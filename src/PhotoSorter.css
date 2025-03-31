@@ -1,0 +1,89 @@
+.photo-sorter {
+  padding: 2rem;
+  font-family: sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.photo-card {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.photo-card:hover {
+  transform: scale(1.02);
+}
+
+.photo-card.selected {
+  border-color: #0070f3;
+  background: #f0faff;
+}
+
+.photo-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-bottom: 1px solid #eee;
+}
+
+.sorter-actions {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.sorter-actions button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.feedback-section {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.refinement-buttons button {
+  margin: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+textarea {
+  width: 100%;
+  max-width: 600px;
+  padding: 0.5rem;
+  margin-top: 1rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.refine-actions button {
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: none;
+  background-color: #444;
+  color: white;
+  cursor: pointer;
+}

@@ -1,0 +1,80 @@
+.artist-dashboard {
+  padding: 2rem;
+  font-family: sans-serif;
+  background-color: #fff;
+  color: #222;
+}
+
+.artist-dashboard h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.logo-preview {
+  margin-top: 1rem;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+.photo-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.photo-thumbs img {
+  height: 60px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  object-fit: cover;
+}
+
+.photo-thumbs img.selected {
+  border-color: #0070f3;
+}
+
+input[type="text"],
+select {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+button {
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+ul {
+  margin-top: 1rem;
+  padding-left: 1.25rem;
+}
+
+ul li {
+  margin: 0.4rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
