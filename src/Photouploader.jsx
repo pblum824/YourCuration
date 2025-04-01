@@ -12,12 +12,26 @@ export default function PhotoUploader({ onUpload }) {
 
   const handleFile = (file) => {
     const img = new Image();
-    const safeName = generateTimestampedFilename(file.name);
+    const originalName = file.name;
+    const safeFilename = generateTimestampedFilename(file.name);
     img.onload = () => {
+      const metadata = {
+        file,
+        safeFilename,
+        originalName,
+        title: '',
+        tags: [],
+        dimensions: {
+          width: img.width,
+          height: img.height
+        }
+      };
+
       if (!isRoughlyThreeByTwo(img.width, img.height)) {
         alert("Note: This image isn't close to a 3:2 aspect ratio. For best results, consistent sizing is recommended.");
       }
-      onUpload(file, safeName);
+
+      onUpload(metadata);
     };
     img.src = URL.createObjectURL(file);
   };
