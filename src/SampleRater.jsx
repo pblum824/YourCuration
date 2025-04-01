@@ -43,15 +43,19 @@ const SampleRater = ({ onComplete }) => {
           <div key={img.id} className="image-card">
             <img src={img.src} alt={`Sample ${img.id}`} />
             <div className="rating-buttons">
-              {[1, 2, 3, 4, 5].map((score) => (
-                <button
-                  key={score}
-                  className={ratings.find((r) => r.id === img.id && r.score === score) ? 'selected' : ''}
-                  onClick={() => handleRating(img.id, score)}
-                >
-                  {score}
-                </button>
-              ))}
+              {[
+  { label: 'OK', score: 1 },
+  { label: 'Good', score: 2 },
+  { label: 'Love', score: 3 }
+].map(({ label, score }) => (
+  <button
+    key={label}
+    className={ratings.find((r) => r.id === img.id && r.score === score) ? 'selected' : ''}
+    onClick={() => handleRating(img.id, score)}
+  >
+    {label}
+  </button>
+))}
             </div>
           </div>
         ))}
