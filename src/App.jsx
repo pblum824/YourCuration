@@ -1,4 +1,3 @@
-// App.jsx (updated with global navigation)
 import React, { useState } from 'react';
 import ArtistDashboard from './ArtistDashboard';
 import SampleRater from './SampleRater';
@@ -6,6 +5,12 @@ import CuratedGallery from './CuratedGallery';
 
 export default function App() {
   const [page, setPage] = useState('artist');
+  const [userRatings, setUserRatings] = useState([]);
+
+  const handleRatingsComplete = (ratings) => {
+    setUserRatings(ratings);
+    setPage('gallery');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -23,8 +28,8 @@ export default function App() {
 
       <main className="p-6">
         {page === 'artist' && <ArtistDashboard />}
-        {page === 'viewer' && <SampleRater />}
-        {page === 'gallery' && <CuratedGallery />}
+        {page === 'viewer' && <SampleRater onComplete={handleRatingsComplete} />}
+        {page === 'gallery' && <CuratedGallery ratings={userRatings} />}
       </main>
     </div>
   );
