@@ -3,6 +3,7 @@ import ArtClientLanding from './ArtClientLanding';
 import ArtistDashboard from './ArtistDashboard';
 import SampleRater from './SampleRater';
 import CuratedGallery from './CuratedGallery';
+import SkinWrapper from './SkinWrapper';
 import { AnimatePresence } from 'framer-motion';
 
 export default function App() {
@@ -29,34 +30,27 @@ export default function App() {
       </nav>
 
       <main className="p-6">
-        <AnimatePresence mode="wait">
-          <>
-            {page === 'client' && (
-              <ArtClientLanding
-                key="client"
-                onStart={() => setPage('viewer')}
-              />
-            )}
-
-            {page === 'artist' && (
-              <ArtistDashboard key="artist" />
-            )}
-
-            {page === 'viewer' && (
-              <SampleRater
-                key="viewer"
-                onComplete={handleRatingsComplete}
-              />
-            )}
-
-            {page === 'gallery' && (
-              <CuratedGallery
-                key="gallery"
-                ratings={userRatings}
-              />
-            )}
-          </>
-        </AnimatePresence>
+        {['client', 'viewer', 'gallery'].includes(page) ? (
+          <SkinWrapper>
+            <AnimatePresence mode="wait">
+              <>
+                {page === 'client' && (
+                  <ArtClientLanding key="client" onStart={() => setPage('viewer')} />
+                )}
+                {page === 'viewer' && (
+                  <SampleRater key="viewer" onComplete={handleRatingsComplete} />
+                )}
+                {page === 'gallery' && (
+                  <CuratedGallery key="gallery" ratings={userRatings} />
+                )}
+              </>
+            </AnimatePresence>
+          </SkinWrapper>
+        ) : (
+          <AnimatePresence mode="wait">
+            {page === 'artist' && <ArtistDashboard key="artist" />}
+          </AnimatePresence>
+        )}
       </main>
     </div>
   );
