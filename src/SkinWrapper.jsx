@@ -5,10 +5,11 @@ export default function SkinWrapper({ children }) {
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Layer 1: linen background */}
       <div
-        className="fixed inset-0 z-0 bg-cover bg-center"
+        className="fixed inset-0 z-0 bg-cover bg-center bg-fixed"
         style={{
           backgroundImage: 'url("/skins/linen-background.jpg")',
           backgroundAttachment: 'fixed',
+          backgroundColor: '#f8f5e4', // soft cream fallback to confirm visibility
         }}
       />
 
