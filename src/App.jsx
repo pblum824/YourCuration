@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import ArtClientLanding from './ArtClientLanding';
 import ArtistDashboard from './ArtistDashboard';
 import SampleRater from './SampleRater';
 import CuratedGallery from './CuratedGallery';
+import { AnimatePresence } from 'framer-motion';
 
 export default function App() {
-  const [page, setPage] = useState('artist');
+  const [page, setPage] = useState('client');
   const [userRatings, setUserRatings] = useState([]);
 
   const handleRatingsComplete = (ratings) => {
@@ -27,9 +29,34 @@ export default function App() {
       </nav>
 
       <main className="p-6">
-        {page === 'artist' && <ArtistDashboard />}
-        {page === 'viewer' && <SampleRater onComplete={handleRatingsComplete} />}
-        {page === 'gallery' && <CuratedGallery ratings={userRatings} />}
+        <AnimatePresence mode="wait">
+          <>
+            {page === 'client' && (
+              <ArtClientLanding
+                key="client"
+                onStart={() => setPage('viewer')}
+              />
+            )}
+
+            {page === 'artist' && (
+              <ArtistDashboard key="artist" />
+            )}
+
+            {page === 'viewer' && (
+              <SampleRater
+                key="viewer"
+                onComplete={handleRatingsComplete}
+              />
+            )}
+
+            {page === 'gallery' && (
+              <CuratedGallery
+                key="gallery"
+                ratings={userRatings}
+              />
+            )}
+          </>
+        </AnimatePresence>
       </main>
     </div>
   );
