@@ -39,11 +39,11 @@ const SampleRater = ({ onComplete }) => {
     <div className="sample-rater space-y-12">
       <h2 className="text-3xl font-semibold text-center">Which of these speaks to you?</h2>
 
-      <div className="flex flex-col md:flex-row justify-center gap-12 items-start">
+      <div className="flex flex-col md:flex-row justify-center items-start gap-12 flex-wrap">
         {currentImages.map((img) => (
           <div
             key={img.id}
-            className="flex flex-col items-center space-y-5"
+            className="flex flex-col items-center gap-5"
             style={{ maxWidth: '340px' }}
           >
             <img
@@ -55,7 +55,7 @@ const SampleRater = ({ onComplete }) => {
                 height: 'auto',
                 borderRadius: '0.5rem',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-                objectFit: 'cover',
+                objectFit: 'cover'
               }}
             />
             <div className="flex gap-4">
@@ -82,7 +82,7 @@ const SampleRater = ({ onComplete }) => {
       {hasRatedAll && (
         <div className="text-center">
           <button
-            className="mt-10 px-8 py-5 bg-primary text-white rounded-xl shadow text-2xl hover:bg-primary/90 transition"
+            className="mt-10 px-8 py-5 bg-primary text-white rounded-xl shadow text-3xl hover:bg-primary/90 transition"
             onClick={handleNext}
           >
             {currentSet < 2 ? 'Next Set' : 'Show My Curated Gallery'}
