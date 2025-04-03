@@ -33,17 +33,15 @@ export default function App() {
 
           <main className="p-6">
             <AnimatePresence mode="wait">
-              <React.Fragment key={page}>
-                {page === 'client' && (
-                  <ArtClientLanding onStart={() => setPage('viewer')} />
-                )}
-                {page === 'viewer' && (
-                  <SampleRater onComplete={handleRatingsComplete} />
-                )}
-                {page === 'gallery' && (
-                  <CuratedGallery ratings={userRatings} />
-                )}
-              </React.Fragment>
+              {page === 'client' && (
+                <ArtClientLanding key="client" onStart={() => setPage('viewer')} />
+              )}
+              {page === 'viewer' && (
+                <SampleRater key="viewer" onComplete={handleRatingsComplete} />
+              )}
+              {page === 'gallery' && (
+                <CuratedGallery key="gallery" ratings={userRatings} />
+              )}
             </AnimatePresence>
           </main>
         </SkinWrapper>
