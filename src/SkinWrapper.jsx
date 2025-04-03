@@ -18,17 +18,27 @@ export default function SkinWrapper({ children }) {
         }}
       />
 
-      {/* Content container with smart border image as background */}
+      {/* Border frame layer - margin creates visual border effect */}
       <div
         style={{
-          position: 'relative',
-          zIndex: 10,
-          minHeight: '100vh',
-          padding: 'clamp(6rem, 10vw, 10rem)',
+          position: 'fixed',
+          inset: 'clamp(3rem, 6vw, 6rem)',
+          zIndex: 5,
           backgroundImage: 'url("/skins/sample-border.jpg")',
           backgroundRepeat: 'no-repeat',
           backgroundSize: '100% 100%',
           backgroundPosition: 'center',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Content layer */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          padding: 'clamp(2rem, 5vw, 5rem)',
+          minHeight: '100vh',
         }}
       >
         {children}
