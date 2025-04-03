@@ -3,7 +3,7 @@ import React from 'react';
 export default function SkinWrapper({ children }) {
   return (
     <div style={{ position: 'relative', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
-      {/* Layer 1: linen background */}
+      {/* Linen background */}
       <div
         style={{
           position: 'fixed',
@@ -18,26 +18,17 @@ export default function SkinWrapper({ children }) {
         }}
       />
 
-      {/* Layer 2: full-screen decorative border (no pointer events) */}
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 10,
-          backgroundImage: 'url("/skins/sample-border.jpg")',
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100% 100%',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* Layer 3: main content */}
+      {/* Content wrapper with faux frame using image */}
       <div
         style={{
           position: 'relative',
           zIndex: 20,
           minHeight: '100vh',
-          padding: 'clamp(2rem, 5vw, 5rem)',
+          padding: 'clamp(3rem, 8vw, 6rem)',
+          backgroundImage: 'url("/skins/sample-border.jpg")',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
         }}
       >
         {children}
