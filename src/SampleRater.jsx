@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SampleRater.css';
 
 const sampleImages = [
@@ -16,6 +16,17 @@ const sampleImages = [
 const SampleRater = ({ onComplete }) => {
   const [currentSet, setCurrentSet] = useState(0);
   const [ratings, setRatings] = useState([]);
+  const [isWide, setIsWide] = useState(true);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      setIsWide(window.innerWidth >= 768);
+    };
+
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   const handleRating = (id, score) => {
     setRatings((prev) => {
@@ -36,16 +47,23 @@ const SampleRater = ({ onComplete }) => {
   const hasRatedAll = currentImages.every((img) => ratings.find((r) => r.id === img.id));
 
   return (
-    <div className="sample-rater space-y-12">
-      <h2 className="text-3xl font-semibold text-center">Which of these speaks to you?</h2>
+    <div style={{ paddingBottom: '2rem' }}>
+      <h2 style={{ fontSize: '2rem', fontWeight: 600, textAlign: 'center', marginBottom: '2rem' }}>
+        Which of these speaks to you?
+      </h2>
 
-      <div className="flex flex-col md:flex-row justify-center items-start gap-12 flex-wrap">
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isWide ? 'row' : 'column',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          gap: '3rem',
+          flexWrap: 'wrap',
+        }}
+      >
         {currentImages.map((img) => (
-          <div
-            key={img.id}
-            className="flex flex-col items-center gap-5"
-            style={{ maxWidth: '340px' }}
-          >
+          <div key={img.id} style={{ maxWidth: '340px', textAlign: 'center' }}>
             <img
               src={img.src}
               alt={`Sample ${img.id}`}
@@ -58,16 +76,23 @@ const SampleRater = ({ onComplete }) => {
                 objectFit: 'cover'
               }}
             />
-            <div className="flex gap-4">
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
               {[{ label: 'OK', score: 1 }, { label: 'Good', score: 2 }, { label: 'Love', score: 3 }].map(
                 ({ label, score }) => (
                   <button
                     key={label}
-                    className={`px-6 py-4 text-2xl rounded-md shadow-sm border ${
-                      ratings.find((r) => r.id === img.id && r.score === score)
-                        ? 'bg-blue-100'
-                        : 'bg-white'
-                    }`}
+                    style={{
+                      padding: '1rem 1.5rem',
+                      fontSize: '1.5rem',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                      border: '1px solid #ccc',
+                      backgroundColor:
+                        ratings.find((r) => r.id === img.id && r.score === score)
+                          ? '#bfdbfe'
+                          : '#fff',
+                      fontFamily: 'Parisienne, cursive'
+                    }}
                     onClick={() => handleRating(img.id, score)}
                   >
                     {label}
@@ -80,9 +105,19 @@ const SampleRater = ({ onComplete }) => {
       </div>
 
       {hasRatedAll && (
-        <div className="text-center">
+        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
           <button
-            className="mt-10 px-8 py-5 bg-primary text-white rounded-xl shadow text-3xl hover:bg-primary/90 transition"
+            style={{
+              padding: '1.25rem 2.5rem',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              fontSize: '1.75rem',
+              borderRadius: '1rem',
+              fontFamily: 'Parisienne, cursive',
+              boxShadow: '0 3px 8px rgba(0,0,0,0.1)',
+              border: 'none',
+              cursor: 'pointer',
+            }}
             onClick={handleNext}
           >
             {currentSet < 2 ? 'Next Set' : 'Show My Curated Gallery'}
