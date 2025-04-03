@@ -45,7 +45,7 @@ const SampleRater = ({ onComplete }) => {
             <img
               src={img.src}
               alt={`Sample ${img.id}`}
-              className="rounded-lg shadow-md w-full max-w-[280px] object-cover"
+              className="rounded-lg shadow-md max-w-[280px] w-[100%] h-auto object-cover"
             />
             <div className="flex gap-4">
               {[{ label: 'OK', score: 1 }, { label: 'Good', score: 2 }, { label: 'Love', score: 3 }].map(
