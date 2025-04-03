@@ -16,7 +16,7 @@ export default function CuratedGallery({ ratings }) {
   const loved = ratings
     .filter((r) => r.score === 3)
     .map((r) => sampleImages.find((img) => img.id === r.id))
-    .filter(Boolean);
+    .filter(Boolean); // keep only matches
 
   return (
     <div>
@@ -25,14 +25,16 @@ export default function CuratedGallery({ ratings }) {
         <p>No favorites selected yet. Try the Viewer first!</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {loved.map((img) => (
-            <img
-              key={img.id}
-              src={img.src}
-              alt={`Favorite ${img.id}`}
-              className="rounded shadow-md"
-            />
-          ))}
+          {loved.map((img, index) =>
+            img ? (
+              <img
+                key={img.id || index}
+                src={img.src}
+                alt={`Favorite ${img.id ?? 'image'}`}
+                className="rounded shadow-md"
+              />
+            ) : null
+          )}
         </div>
       )}
     </div>
