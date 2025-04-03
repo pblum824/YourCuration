@@ -48,7 +48,16 @@ const SampleRater = ({ onComplete }) => {
 
   return (
     <div style={{ paddingBottom: '2rem' }}>
-      <h2 style={{ fontSize: '2rem', fontWeight: 600, textAlign: 'center', marginBottom: '2rem' }}>
+      <h2
+        style={{
+          fontSize: '2.25rem',
+          fontWeight: 600,
+          textAlign: 'center',
+          marginBottom: '2rem',
+          color: '#1e3a8a',
+          fontFamily: 'Parisienne, cursive'
+        }}
+      >
         Which of these speaks to you?
       </h2>
 
@@ -59,7 +68,7 @@ const SampleRater = ({ onComplete }) => {
           justifyContent: 'center',
           alignItems: 'flex-start',
           gap: '3rem',
-          flexWrap: 'wrap',
+          flexWrap: 'wrap'
         }}
       >
         {currentImages.map((img) => (
