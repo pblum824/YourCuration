@@ -41,11 +41,18 @@ const SampleRater = ({ onComplete }) => {
 
       <div className="flex flex-wrap justify-center gap-10">
         {currentImages.map((img) => (
-          <div key={img.id} className="flex flex-col items-center space-y-4 max-w-[300px]">
+          <div key={img.id} className="flex flex-col items-center space-y-4">
             <img
               src={img.src}
               alt={`Sample ${img.id}`}
-              className="rounded-lg shadow-md max-w-[280px] w-[100%] h-auto object-cover"
+              style={{
+                maxWidth: '280px',
+                width: '100%',
+                height: 'auto',
+                borderRadius: '0.5rem',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+                objectFit: 'cover'
+              }}
             />
             <div className="flex gap-4">
               {[{ label: 'OK', score: 1 }, { label: 'Good', score: 2 }, { label: 'Love', score: 3 }].map(
