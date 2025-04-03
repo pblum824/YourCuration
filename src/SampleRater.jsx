@@ -36,34 +36,47 @@ const SampleRater = ({ onComplete }) => {
   const hasRatedAll = currentImages.every((img) => ratings.find((r) => r.id === img.id));
 
   return (
-    <div className="sample-rater">
-      <h2>Which of these speaks to you?</h2>
-      <div className="image-row">
+    <div className="sample-rater space-y-8">
+      <h2 className="text-2xl font-semibold text-center">Which of these speaks to you?</h2>
+
+      <div className="flex flex-wrap justify-center gap-8">
         {currentImages.map((img) => (
-          <div key={img.id} className="image-card">
-            <img src={img.src} alt={`Sample ${img.id}`} />
-            <div className="rating-buttons">
-              {[
-  { label: 'OK', score: 1 },
-  { label: 'Good', score: 2 },
-  { label: 'Love', score: 3 }
-].map(({ label, score }) => (
-  <button
-    key={label}
-    className={ratings.find((r) => r.id === img.id && r.score === score) ? 'selected' : ''}
-    onClick={() => handleRating(img.id, score)}
-  >
-    {label}
-  </button>
-))}
+          <div key={img.id} className="flex flex-col items-center space-y-3 max-w-xs">
+            <img
+              src={img.src}
+              alt={`Sample ${img.id}`}
+              className="rounded-lg shadow-md w-full object-cover"
+            />
+            <div className="flex gap-3">
+              {[{ label: 'OK', score: 1 }, { label: 'Good', score: 2 }, { label: 'Love', score: 3 }].map(
+                ({ label, score }) => (
+                  <button
+                    key={label}
+                    className={`px-4 py-2 text-lg rounded-md shadow-sm border ${
+                      ratings.find((r) => r.id === img.id && r.score === score)
+                        ? 'bg-blue-100'
+                        : 'bg-white'
+                    } font-parisienne`}
+                    onClick={() => handleRating(img.id, score)}
+                  >
+                    {label}
+                  </button>
+                )
+              )}
             </div>
           </div>
         ))}
       </div>
+
       {hasRatedAll && (
-        <button className="next-button" onClick={handleNext}>
-          {currentSet < 2 ? 'Next Set' : 'Show My Curated Gallery'}
-        </button>
+        <div className="text-center">
+          <button
+            className="mt-6 px-6 py-3 bg-primary text-white rounded-xl shadow font-parisienne text-lg hover:bg-primary/90 transition"
+            onClick={handleNext}
+          >
+            {currentSet < 2 ? 'Next Set' : 'Show My Curated Gallery'}
+          </button>
+        </div>
       )}
     </div>
   );

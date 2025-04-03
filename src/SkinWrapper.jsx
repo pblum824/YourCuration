@@ -3,7 +3,7 @@ import React from 'react';
 export default function SkinWrapper({ children }) {
   return (
     <div style={{ position: 'relative', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
-      {/* Full-screen floral border frame */}
+      {/* Full-screen floral frame */}
       <div
         style={{
           position: 'fixed',
@@ -13,21 +13,22 @@ export default function SkinWrapper({ children }) {
           backgroundRepeat: 'no-repeat',
           backgroundSize: '100% 100%',
           backgroundPosition: 'center',
-          backgroundColor: '#f8f5e4', // in case image fails
+          backgroundColor: '#f8f5e4',
         }}
       />
 
-      {/* Inset content container with linen background */}
+      {/* Responsive linen placemat */}
       <div
         style={{
           position: 'relative',
           zIndex: 10,
-          margin: 'clamp(3rem, 6vw, 6rem)',
+          width: 'min(90vw, 1100px)',
+          margin: 'clamp(2rem, 5vw, 4rem) auto',
           backgroundImage: 'url("/skins/linen-background.jpg")',
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundColor: '#fdfaf5', // soft linen fallback
+          backgroundColor: '#fdfaf5',
           borderRadius: '1rem',
           padding: 'clamp(2rem, 5vw, 5rem)',
           boxShadow: '0 0 30px rgba(0,0,0,0.05)',
