@@ -18,13 +18,13 @@ export default function SkinWrapper({ children }) {
         }}
       />
 
-      {/* Content wrapper with faux frame using image */}
+      {/* Content container with smart border image as background */}
       <div
         style={{
           position: 'relative',
-          zIndex: 20,
+          zIndex: 10,
           minHeight: '100vh',
-          padding: 'clamp(3rem, 8vw, 6rem)',
+          padding: 'clamp(6rem, 10vw, 10rem)',
           backgroundImage: 'url("/skins/sample-border.jpg")',
           backgroundRepeat: 'no-repeat',
           backgroundSize: '100% 100%',
