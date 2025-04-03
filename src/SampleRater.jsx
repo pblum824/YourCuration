@@ -36,22 +36,26 @@ const SampleRater = ({ onComplete }) => {
   const hasRatedAll = currentImages.every((img) => ratings.find((r) => r.id === img.id));
 
   return (
-    <div className="sample-rater space-y-10">
-      <h2 className="text-2xl font-semibold text-center">Which of these speaks to you?</h2>
+    <div className="sample-rater space-y-12">
+      <h2 className="text-3xl font-semibold text-center">Which of these speaks to you?</h2>
 
-      <div className="flex flex-wrap justify-center gap-10">
+      <div className="flex flex-col md:flex-row justify-center gap-12 items-start">
         {currentImages.map((img) => (
-          <div key={img.id} className="flex flex-col items-center space-y-4">
+          <div
+            key={img.id}
+            className="flex flex-col items-center space-y-5"
+            style={{ maxWidth: '340px' }}
+          >
             <img
               src={img.src}
               alt={`Sample ${img.id}`}
               style={{
-                maxWidth: '280px',
+                maxWidth: '320px',
                 width: '100%',
                 height: 'auto',
                 borderRadius: '0.5rem',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-                objectFit: 'cover'
+                objectFit: 'cover',
               }}
             />
             <div className="flex gap-4">
@@ -59,7 +63,7 @@ const SampleRater = ({ onComplete }) => {
                 ({ label, score }) => (
                   <button
                     key={label}
-                    className={`px-5 py-3 text-xl rounded-md shadow-sm border font-parisienne ${
+                    className={`px-6 py-4 text-2xl rounded-md shadow-sm border ${
                       ratings.find((r) => r.id === img.id && r.score === score)
                         ? 'bg-blue-100'
                         : 'bg-white'
@@ -78,7 +82,7 @@ const SampleRater = ({ onComplete }) => {
       {hasRatedAll && (
         <div className="text-center">
           <button
-            className="mt-8 px-8 py-4 bg-primary text-white rounded-xl shadow font-parisienne text-xl hover:bg-primary/90 transition"
+            className="mt-10 px-8 py-5 bg-primary text-white rounded-xl shadow text-2xl hover:bg-primary/90 transition"
             onClick={handleNext}
           >
             {currentSet < 2 ? 'Next Set' : 'Show My Curated Gallery'}

@@ -1,4 +1,7 @@
-body { margin: 0; padding: 0; font-family: sans-serif; }
-.font-parisienne {
+body {
+  font-family: 'Parisienne', cursive;
+}
+
+button {
   font-family: 'Parisienne', cursive;
 }
