@@ -9,8 +9,13 @@ const pageFade = {
 
 export default function ArtClientLanding({ onStart }) {
   return (
-    <div className="min-h-[70vh] flex flex-col justify-center items-center text-center gap-8">
-      <h1 className="text-4xl text-primary font-bold">Your gallery starts here</h1>
+    <div
+      className="min-h-[70vh] flex flex-col justify-center items-center text-center gap-8"
+      style={{ fontFamily: 'Parisienne, cursive' }}
+    >
+      <h1 className="text-4xl text-primary font-bold text-shadow">
+        Your gallery starts here
+      </h1>
       <p className="text-xl text-muted-foreground max-w-xl">
         Discover which images speak to you — we’ll help curate your personal collection.
       </p>
