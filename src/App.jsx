@@ -40,7 +40,7 @@ export default function App() {
                 <SampleRater key="viewer" onComplete={handleRatingsComplete} />
               )}
               {page === 'gallery' && (
-                <CuratedGallery key="gallery" ratings={userRatings} />
+          <CuratedGallery key="gallery" lovedSamples={userRatings.filter(r => r.score === 3)} />
               )}
             </AnimatePresence>
           </main>
