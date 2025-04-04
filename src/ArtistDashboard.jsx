@@ -64,7 +64,14 @@ export default function ArtistDashboard() {
 
       {/* Hero image upload */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+        <h3
+          style={{
+            fontSize: '1.5rem',
+            marginBottom: '0.5rem',
+            fontFamily: 'Parisienne, cursive',
+            color: '#1e3a8a',
+          }}
+        >
           Upload Your Hero Image
         </h3>
         <input
@@ -91,7 +98,20 @@ export default function ArtistDashboard() {
         )}
       </div>
 
-      {/* Regular uploads */}
+      {/* Photo library heading */}
+      <h3
+        style={{
+          fontSize: '1.5rem',
+          textAlign: 'center',
+          margin: '2rem 0 1rem',
+          fontFamily: 'Parisienne, cursive',
+          color: '#1e3a8a',
+        }}
+      >
+        Your Photo Library
+      </h3>
+
+      {/* Photo library uploader */}
       <input
         type="file"
         accept=".jpg,.jpeg,.png,.webp"
