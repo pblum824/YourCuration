@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import generateMetadata from './utils/generateMetadata';
 
+// layout alignment fix
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_MB = 10;
 
