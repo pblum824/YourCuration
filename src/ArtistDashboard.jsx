@@ -1,78 +1,113 @@
-// PhotoUploader.jsx
 import React, { useState } from 'react';
-import { generateTimestampedFilename } from './utils/generateSafeFilename';
+import generateMetadata from './utils/generateMetadata';
 
-const isRoughlyThreeByTwo = (width, height) => {
-  const ratio = width / height;
-  return ratio > 1.45 && ratio < 1.55; // ~3:2 aspect ratio
-};
+const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE_MB = 10;
 
-export default function PhotoUploader({ onUpload }) {
-  const [dragging, setDragging] = useState(false);
+export default function ArtistDashboard() {
+  const [images, setImages] = useState([]);
 
-  const handleFile = (file) => {
-    const img = new Image();
-    const originalName = file.name;
-    const safeFilename = generateTimestampedFilename(file.name);
-    img.onload = () => {
-      const metadata = {
-        file,
-        safeFilename,
-        originalName,
-        title: '',
-        tags: [],
-        dimensions: {
-          width: img.width,
-          height: img.height
-        }
-      };
+  const handleUpload = (e) => {
+    const files = Array.from(e.target.files);
 
-      if (!isRoughlyThreeByTwo(img.width, img.height)) {
-        alert("Note: This image isn't close to a 3:2 aspect ratio. For best results, consistent sizing is recommended.");
-      }
+    const validFiles = files.filter((file) => {
+      const isValidType = ACCEPTED_FORMATS.includes(file.type);
+      const isValidSize = file.size / 1024 / 1024 < MAX_FILE_SIZE_MB;
+      return isValidType && isValidSize;
+    });
 
-      onUpload(metadata);
-    };
-    img.src = URL.createObjectURL(file);
+    const newImages = validFiles.map((file, index) => ({
+      id: `${Date.now()}-${index}`,
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file,
+      scrapeEligible: true,
+      metadata: generateMetadata(file.name),
+    }));
+
+    setImages((prev) => [...prev, ...newImages]);
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => setDragging(false);
-
-  const handleInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) handleFile(file);
+  const toggleScrape = (id) => {
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
   };
 
   return (
-    <div
-      className={`border-2 border-dashed p-4 rounded-xl text-center cursor-pointer ${dragging ? 'bg-accent' : 'bg-muted'}`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-    >
-      <p className="text-sm mb-2">Drag & drop a photo here, or click to upload</p>
+    <div style={{ padding: '2rem' }}>
+      <h2
+        style={{
+          fontSize: '2.25rem',
+          fontWeight: 600,
+          textAlign: 'center',
+          marginBottom: '2rem',
+          color: '#1e3a8a',
+          fontFamily: 'Parisienne, cursive',
+        }}
+      >
+        Artist Dashboard
+      </h2>
+
       <input
         type="file"
-        accept="image/*"
-        className="hidden"
-        id="photo-upload"
-        onChange={handleInputChange}
+        accept=".jpg,.jpeg,.png,.webp"
+        multiple
+        onChange={handleUpload}
+        style={{ marginBottom: '2rem', display: 'block', margin: '0 auto' }}
       />
-      <label htmlFor="photo-upload" className="cursor-pointer text-primary font-medium">
-        Browse Files
-      </label>
+
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '2rem',
+          justifyContent: 'center',
+        }}
+      >
+        {images.map((img) => (
+          <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
+            <img
+              src={img.url}
+              alt={img.name}
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '0.5rem',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+              }}
+            />
+            <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>
+              {img.name}
+            </p>
+            <button
+              onClick={() => toggleScrape(img.id)}
+              style={{
+                marginTop: '0.5rem',
+                padding: '0.5rem 1rem',
+                fontSize: '1rem',
+                borderRadius: '0.5rem',
+                border: '1px solid #ccc',
+                backgroundColor: img.scrapeEligible ? '#d1fae5' : '#fee2e2',
+                cursor: 'pointer',
+              }}
+            >
+              {img.scrapeEligible ? 'Eligible for Scrape' : 'Excluded'}
+            </button>
+            <p
+              style={{
+                fontSize: '0.85rem',
+                fontStyle: 'italic',
+                marginTop: '0.5rem',
+              }}
+            >
+              Tags: {img.metadata.tags.join(', ')}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
