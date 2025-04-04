@@ -16,25 +16,51 @@ export default function CuratedGallery({ ratings }) {
   const loved = ratings
     .filter((r) => r.score === 3)
     .map((r) => sampleImages.find((img) => img.id === r.id))
-    .filter(Boolean); // keep only matches
+    .filter(Boolean);
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Your Curated Gallery</h2>
+    <div style={{ paddingBottom: '2rem' }}>
+      <h2
+        style={{
+          fontSize: '2.25rem',
+          fontWeight: 600,
+          textAlign: 'center',
+          marginBottom: '2rem',
+          color: '#1e3a8a',
+          fontFamily: 'Parisienne, cursive'
+        }}
+      >
+        Your Curated Gallery
+      </h2>
+
       {loved.length === 0 ? (
-        <p>No favorites selected yet. Try the Viewer first!</p>
+        <p style={{ textAlign: 'center', fontSize: '1.25rem', fontStyle: 'italic' }}>
+          No favorites selected yet. Try the Viewer first!
+        </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {loved.map((img, index) =>
-            img ? (
-              <img
-                key={img.id || index}
-                src={img.src}
-                alt={`Favorite ${img.id ?? 'image'}`}
-                className="rounded shadow-md"
-              />
-            ) : null
-          )}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: '2.5rem',
+          }}
+        >
+          {loved.map((img, index) => (
+            <img
+              key={img?.id || index}
+              src={img?.src}
+              alt={`Favorite ${img?.id}`}
+              style={{
+                maxWidth: '320px',
+                width: '100%',
+                height: 'auto',
+                borderRadius: '0.5rem',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+                objectFit: 'cover',
+              }}
+            />
+          ))}
         </div>
       )}
     </div>
