@@ -7,6 +7,7 @@ const MAX_FILE_SIZE_MB = 10;
 export default function ArtistDashboard() {
   const [heroImage, setHeroImage] = useState(null);
   const [images, setImages] = useState([]);
+  const [dragging, setDragging] = useState(false);
 
   const handleHeroUpload = (e) => {
     const file = e.target.files[0];
@@ -18,8 +19,8 @@ export default function ArtistDashboard() {
     setHeroImage({ name: file.name, url });
   };
 
-  const handleUpload = (e) => {
-    const files = Array.from(e.target.files);
+  const handleFiles = (fileList) => {
+    const files = Array.from(fileList);
 
     const validFiles = files.filter((file) => {
       const isValidType = ACCEPTED_FORMATS.includes(file.type);
@@ -111,15 +112,50 @@ export default function ArtistDashboard() {
         Your Photo Library
       </h3>
 
-      {/* Photo library uploader */}
-      <input
-        type="file"
-        accept=".jpg,.jpeg,.png,.webp"
-        multiple
-        onChange={handleUpload}
-        style={{ marginBottom: '2rem', display: 'block', margin: '0 auto' }}
-      />
+      {/* Drag-and-drop zone */}
+      <div
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          handleFiles(e.dataTransfer.files);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        style={{
+          border: '2px dashed #aaa',
+          borderRadius: '0.75rem',
+          padding: '3rem',
+          textAlign: 'center',
+          backgroundColor: dragging ? '#f0fdfa' : '#fff',
+          cursor: 'pointer',
+          marginBottom: '1rem',
+        }}
+      >
+        <p style={{ marginBottom: '0.5rem' }}>
+          Drag and drop images here
+        </p>
+        <p style={{ fontSize: '0.85rem', color: '#555' }}>
+          (JPEG, PNG, or WebP only — Max 10MB each)
+        </p>
+      </div>
 
+      {/* OR separator */}
+      <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
+
+      {/* Multi-file input */}
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          multiple
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </div>
+
+      {/* Image previews */}
       <div
         style={{
           display: 'flex',
@@ -140,9 +176,7 @@ export default function ArtistDashboard() {
                 boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
               }}
             />
-            <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>
-              {img.name}
-            </p>
+            <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
             <button
               onClick={() => toggleScrape(img.id)}
               style={{
