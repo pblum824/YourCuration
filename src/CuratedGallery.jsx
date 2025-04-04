@@ -43,7 +43,6 @@ const artistLibrary = [
   },
 ];
 
-// Simulated metadata for sample IDs
 const dummyTagMap = {
   1: ['animal', 'backlit', 'rule-of-thirds'],
   2: ['figure', 'soft-focus', 'monochrome'],
@@ -57,15 +56,10 @@ const dummyTagMap = {
 };
 
 function findSimilarPhotos(lovedSamples, dislikedSamples, artistLibrary) {
-  const lovedTags = lovedSamples.flatMap(sample =>
-    dummyTagMap[sample.id] || []
-  );
+  const lovedTags = lovedSamples.flatMap(sample => dummyTagMap[sample.id] || []);
+  const dislikedTags = dislikedSamples.flatMap(sample => dummyTagMap[sample.id] || []);
 
-  const dislikedTags = dislikedSamples.flatMap(sample =>
-    dummyTagMap[sample.id] || []
-  );
-
-  return artistLibrary.filter(photo => {
+  const matched = artistLibrary.filter(photo => {
     if (!photo.scrapeEligible) return false;
 
     const tags = photo.metadata.tags;
@@ -74,10 +68,16 @@ function findSimilarPhotos(lovedSamples, dislikedSamples, artistLibrary) {
 
     return hasPositive && !hasNegative;
   });
+
+  return { matched, lovedTags, dislikedTags };
 }
 
 export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
-  const matched = findSimilarPhotos(lovedSamples, dislikedSamples, artistLibrary);
+  const { matched, lovedTags, dislikedTags } = findSimilarPhotos(
+    lovedSamples,
+    dislikedSamples,
+    artistLibrary
+  );
 
   return (
     <div style={{ paddingBottom: '2rem' }}>
@@ -94,6 +94,12 @@ export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
       >
         Your Curated Gallery
       </h2>
+
+      {/* Debug: show matched logic */}
+      <div style={{ margin: '0 auto', maxWidth: '700px', textAlign: 'center', marginBottom: '2rem' }}>
+        <p style={{ fontSize: '1rem' }}><strong>Loved Tags:</strong> {lovedTags.join(', ')}</p>
+        <p style={{ fontSize: '1rem' }}><strong>Disliked Tags:</strong> {dislikedTags.join(', ')}</p>
+      </div>
 
       {matched.length === 0 ? (
         <p style={{ textAlign: 'center', fontSize: '1.25rem', fontStyle: 'italic' }}>
