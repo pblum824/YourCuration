@@ -5,7 +5,18 @@ const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_MB = 10;
 
 export default function ArtistDashboard() {
+  const [heroImage, setHeroImage] = useState(null);
   const [images, setImages] = useState([]);
+
+  const handleHeroUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!ACCEPTED_FORMATS.includes(file.type)) return alert('Unsupported format');
+    if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) return alert('File too large');
+
+    const url = URL.createObjectURL(file);
+    setHeroImage({ name: file.name, url });
+  };
 
   const handleUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -51,6 +62,36 @@ export default function ArtistDashboard() {
         Artist Dashboard
       </h2>
 
+      {/* Hero image upload */}
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+          Upload Your Hero Image
+        </h3>
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          onChange={handleHeroUpload}
+          style={{ marginBottom: '1rem' }}
+        />
+        {heroImage && (
+          <div style={{ marginTop: '1rem' }}>
+            <img
+              src={heroImage.url}
+              alt={heroImage.name}
+              style={{
+                maxWidth: '480px',
+                width: '100%',
+                height: 'auto',
+                borderRadius: '0.5rem',
+                boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
+              }}
+            />
+            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{heroImage.name}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Regular uploads */}
       <input
         type="file"
         accept=".jpg,.jpeg,.png,.webp"
