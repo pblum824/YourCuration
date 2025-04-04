@@ -55,7 +55,8 @@ const SampleRater = ({ onComplete }) => {
           textAlign: 'center',
           marginBottom: '2rem',
           color: '#1e3a8a',
-          fontFamily: 'Parisienne, cursive'
+          fontFamily: 'Parisienne, cursive',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
         }}
       >
         Which of these speaks to you?

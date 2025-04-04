@@ -27,12 +27,12 @@ export default function CuratedGallery({ ratings }) {
           textAlign: 'center',
           marginBottom: '2rem',
           color: '#1e3a8a',
-          fontFamily: 'Parisienne, cursive'
+          fontFamily: 'Parisienne, cursive',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
         }}
       >
         Your Curated Gallery
       </h2>
-
       {loved.length === 0 ? (
         <p style={{ textAlign: 'center', fontSize: '1.25rem', fontStyle: 'italic' }}>
           No favorites selected yet. Try the Viewer first!
