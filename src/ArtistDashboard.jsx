@@ -150,14 +150,31 @@ export default function ArtistDashboard() {
       {/* OR separator */}
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file input */}
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <input
-          type="file"
-          accept=".jpg,.jpeg,.png,.webp"
-          multiple
-          onChange={(e) => handleFiles(e.target.files)}
-        />
+      {/* Multi-file input, styled */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <label
+          htmlFor="multiUpload"
+          style={{
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: '1px solid #ccc',
+            cursor: 'pointer',
+            fontFamily: 'Parisienne, cursive',
+            color: '#1e3a8a',
+            backgroundColor: '#f9f9f9',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+          }}
+        >
+          Choose Files
+          <input
+            id="multiUpload"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            multiple
+            onChange={(e) => handleFiles(e.target.files)}
+            style={{ display: 'none' }}
+          />
+        </label>
       </div>
 
       {/* Image previews */}
