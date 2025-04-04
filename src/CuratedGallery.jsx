@@ -94,19 +94,23 @@ export default function CuratedGallery() {
           }}
         >
           {matched.map((img, index) => (
-            <img
-              key={img?.id || index}
-              src={img?.src}
-              alt={`Matched ${img?.id}`}
-              style={{
-                maxWidth: '320px',
-                width: '100%',
-                height: 'auto',
-                borderRadius: '0.5rem',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-                objectFit: 'cover',
-              }}
-            />
+            <div key={img?.id || index} style={{ maxWidth: '320px', textAlign: 'center' }}>
+              <img
+                src={img?.src}
+                alt={`Matched ${img?.id}`}
+                style={{
+                  maxWidth: '320px',
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+                  objectFit: 'cover',
+                }}
+              />
+              <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginTop: '0.5rem' }}>
+                Tags: {img?.metadata?.tags?.join(', ')}
+              </p>
+            </div>
           ))}
         </div>
       )}
