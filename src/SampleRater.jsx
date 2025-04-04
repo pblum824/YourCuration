@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './SampleRater.css';
+import generateMetadata from './utils/generateMetadata';
 
-const sampleImages = [
-  { id: 1, src: '/samples/sample1.jpg' },
-  { id: 2, src: '/samples/sample2.jpg' },
-  { id: 3, src: '/samples/sample3.jpg' },
-  { id: 4, src: '/samples/sample4.jpg' },
-  { id: 5, src: '/samples/sample5.jpg' },
-  { id: 6, src: '/samples/sample6.jpg' },
-  { id: 7, src: '/samples/sample7.jpg' },
-  { id: 8, src: '/samples/sample8.jpg' },
-  { id: 9, src: '/samples/sample9.jpg' }
-];
+const sampleImages = Array.from({ length: 9 }, (_, i) => {
+  const image = generateMetadata(i + 1);
+  return {
+    ...image,
+    src: `/samples/sample${i + 1}.jpg`,
+  };
+});
 
 const SampleRater = ({ onComplete }) => {
   const [currentSet, setCurrentSet] = useState(0);
@@ -29,8 +26,9 @@ const SampleRater = ({ onComplete }) => {
   }, []);
 
   const handleRating = (id, score) => {
+    const metadata = sampleImages.find(img => img.id === id)?.metadata;
     setRatings((prev) => {
-      const updated = [...prev.filter((r) => r.id !== id), { id, score }];
+      const updated = [...prev.filter((r) => r.id !== id), { id, score, metadata }];
       return updated;
     });
   };
@@ -69,7 +67,7 @@ const SampleRater = ({ onComplete }) => {
           justifyContent: 'center',
           alignItems: 'flex-start',
           gap: '3rem',
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
         }}
       >
         {currentImages.map((img) => (
@@ -83,7 +81,7 @@ const SampleRater = ({ onComplete }) => {
                 height: 'auto',
                 borderRadius: '0.5rem',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-                objectFit: 'cover'
+                objectFit: 'cover',
               }}
             />
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
@@ -110,6 +108,10 @@ const SampleRater = ({ onComplete }) => {
                 )
               )}
             </div>
+            {/* Optional debug: show tags */}
+            <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginTop: '0.5rem' }}>
+              Tags: {img?.metadata?.tags?.join(', ')}
+            </p>
           </div>
         ))}
       </div>
