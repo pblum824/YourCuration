@@ -68,7 +68,7 @@ export default function ArtistDashboard() {
         <h3
           style={{
             fontSize: '1.5rem',
-            marginBottom: '0.5rem',
+            marginBottom: '0.75rem',
             fontFamily: 'Parisienne, cursive',
             color: '#1e3a8a',
           }}
@@ -79,7 +79,7 @@ export default function ArtistDashboard() {
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
           onChange={handleHeroUpload}
-          style={{ marginBottom: '1rem' }}
+          style={{ marginBottom: '0.5rem' }}
         />
         {heroImage && (
           <div style={{ marginTop: '1rem' }}>
@@ -126,12 +126,17 @@ export default function ArtistDashboard() {
         onDragLeave={() => setDragging(false)}
         style={{
           border: '2px dashed #aaa',
-          borderRadius: '0.75rem',
-          padding: '3rem',
+          borderRadius: '1rem',
+          padding: '2rem',
           textAlign: 'center',
           backgroundColor: dragging ? '#f0fdfa' : '#fff',
           cursor: 'pointer',
-          marginBottom: '1rem',
+          marginBottom: '1.25rem',
+          width: '80%',
+          maxWidth: '600px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
         }}
       >
         <p style={{ marginBottom: '0.5rem' }}>
