@@ -1,4 +1,5 @@
 import React from 'react';
+import generateMetadata from './utils/generateMetadata';
 
 const artistLibrary = [
   {
@@ -43,21 +44,14 @@ const artistLibrary = [
   },
 ];
 
-const dummyTagMap = {
-  1: ['animal', 'backlit', 'rule-of-thirds'],
-  2: ['figure', 'soft-focus', 'monochrome'],
-  3: ['landscape', 'symmetry', 'cool-toned'],
-  4: ['architecture', 'sharp', 'contrast'],
-  5: ['animal', 'grainy', 'eerie'],
-  6: ['still-life', 'pastel', 'nostalgic'],
-  7: ['abstract', 'minimal', 'warm-toned'],
-  8: ['figure', 'negative-space', 'centered-subject'],
-  9: ['animal', 'leading-lines', 'romantic'],
-};
-
 function findSimilarPhotos(lovedSamples, dislikedSamples, artistLibrary) {
-  const lovedTags = lovedSamples.flatMap(sample => dummyTagMap[sample.id] || []);
-  const dislikedTags = dislikedSamples.flatMap(sample => dummyTagMap[sample.id] || []);
+  const lovedTags = lovedSamples.flatMap(sample =>
+    generateMetadata(sample.id).metadata.tags
+  );
+
+  const dislikedTags = dislikedSamples.flatMap(sample =>
+    generateMetadata(sample.id).metadata.tags
+  );
 
   const matched = artistLibrary.filter(photo => {
     if (!photo.scrapeEligible) return false;
@@ -95,10 +89,9 @@ export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
         Your Curated Gallery
       </h2>
 
-      {/* Debug: show matched logic */}
       <div style={{ margin: '0 auto', maxWidth: '700px', textAlign: 'center', marginBottom: '2rem' }}>
-        <p style={{ fontSize: '1rem' }}><strong>Loved Tags:</strong> {lovedTags.join(', ')}</p>
-        <p style={{ fontSize: '1rem' }}><strong>Disliked Tags:</strong> {dislikedTags.join(', ')}</p>
+        <p><strong>Loved Tags:</strong> {lovedTags.join(', ')}</p>
+        <p><strong>Disliked Tags:</strong> {dislikedTags.join(', ')}</p>
       </div>
 
       {matched.length === 0 ? (
