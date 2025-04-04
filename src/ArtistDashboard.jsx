@@ -6,17 +6,19 @@ const MAX_FILE_SIZE_MB = 10;
 
 export default function ArtistDashboard() {
   const [heroImage, setHeroImage] = useState(null);
+  const [borderSkin, setBorderSkin] = useState(null);
+  const [centerBackground, setCenterBackground] = useState(null);
   const [images, setImages] = useState([]);
   const [dragging, setDragging] = useState(false);
 
-  const handleHeroUpload = (e) => {
+  const handleSingleUpload = (e, setState) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!ACCEPTED_FORMATS.includes(file.type)) return alert('Unsupported format');
     if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) return alert('File too large');
 
     const url = URL.createObjectURL(file);
-    setHeroImage({ name: file.name, url });
+    setState({ name: file.name, url });
   };
 
   const handleFiles = (fileList) => {
@@ -48,6 +50,25 @@ export default function ArtistDashboard() {
     );
   };
 
+  const renderPreview = (image, label) => (
+    image && (
+      <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+        <img
+          src={image.url}
+          alt={image.name}
+          style={{
+            maxWidth: '480px',
+            width: '100%',
+            height: 'auto',
+            borderRadius: '0.5rem',
+            boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
+          }}
+        />
+        <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{image.name}</p>
+      </div>
+    )
+  );
+
   return (
     <div style={{ padding: '2rem' }}>
       <h2
@@ -63,56 +84,46 @@ export default function ArtistDashboard() {
         Artist Dashboard
       </h2>
 
-      {/* Hero image upload */}
-      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <h3
-          style={{
-            fontSize: '1.5rem',
-            marginBottom: '0.75rem',
-            fontFamily: 'Parisienne, cursive',
-            color: '#1e3a8a',
-          }}
-        >
-          Upload Your Hero Image
-        </h3>
+      {/* Hero Image Upload */}
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h3 style={sectionHeading}>Upload Your Hero Image</h3>
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
-          onChange={handleHeroUpload}
+          onChange={(e) => handleSingleUpload(e, setHeroImage)}
           style={{ marginBottom: '0.5rem' }}
         />
-        {heroImage && (
-          <div style={{ marginTop: '1rem' }}>
-            <img
-              src={heroImage.url}
-              alt={heroImage.name}
-              style={{
-                maxWidth: '480px',
-                width: '100%',
-                height: 'auto',
-                borderRadius: '0.5rem',
-                boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
-              }}
-            />
-            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{heroImage.name}</p>
-          </div>
-        )}
+        {renderPreview(heroImage)}
       </div>
 
-      {/* Photo library heading */}
-      <h3
-        style={{
-          fontSize: '1.5rem',
-          textAlign: 'center',
-          margin: '2rem 0 1rem',
-          fontFamily: 'Parisienne, cursive',
-          color: '#1e3a8a',
-        }}
-      >
-        Your Photo Library
-      </h3>
+      {/* Border Skin Upload */}
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h3 style={sectionHeading}>Upload Your Border Skin</h3>
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          onChange={(e) => handleSingleUpload(e, setBorderSkin)}
+          style={{ marginBottom: '0.5rem' }}
+        />
+        {renderPreview(borderSkin)}
+      </div>
 
-      {/* Drag-and-drop zone */}
+      {/* Center Background Upload */}
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h3 style={sectionHeading}>Upload Your Center Background</h3>
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          onChange={(e) => handleSingleUpload(e, setCenterBackground)}
+          style={{ marginBottom: '0.5rem' }}
+        />
+        {renderPreview(centerBackground)}
+      </div>
+
+      {/* Photo Library Section */}
+      <h3 style={sectionHeading}>Your Photo Library</h3>
+
+      {/* Drag-and-Drop Zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -147,10 +158,9 @@ export default function ArtistDashboard() {
         </p>
       </div>
 
-      {/* OR separator */}
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file input, styled */}
+      {/* Multi-file input */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -228,3 +238,11 @@ export default function ArtistDashboard() {
     </div>
   );
 }
+
+const sectionHeading = {
+  fontSize: '1.5rem',
+  textAlign: 'center',
+  marginBottom: '0.75rem',
+  fontFamily: 'Parisienne, cursive',
+  color: '#1e3a8a',
+};
