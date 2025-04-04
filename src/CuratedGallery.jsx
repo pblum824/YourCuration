@@ -1,22 +1,68 @@
 import React from 'react';
 
-const sampleImages = [
-  { id: 1, src: '/samples/sample1.jpg' },
-  { id: 2, src: '/samples/sample2.jpg' },
-  { id: 3, src: '/samples/sample3.jpg' },
-  { id: 4, src: '/samples/sample4.jpg' },
-  { id: 5, src: '/samples/sample5.jpg' },
-  { id: 6, src: '/samples/sample6.jpg' },
-  { id: 7, src: '/samples/sample7.jpg' },
-  { id: 8, src: '/samples/sample8.jpg' },
-  { id: 9, src: '/samples/sample9.jpg' }
+const lovedSamples = [
+  {
+    id: 's01',
+    metadata: {
+      tags: ['animal', 'backlit', 'rule-of-thirds'],
+    },
+  },
 ];
 
-export default function CuratedGallery({ ratings }) {
-  const loved = ratings
-    .filter((r) => r.score === 3)
-    .map((r) => sampleImages.find((img) => img.id === r.id))
-    .filter(Boolean);
+const artistLibrary = [
+  {
+    id: 'a101',
+    src: '/artist-images/a101.jpg',
+    scrapeEligible: true,
+    metadata: {
+      tags: ['animal', 'backlit', 'rule-of-thirds', 'nostalgic'],
+    },
+  },
+  {
+    id: 'a102',
+    src: '/artist-images/a102.jpg',
+    scrapeEligible: true,
+    metadata: {
+      tags: ['figure', 'monochrome', 'soft-focus', 'centered-subject'],
+    },
+  },
+  {
+    id: 'a103',
+    src: '/artist-images/a103.jpg',
+    scrapeEligible: true,
+    metadata: {
+      tags: ['landscape', 'cool-toned', 'symmetry', 'calm'],
+    },
+  },
+  {
+    id: 'a104',
+    src: '/artist-images/a104.jpg',
+    scrapeEligible: true,
+    metadata: {
+      tags: ['animal', 'grainy', 'negative-space', 'eerie'],
+    },
+  },
+  {
+    id: 'a105',
+    src: '/artist-images/a105.jpg',
+    scrapeEligible: false,
+    metadata: {
+      tags: ['still-life', 'warm-toned', 'sharp'],
+    },
+  },
+];
+
+function findSimilarPhotos(lovedSamples, artistLibrary) {
+  const lovedTags = lovedSamples.flatMap(sample => sample.metadata?.tags || []);
+  return artistLibrary.filter(photo => {
+    if (!photo.scrapeEligible) return false;
+    const overlap = photo.metadata.tags.filter(tag => lovedTags.includes(tag));
+    return overlap.length > 0;
+  });
+}
+
+export default function CuratedGallery() {
+  const matched = findSimilarPhotos(lovedSamples, artistLibrary);
 
   return (
     <div style={{ paddingBottom: '2rem' }}>
@@ -33,9 +79,10 @@ export default function CuratedGallery({ ratings }) {
       >
         Your Curated Gallery
       </h2>
-      {loved.length === 0 ? (
+
+      {matched.length === 0 ? (
         <p style={{ textAlign: 'center', fontSize: '1.25rem', fontStyle: 'italic' }}>
-          No favorites selected yet. Try the Viewer first!
+          No matches found from artist library.
         </p>
       ) : (
         <div
@@ -46,11 +93,11 @@ export default function CuratedGallery({ ratings }) {
             gap: '2.5rem',
           }}
         >
-          {loved.map((img, index) => (
+          {matched.map((img, index) => (
             <img
               key={img?.id || index}
               src={img?.src}
-              alt={`Favorite ${img?.id}`}
+              alt={`Matched ${img?.id}`}
               style={{
                 maxWidth: '320px',
                 width: '100%',
