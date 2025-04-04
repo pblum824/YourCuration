@@ -16,14 +16,12 @@ export default function ArtistDashboard() {
     if (!file) return;
     if (!ACCEPTED_FORMATS.includes(file.type)) return alert('Unsupported format');
     if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) return alert('File too large');
-
     const url = URL.createObjectURL(file);
     setState({ name: file.name, url });
   };
 
   const handleFiles = (fileList) => {
     const files = Array.from(fileList);
-
     const validFiles = files.filter((file) => {
       const isValidType = ACCEPTED_FORMATS.includes(file.type);
       const isValidSize = file.size / 1024 / 1024 < MAX_FILE_SIZE_MB;
@@ -50,7 +48,7 @@ export default function ArtistDashboard() {
     );
   };
 
-  const renderPreview = (image, label) => (
+  const renderPreview = (image) =>
     image && (
       <div style={{ marginTop: '1rem', textAlign: 'center' }}>
         <img
@@ -66,64 +64,48 @@ export default function ArtistDashboard() {
         />
         <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{image.name}</p>
       </div>
-    )
-  );
+    );
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2
-        style={{
-          fontSize: '2.25rem',
-          fontWeight: 600,
-          textAlign: 'center',
-          marginBottom: '2rem',
-          color: '#1e3a8a',
-          fontFamily: 'Parisienne, cursive',
-        }}
-      >
-        Artist Dashboard
-      </h2>
+      <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Hero Image Upload */}
+      {/* Hero Image */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h3 style={sectionHeading}>Upload Your Hero Image</h3>
+        <h3 style={section}>Upload Your Hero Image</h3>
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
           onChange={(e) => handleSingleUpload(e, setHeroImage)}
-          style={{ marginBottom: '0.5rem' }}
         />
         {renderPreview(heroImage)}
       </div>
 
-      {/* Border Skin Upload */}
+      {/* Border Skin */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h3 style={sectionHeading}>Upload Your Border Skin</h3>
+        <h3 style={section}>Upload Your Border Skin</h3>
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
           onChange={(e) => handleSingleUpload(e, setBorderSkin)}
-          style={{ marginBottom: '0.5rem' }}
         />
         {renderPreview(borderSkin)}
       </div>
 
-      {/* Center Background Upload */}
+      {/* Center Background */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h3 style={sectionHeading}>Upload Your Center Background</h3>
+        <h3 style={section}>Upload Your Center Background</h3>
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
           onChange={(e) => handleSingleUpload(e, setCenterBackground)}
-          style={{ marginBottom: '0.5rem' }}
         />
         {renderPreview(centerBackground)}
       </div>
 
-      {/* Photo Library Section */}
-      <h3 style={sectionHeading}>Your Photo Library</h3>
+      {/* Photo Library */}
+      <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag-and-Drop Zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -160,7 +142,6 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file input */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -169,7 +150,7 @@ export default function ArtistDashboard() {
             borderRadius: '0.5rem',
             border: '1px solid #ccc',
             cursor: 'pointer',
-            fontFamily: 'Parisienne, cursive',
+            fontFamily: 'sans-serif', // intentional by design
             color: '#1e3a8a',
             backgroundColor: '#f9f9f9',
             boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
@@ -187,7 +168,7 @@ export default function ArtistDashboard() {
         </label>
       </div>
 
-      {/* Image previews */}
+      {/* Image Previews */}
       <div
         style={{
           display: 'flex',
@@ -239,7 +220,16 @@ export default function ArtistDashboard() {
   );
 }
 
-const sectionHeading = {
+const heading = {
+  fontSize: '2.25rem',
+  fontWeight: 600,
+  textAlign: 'center',
+  marginBottom: '2rem',
+  color: '#1e3a8a',
+  fontFamily: 'Parisienne, cursive',
+};
+
+const section = {
   fontSize: '1.5rem',
   textAlign: 'center',
   marginBottom: '0.75rem',
