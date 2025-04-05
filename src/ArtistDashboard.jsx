@@ -261,3 +261,6 @@ const section = {
   fontFamily: 'Parisienne, cursive',
   color: '#1e3a8a',
 };
+import AppReadyState from './AppReadyState';
+// ...
+<AppReadyState />
