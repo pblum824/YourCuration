@@ -54,14 +54,17 @@ export default function ArtistDashboard() {
     setUploadWarnings(newWarnings);
     setUploadCount(validFiles.length);
 
-    const newImages = validFiles.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      url: URL.createObjectURL(file),
-      file,
-      scrapeEligible: true,
-      metadata: generateMetadata(file.name),
-    }));
+    const newImages = validFiles.map((file, index) => {
+      const metadata = generateMetadata(file.name);
+      return {
+        id: `${Date.now()}-${index}`,
+        name: file.name,
+        url: URL.createObjectURL(file),
+        file,
+        scrapeEligible: true,
+        metadata
+      };
+    });
 
     setImages((prev) => [...prev, ...newImages]);
   };
@@ -185,6 +188,7 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
+      {/* Multi-file input */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -269,7 +273,10 @@ export default function ArtistDashboard() {
                 marginTop: '0.5rem',
               }}
             >
-              Tags: {img.metadata.tags.join(', ')}
+              Tags:{' '}
+              {img.metadata?.tags?.length
+                ? img.metadata.tags.join(', ')
+                : 'No tags available'}
             </p>
           </div>
         ))}
