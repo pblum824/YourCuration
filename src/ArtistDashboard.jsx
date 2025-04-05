@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import generateMetadata from './utils/generateMetadata';
+import AppReadyState from './AppReadyState';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_MB = 10;
@@ -252,6 +253,13 @@ export default function ArtistDashboard() {
     </div>
   );
 }
+<AppReadyState
+  heroImage={heroImage}
+  borderSkin={borderSkin}
+  centerBackground={centerBackground}
+  images={images}
+  clientSessions={[]} // stub for now
+/>
 
 const heading = {
   fontSize: '2.25rem',
