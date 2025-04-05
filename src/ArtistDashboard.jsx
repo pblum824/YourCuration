@@ -264,7 +264,7 @@ export default function ArtistDashboard() {
                 cursor: 'pointer',
               }}
             >
-              {img.scrapeEligible ? 'Eligible for Scrape' : 'Excluded'}
+              {img.scrapeEligible ? 'Accepted' : 'Excluded'}
             </button>
             <p
               style={{
