@@ -96,54 +96,6 @@ export default function ArtistDashboard() {
     setUploadWarnings([]);
     setUploadCount(0);
   };
-
-  const renderStyledUploader = (label, inputId, onChange, fileState) => (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-      <label
-        htmlFor={inputId}
-        style={{
-          padding: '0.75rem 1.25rem',
-          borderRadius: '0.5rem',
-          border: '1px solid #ccc',
-          cursor: 'pointer',
-          fontFamily: 'sans-serif',
-          color: '#1e3a8a',
-          backgroundColor: '#f9f9f9',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-        }}
-      >
-        {label}
-        <input
-          id={inputId}
-          type="file"
-          accept=".jpg,.jpeg,.png,.webp"
-          onChange={onChange}
-          style={{ display: 'none' }}
-        />
-      </label>
-      <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-        {fileState?.name || 'No file selected'}
-      </span>
-    </div>
-  );
-
-  const renderPreview = (image) =>
-    image && (
-      <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-        <img
-          src={image.url}
-          alt={image.name}
-          style={{
-            maxWidth: '480px',
-            width: '100%',
-            height: 'auto',
-            borderRadius: '0.5rem',
-            boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
-          }}
-        />
-      </div>
-    );
-
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
@@ -152,27 +104,26 @@ export default function ArtistDashboard() {
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Hero Image</h3>
         {renderStyledUploader('Choose File', 'hero-upload', (e) => handleSingleUpload(e, setHeroImage), heroImage)}
-        {renderPreview(heroImage)}
+        {heroImage && renderPreview(heroImage)}
       </div>
 
       {/* Border Skin */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Border Skin</h3>
         {renderStyledUploader('Choose File', 'border-upload', (e) => handleSingleUpload(e, setBorderSkin), borderSkin)}
-        {renderPreview(borderSkin)}
+        {borderSkin && renderPreview(borderSkin)}
       </div>
 
       {/* Center Background */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Center Background</h3>
         {renderStyledUploader('Choose File', 'center-upload', (e) => handleSingleUpload(e, setCenterBackground), centerBackground)}
-        {renderPreview(centerBackground)}
+        {centerBackground && renderPreview(centerBackground)}
       </div>
 
-      {/* Photo Library */}
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Upload Zone + Button */}
+      {/* Drag and Drop Upload */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -199,9 +150,7 @@ export default function ArtistDashboard() {
           boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
         }}
       >
-        <p style={{ marginBottom: '0.5rem' }}>
-          Drag and drop images here
-        </p>
+        <p style={{ marginBottom: '0.5rem' }}>Drag and drop images here</p>
         <p style={{ fontSize: '0.85rem', color: '#555' }}>
           (JPEG, PNG, or WebP only — Max 10MB each)
         </p>
@@ -209,7 +158,7 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file Input */}
+      {/* File Picker Upload */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -239,7 +188,7 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Warnings */}
+      {/* Upload Warnings */}
       {uploadWarnings.length > 0 && (
         <div style={{ marginTop: '1rem', textAlign: 'center', color: '#b91c1c' }}>
           <p style={{ fontWeight: 600 }}>Some files were not added:</p>
@@ -250,8 +199,7 @@ export default function ArtistDashboard() {
           </ul>
         </div>
       )}
-
-      {/* Image Grid */}
+      {/* Image Gallery */}
       <div
         style={{
           display: 'flex',
@@ -273,6 +221,8 @@ export default function ArtistDashboard() {
               }}
             />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
+
+            {/* Scrape toggle */}
             <button
               onClick={() => toggleScrape(img.id)}
               style={{
@@ -287,12 +237,14 @@ export default function ArtistDashboard() {
             >
               {img.scrapeEligible ? 'Accepted' : 'Excluded'}
             </button>
+
+            {/* Remove button — now same size */}
             <button
               onClick={() => removeImage(img.id)}
               style={{
-                marginTop: '0.25rem',
-                padding: '0.25rem 1rem',
-                fontSize: '0.9rem',
+                marginTop: '0.5rem',
+                padding: '0.5rem 1rem',
+                fontSize: '1rem',
                 borderRadius: '0.5rem',
                 border: '1px solid #ccc',
                 backgroundColor: '#fef2f2',
@@ -302,6 +254,8 @@ export default function ArtistDashboard() {
             >
               Remove
             </button>
+
+            {/* Metadata preview */}
             <p
               style={{
                 fontSize: '0.85rem',
@@ -315,6 +269,7 @@ export default function ArtistDashboard() {
         ))}
       </div>
 
+      {/* App Ready State */}
       <AppReadyState
         heroImage={heroImage}
         borderSkin={borderSkin}
@@ -323,6 +278,7 @@ export default function ArtistDashboard() {
         clientSessions={[]}
       />
 
+      {/* Reset Button */}
       <div style={{ textAlign: 'center', marginTop: '3rem' }}>
         <button
           onClick={resetDashboard}
@@ -339,23 +295,24 @@ export default function ArtistDashboard() {
           Reset Dashboard
         </button>
       </div>
-    </div>
-  );
-}
+      </div>
+      );
+      }
 
-const heading = {
-  fontSize: '2.25rem',
-  fontWeight: 600,
-  textAlign: 'center',
-  marginBottom: '2rem',
-  color: '#1e3a8a',
-  fontFamily: 'Parisienne, cursive',
-};
+      // Styles
+      const heading = {
+      fontSize: '2.25rem',
+      fontWeight: 600,
+      textAlign: 'center',
+      marginBottom: '2rem',
+      color: '#1e3a8a',
+      fontFamily: 'Parisienne, cursive',
+      };
 
-const section = {
-  fontSize: '1.5rem',
-  textAlign: 'center',
-  marginBottom: '0.75rem',
-  fontFamily: 'Parisienne, cursive',
-  color: '#1e3a8a',
-};
+      const section = {
+      fontSize: '1.5rem',
+      textAlign: 'center',
+      marginBottom: '0.75rem',
+      fontFamily: 'Parisienne, cursive',
+      color: '#1e3a8a',
+      };
