@@ -17,34 +17,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* NAVIGATION embedded in visual frame */}
+      {/* NAVIGATION - floating buttons only */}
       <nav style={{
         padding: '1rem',
         display: 'flex',
         justifyContent: 'center',
         gap: '1.25rem',
-        backgroundColor: '#f8f5e4', // linen tone
-        borderBottom: '1px solid #ccc',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
         position: 'relative',
         zIndex: 50,
       }}>
-        <button
-          onClick={() => setPage('artist')}
-          style={navButton}
-        >
+        <button onClick={() => setPage('artist')} style={navButton}>
           Artist Dashboard
         </button>
-        <button
-          onClick={() => setPage('viewer')}
-          style={navButton}
-        >
+        <button onClick={() => setPage('viewer')} style={navButton}>
           Viewer
         </button>
-        <button
-          onClick={() => setPage('gallery')}
-          style={navButton}
-        >
+        <button onClick={() => setPage('gallery')} style={navButton}>
           Curated Gallery
         </button>
       </nav>
@@ -91,4 +79,5 @@ const navButton = {
   border: '1px solid #ccc',
   cursor: 'pointer',
   transition: '0.2s ease-in-out',
+  boxShadow: '0 3px 6px rgba(0,0,0,0.2)',
 };
