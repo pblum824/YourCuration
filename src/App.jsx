@@ -17,14 +17,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* NAVIGATION (now elevated above skins) */}
+      {/* NAVIGATION embedded in visual frame */}
       <nav style={{
         padding: '1rem',
         display: 'flex',
         justifyContent: 'center',
         gap: '1.25rem',
+        backgroundColor: '#f8f5e4', // linen tone
         borderBottom: '1px solid #ccc',
-        backgroundColor: '#f5f5f5',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
         position: 'relative',
         zIndex: 50,
       }}>
