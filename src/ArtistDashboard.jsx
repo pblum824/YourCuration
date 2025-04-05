@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import generateMetadata from './utils/generateMetadata';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -8,9 +8,18 @@ export default function ArtistDashboard() {
   const [heroImage, setHeroImage] = useState(null);
   const [borderSkin, setBorderSkin] = useState(null);
   const [centerBackground, setCenterBackground] = useState(null);
-  const [images, setImages] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
+
+  const [images, setImages] = useState(() => {
+    const stored = localStorage.getItem('yourcuration_artistImages');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Save images to localStorage when updated
+  useEffect(() => {
+    localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
+  }, [images]);
 
   const handleSingleUpload = (e, setState) => {
     const file = e.target.files[0];
@@ -163,7 +172,6 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file input */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -261,6 +269,3 @@ const section = {
   fontFamily: 'Parisienne, cursive',
   color: '#1e3a8a',
 };
-import AppReadyState from './AppReadyState';
-// ...
-<AppReadyState />
