@@ -3,6 +3,7 @@ import ArtClientLanding from './ArtClientLanding';
 import ArtistDashboard from './ArtistDashboard';
 import SampleRater from './SampleRater';
 import CuratedGallery from './CuratedGallery';
+import SkinWrapper from './SkinWrapper';
 import { AnimatePresence } from 'framer-motion';
 
 export default function App() {
@@ -48,16 +49,22 @@ export default function App() {
         <AnimatePresence mode="wait">
           <>
             {page === 'client' && (
-              <ArtClientLanding key="client" onStart={() => setPage('viewer')} />
+              <SkinWrapper>
+                <ArtClientLanding key="client" onStart={() => setPage('viewer')} />
+              </SkinWrapper>
             )}
             {page === 'artist' && (
               <ArtistDashboard key="artist" />
             )}
             {page === 'viewer' && (
-              <SampleRater key="viewer" onComplete={handleRatingsComplete} />
+              <SkinWrapper>
+                <SampleRater key="viewer" onComplete={handleRatingsComplete} />
+              </SkinWrapper>
             )}
             {page === 'gallery' && (
-              <CuratedGallery key="gallery" lovedSamples={userRatings.filter(r => r.score === 3)} dislikedSamples={userRatings.filter(r => r.score === 1)} />
+              <SkinWrapper>
+                <CuratedGallery key="gallery" lovedSamples={userRatings.filter(r => r.score === 3)} dislikedSamples={userRatings.filter(r => r.score === 1)} />
+              </SkinWrapper>
             )}
           </>
         </AnimatePresence>
