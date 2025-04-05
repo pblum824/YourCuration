@@ -77,6 +77,26 @@ export default function ArtistDashboard() {
     );
   };
 
+  const removeImage = (id) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const resetDashboard = () => {
+    const confirmed = window.confirm('Are you sure you want to reset your dashboard? All uploaded content will be cleared.');
+    if (!confirmed) return;
+
+    localStorage.removeItem('yourcuration_artistImages');
+    localStorage.removeItem('yourcuration_ready');
+    localStorage.removeItem('yourcuration_readyBundle');
+
+    setHeroImage(null);
+    setBorderSkin(null);
+    setCenterBackground(null);
+    setImages([]);
+    setUploadWarnings([]);
+    setUploadCount(0);
+  };
+
   const renderStyledUploader = (label, inputId, onChange, fileState) => (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
       <label
@@ -152,6 +172,7 @@ export default function ArtistDashboard() {
       {/* Photo Library */}
       <h3 style={section}>Your Photo Library</h3>
 
+      {/* Upload Zone + Button */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -188,7 +209,7 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file input */}
+      {/* Multi-file Input */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -218,7 +239,7 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Warning Messages */}
+      {/* Warnings */}
       {uploadWarnings.length > 0 && (
         <div style={{ marginTop: '1rem', textAlign: 'center', color: '#b91c1c' }}>
           <p style={{ fontWeight: 600 }}>Some files were not added:</p>
@@ -230,7 +251,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Image Previews */}
+      {/* Image Grid */}
       <div
         style={{
           display: 'flex',
@@ -266,6 +287,21 @@ export default function ArtistDashboard() {
             >
               {img.scrapeEligible ? 'Accepted' : 'Excluded'}
             </button>
+            <button
+              onClick={() => removeImage(img.id)}
+              style={{
+                marginTop: '0.25rem',
+                padding: '0.25rem 1rem',
+                fontSize: '0.9rem',
+                borderRadius: '0.5rem',
+                border: '1px solid #ccc',
+                backgroundColor: '#fef2f2',
+                color: '#991b1b',
+                cursor: 'pointer',
+              }}
+            >
+              Remove
+            </button>
             <p
               style={{
                 fontSize: '0.85rem',
@@ -273,10 +309,7 @@ export default function ArtistDashboard() {
                 marginTop: '0.5rem',
               }}
             >
-              Tags:{' '}
-              {img.metadata?.tags?.length
-                ? img.metadata.tags.join(', ')
-                : 'No tags available'}
+              Tags: {img.metadata?.tags?.join(', ') || 'No tags'}
             </p>
           </div>
         ))}
@@ -289,6 +322,23 @@ export default function ArtistDashboard() {
         images={images}
         clientSessions={[]}
       />
+
+      <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+        <button
+          onClick={resetDashboard}
+          style={{
+            padding: '0.75rem 2rem',
+            fontSize: '1.25rem',
+            borderRadius: '0.5rem',
+            backgroundColor: '#fee2e2',
+            color: '#b91c1c',
+            border: '1px solid #ccc',
+            cursor: 'pointer',
+          }}
+        >
+          Reset Dashboard
+        </button>
+      </div>
     </div>
   );
 }
