@@ -17,7 +17,6 @@ export default function ArtistDashboard() {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Save images to localStorage when updated
   useEffect(() => {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
@@ -173,6 +172,7 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
+      {/* Multi-file input */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -250,16 +250,18 @@ export default function ArtistDashboard() {
           </div>
         ))}
       </div>
+
+      {/* Presentation Mode Toggle */}
+      <AppReadyState
+        heroImage={heroImage}
+        borderSkin={borderSkin}
+        centerBackground={centerBackground}
+        images={images}
+        clientSessions={[]}
+      />
     </div>
   );
 }
-<AppReadyState
-  heroImage={heroImage}
-  borderSkin={borderSkin}
-  centerBackground={centerBackground}
-  images={images}
-  clientSessions={[]} // stub for now
-/>
 
 const heading = {
   fontSize: '2.25rem',
