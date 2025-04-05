@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import generateMetadata from './utils/generateMetadata';
 import AppReadyState from './AppReadyState';
@@ -22,13 +24,6 @@ export default function ArtistDashboard() {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
 
-  const createImageObject = (file) => ({
-    name: file.name,
-    url: URL.createObjectURL(file),
-    scrapeEligible: true,
-    metadata: generateMetadata(file.name),
-  });
-
   const handleSingleUpload = (e, setState) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -47,8 +42,9 @@ export default function ArtistDashboard() {
       return;
     }
 
+    const metadata = generateMetadata(file.name);
     setUploadWarnings([]);
-    setState(createImageObject(file));
+    setState({ name: file.name, url: URL.createObjectURL(file), scrapeEligible: true, metadata });
   };
 
   const handleFiles = (fileList) => {
@@ -86,10 +82,10 @@ export default function ArtistDashboard() {
     setImages((prev) => [...prev, ...newImages]);
   };
 
-  const toggleScrape = (id, current, setState) => {
-    setState((prev) => ({
+  const toggleScrape = (imageSetter) => {
+    imageSetter((prev) => ({
       ...prev,
-      scrapeEligible: !current.scrapeEligible,
+      scrapeEligible: !prev.scrapeEligible,
     }));
   };
 
@@ -121,68 +117,75 @@ export default function ArtistDashboard() {
     setUploadCount(0);
   };
 
-  const renderImageSection = (title, state, setState, id) => (
-    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-      <h3 style={section}>Upload Your {title}</h3>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-        <label htmlFor={id} style={uploadButtonStyle}>
-          Choose File
-          <input
-            id={id}
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp"
-            onChange={(e) => handleSingleUpload(e, setState)}
-            style={{ display: 'none' }}
-          />
-        </label>
-        <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-          {state?.name || 'No file selected'}
-        </span>
-      </div>
-
-      {state && (
-        <>
-          <img
-            src={state.url}
-            alt={state.name}
-            style={{
-              maxWidth: '480px',
-              width: '100%',
-              height: 'auto',
-              borderRadius: '0.5rem',
-              boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
-            }}
-          />
-          <div style={{ marginTop: '0.5rem' }}>
-            <button
-              onClick={() => toggleScrape(id, state, setState)}
-              style={imageButton(state.scrapeEligible ? '#d1fae5' : '#fee2e2')}
-            >
-              {state.scrapeEligible ? 'Accepted' : 'Excluded'}
-            </button>
-            <button
-              onClick={() => setState(null)}
-              style={imageButton('#fef2f2', '#991b1b')}
-            >
-              Remove
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {renderImageSection('Hero Image', heroImage, setHeroImage, 'hero-upload')}
-      {renderImageSection('Border Skin', borderSkin, setBorderSkin, 'border-upload')}
-      {renderImageSection('Center Background', centerBackground, setCenterBackground, 'center-upload')}
+      {/* Hero / Border / Background Upload Sections */}
+      {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
+        ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
+        ['Center Background', centerBackground, setCenterBackground, 'center-upload']
+      ].map(([label, state, setter, inputId]) => (
+        <div key={inputId} style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <h3 style={section}>Upload Your {label}</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <label htmlFor={inputId} style={uploadButtonStyle}>
+              Choose File
+              <input
+                id={inputId}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={(e) => handleSingleUpload(e, setter)}
+                style={{ display: 'none' }}
+              />
+            </label>
+            <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+              {state?.name || 'No file selected'}
+            </span>
+          </div>
+          {state?.url && (
+            <>
+              <img
+                src={state.url}
+                alt={state.name}
+                style={{
+                  maxWidth: '480px',
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const msg = e.target.nextElementSibling;
+                  if (msg) msg.style.display = 'block';
+                }}
+              />
+              <p style={{ display: 'none', fontSize: '0.9rem', fontStyle: 'italic', color: '#991b1b' }}>
+                Preview not available
+              </p>
+              <div style={{ marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => toggleScrape(setter)}
+                  style={imageButton(state.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+                >
+                  {state.scrapeEligible ? 'Accepted' : 'Excluded'}
+                </button>
+                <button
+                  onClick={() => setter(null)}
+                  style={imageButton('#fef2f2', '#991b1b')}
+                >
+                  Remove
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
 
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag-and-drop zone and multi-upload UI (unchanged) */}
+      {/* Drag-and-drop uploader */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -215,6 +218,7 @@ export default function ArtistDashboard() {
         </p>
       </div>
 
+      {/* Manual upload */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -232,6 +236,7 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
+      {/* Warnings */}
       {uploadWarnings.length > 0 && (
         <div style={{ marginTop: '1rem', textAlign: 'center', color: '#b91c1c' }}>
           <p style={{ fontWeight: 600 }}>Some files were not added:</p>
@@ -243,20 +248,30 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Library image previews */}
+      {/* Library image grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
-            <img
-              src={img.url}
-              alt={img.name}
-              style={{
-                width: '100%',
-                height: 'auto',
-                borderRadius: '0.5rem',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-              }}
-            />
+            {img.url ? (
+              <img
+                src={img.url}
+                alt={img.name}
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const msg = e.target.nextElementSibling;
+                  if (msg) msg.style.display = 'block';
+                }}
+              />
+            ) : null}
+            <p style={{ display: 'none', fontSize: '0.9rem', fontStyle: 'italic', color: '#991b1b' }}>
+              Preview not available
+            </p>
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
             <button
               onClick={() => toggleImageScrape(img.id)}
