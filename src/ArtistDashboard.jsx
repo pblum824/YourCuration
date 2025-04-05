@@ -52,7 +52,7 @@ export default function ArtistDashboard() {
     );
   };
 
-  const renderStyledUploader = (label, inputId, onChange) => (
+  const renderStyledUploader = (label, inputId, onChange, fileState) => (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
       <label
         htmlFor={inputId}
@@ -76,6 +76,9 @@ export default function ArtistDashboard() {
           style={{ display: 'none' }}
         />
       </label>
+      <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+        {fileState?.name || 'No file selected'}
+      </span>
     </div>
   );
 
@@ -93,7 +96,6 @@ export default function ArtistDashboard() {
             boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
           }}
         />
-        <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{image.name}</p>
       </div>
     );
 
@@ -104,28 +106,27 @@ export default function ArtistDashboard() {
       {/* Hero Image */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Hero Image</h3>
-        {renderStyledUploader('Choose File', 'hero-upload', (e) => handleSingleUpload(e, setHeroImage))}
+        {renderStyledUploader('Choose File', 'hero-upload', (e) => handleSingleUpload(e, setHeroImage), heroImage)}
         {renderPreview(heroImage)}
       </div>
 
       {/* Border Skin */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Border Skin</h3>
-        {renderStyledUploader('Choose File', 'border-upload', (e) => handleSingleUpload(e, setBorderSkin))}
+        {renderStyledUploader('Choose File', 'border-upload', (e) => handleSingleUpload(e, setBorderSkin), borderSkin)}
         {renderPreview(borderSkin)}
       </div>
 
       {/* Center Background */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Center Background</h3>
-        {renderStyledUploader('Choose File', 'center-upload', (e) => handleSingleUpload(e, setCenterBackground))}
+        {renderStyledUploader('Choose File', 'center-upload', (e) => handleSingleUpload(e, setCenterBackground), centerBackground)}
         {renderPreview(centerBackground)}
       </div>
 
       {/* Photo Library */}
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag-and-drop zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -160,7 +161,6 @@ export default function ArtistDashboard() {
         </p>
       </div>
 
-      {/* OR separator */}
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
       {/* Multi-file input */}
