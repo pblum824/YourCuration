@@ -17,6 +17,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* NAVIGATION ALWAYS VISIBLE */}
       <nav style={{
         padding: '1rem',
         display: 'flex',
@@ -63,7 +64,11 @@ export default function App() {
             )}
             {page === 'gallery' && (
               <SkinWrapper>
-                <CuratedGallery key="gallery" lovedSamples={userRatings.filter(r => r.score === 3)} dislikedSamples={userRatings.filter(r => r.score === 1)} />
+                <CuratedGallery
+                  key="gallery"
+                  lovedSamples={userRatings.filter(r => r.score === 3)}
+                  dislikedSamples={userRatings.filter(r => r.score === 1)}
+                />
               </SkinWrapper>
             )}
           </>
