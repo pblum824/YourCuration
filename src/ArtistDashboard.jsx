@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import generateMetadata from './utils/generateMetadata';
 
-// layout alignment fix
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_MB = 10;
 
@@ -11,6 +10,7 @@ export default function ArtistDashboard() {
   const [centerBackground, setCenterBackground] = useState(null);
   const [images, setImages] = useState([]);
   const [dragging, setDragging] = useState(false);
+  const [uploadCount, setUploadCount] = useState(0);
 
   const handleSingleUpload = (e, setState) => {
     const file = e.target.files[0];
@@ -23,11 +23,14 @@ export default function ArtistDashboard() {
 
   const handleFiles = (fileList) => {
     const files = Array.from(fileList);
+
     const validFiles = files.filter((file) => {
       const isValidType = ACCEPTED_FORMATS.includes(file.type);
       const isValidSize = file.size / 1024 / 1024 < MAX_FILE_SIZE_MB;
       return isValidType && isValidSize;
     });
+
+    setUploadCount(validFiles.length);
 
     const newImages = validFiles.map((file, index) => ({
       id: `${Date.now()}-${index}`,
@@ -71,7 +74,7 @@ export default function ArtistDashboard() {
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Hero Image */}
+      {/* Hero Image Upload */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Hero Image</h3>
         <input
@@ -82,7 +85,7 @@ export default function ArtistDashboard() {
         {renderPreview(heroImage)}
       </div>
 
-      {/* Border Skin */}
+      {/* Border Skin Upload */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Border Skin</h3>
         <input
@@ -93,7 +96,7 @@ export default function ArtistDashboard() {
         {renderPreview(borderSkin)}
       </div>
 
-      {/* Center Background */}
+      {/* Center Background Upload */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h3 style={section}>Upload Your Center Background</h3>
         <input
@@ -104,9 +107,10 @@ export default function ArtistDashboard() {
         {renderPreview(centerBackground)}
       </div>
 
-      {/* Photo Library */}
+      {/* Photo Library Section */}
       <h3 style={section}>Your Photo Library</h3>
 
+      {/* Drag-and-drop zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -141,9 +145,11 @@ export default function ArtistDashboard() {
         </p>
       </div>
 
+      {/* OR separator */}
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+      {/* Multi-file input */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
           style={{
@@ -151,7 +157,7 @@ export default function ArtistDashboard() {
             borderRadius: '0.5rem',
             border: '1px solid #ccc',
             cursor: 'pointer',
-            fontFamily: 'sans-serif', // intentional by design
+            fontFamily: 'sans-serif',
             color: '#1e3a8a',
             backgroundColor: '#f9f9f9',
             boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
@@ -167,9 +173,12 @@ export default function ArtistDashboard() {
             style={{ display: 'none' }}
           />
         </label>
+        <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+          {uploadCount === 0 ? 'No files selected' : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
+        </span>
       </div>
 
-      {/* Image Previews */}
+      {/* Image previews */}
       <div
         style={{
           display: 'flex',
