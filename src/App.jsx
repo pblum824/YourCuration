@@ -17,7 +17,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* NAVIGATION ALWAYS VISIBLE */}
+      {/* NAVIGATION (now elevated above skins) */}
       <nav style={{
         padding: '1rem',
         display: 'flex',
@@ -25,6 +25,8 @@ export default function App() {
         gap: '1.25rem',
         borderBottom: '1px solid #ccc',
         backgroundColor: '#f5f5f5',
+        position: 'relative',
+        zIndex: 50,
       }}>
         <button
           onClick={() => setPage('artist')}
