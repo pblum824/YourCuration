@@ -4,11 +4,21 @@ import ArtistDashboard from './ArtistDashboard';
 import SampleRater from './SampleRater';
 import CuratedGallery from './CuratedGallery';
 import SkinWrapper from './SkinWrapper';
+import loadReadyBundle from './utils/loadReadyBundle';
 import { AnimatePresence } from 'framer-motion';
 
 export default function App() {
+  const bundle = loadReadyBundle();
+
   const [page, setPage] = useState('client');
   const [userRatings, setUserRatings] = useState([]);
+
+  // Restore ready bundle state if present
+  const [heroImage, setHeroImage] = useState(bundle?.heroImage || null);
+  const [borderSkin, setBorderSkin] = useState(bundle?.borderSkin || null);
+  const [centerBackground, setCenterBackground] = useState(bundle?.centerBackground || null);
+  const [artistImages, setArtistImages] = useState(bundle?.images || []);
+  const [clientSessions, setClientSessions] = useState(bundle?.clientSessions || []);
 
   const handleRatingsComplete = (ratings) => {
     setUserRatings(ratings);
@@ -46,7 +56,14 @@ export default function App() {
               </SkinWrapper>
             )}
             {page === 'artist' && (
-              <ArtistDashboard key="artist" />
+              <ArtistDashboard
+                key="artist"
+                heroImage={heroImage}
+                borderSkin={borderSkin}
+                centerBackground={centerBackground}
+                artistImages={artistImages}
+                clientSessions={clientSessions}
+              />
             )}
             {page === 'viewer' && (
               <SkinWrapper>
