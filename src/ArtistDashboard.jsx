@@ -11,6 +11,7 @@ export default function ArtistDashboard() {
   const [centerBackground, setCenterBackground] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
+  const [uploadWarnings, setUploadWarnings] = useState([]);
 
   const [images, setImages] = useState(() => {
     const stored = localStorage.getItem('yourcuration_artistImages');
@@ -32,13 +33,25 @@ export default function ArtistDashboard() {
 
   const handleFiles = (fileList) => {
     const files = Array.from(fileList);
+    const newWarnings = [];
 
     const validFiles = files.filter((file) => {
-      const isValidType = ACCEPTED_FORMATS.includes(file.type);
-      const isValidSize = file.size / 1024 / 1024 < MAX_FILE_SIZE_MB;
-      return isValidType && isValidSize;
+      if (!file.type || !file.size) {
+        newWarnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
+        return false;
+      }
+      if (!ACCEPTED_FORMATS.includes(file.type)) {
+        newWarnings.push(`${file.name} skipped: unsupported file type.`);
+        return false;
+      }
+      if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
+        newWarnings.push(`${file.name} skipped: file exceeds 10MB.`);
+        return false;
+      }
+      return true;
     });
 
+    setUploadWarnings(newWarnings);
     setUploadCount(validFiles.length);
 
     const newImages = validFiles.map((file, index) => ({
@@ -172,7 +185,6 @@ export default function ArtistDashboard() {
 
       <p style={{ textAlign: 'center', marginBottom: '1rem' }}>— or —</p>
 
-      {/* Multi-file input */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label
           htmlFor="multiUpload"
@@ -201,6 +213,18 @@ export default function ArtistDashboard() {
           {uploadCount === 0 ? 'No files selected' : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
         </span>
       </div>
+
+      {/* Warning Messages */}
+      {uploadWarnings.length > 0 && (
+        <div style={{ marginTop: '1rem', textAlign: 'center', color: '#b91c1c' }}>
+          <p style={{ fontWeight: 600 }}>Some files were not added:</p>
+          <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+            {uploadWarnings.map((warn, i) => (
+              <li key={i} style={{ fontSize: '0.9rem' }}>{warn}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Image Previews */}
       <div
@@ -251,7 +275,6 @@ export default function ArtistDashboard() {
         ))}
       </div>
 
-      {/* Presentation Mode Toggle */}
       <AppReadyState
         heroImage={heroImage}
         borderSkin={borderSkin}
