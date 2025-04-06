@@ -4,7 +4,6 @@ import generateMetadata from './utils/generateMetadata';
 import AppReadyState from './AppReadyState';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE_MB = 10;
 
 export default function ArtistDashboard() {
   const [heroImage, setHeroImage] = useState(null);
@@ -69,16 +68,12 @@ export default function ArtistDashboard() {
     const newWarnings = [];
 
     const validFiles = files.filter((file) => {
-      if (!file.type || !file.size) {
-        newWarnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
+      if (!file.type) {
+        newWarnings.push(`${file.name || 'Unnamed file'} skipped: missing type.`);
         return false;
       }
       if (!ACCEPTED_FORMATS.includes(file.type)) {
         newWarnings.push(`${file.name} skipped: unsupported file type.`);
-        return false;
-      }
-      if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
-        newWarnings.push(`${file.name} skipped: file exceeds 10MB.`);
         return false;
       }
       return true;
@@ -96,12 +91,8 @@ export default function ArtistDashboard() {
     if (!file) return;
 
     const warnings = [];
-    if (!file.type || !file.size) {
-      warnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
-    } else if (!ACCEPTED_FORMATS.includes(file.type)) {
+    if (!file.type || !ACCEPTED_FORMATS.includes(file.type)) {
       warnings.push(`${file.name} skipped: unsupported file type.`);
-    } else if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
-      warnings.push(`${file.name} skipped: file exceeds 10MB.`);
     }
 
     if (warnings.length > 0) {
@@ -149,30 +140,11 @@ export default function ArtistDashboard() {
     setUploadCount(0);
   };
 
-  const exportGallery = () => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const bundle = {
-      timestamp,
-      heroImage,
-      borderSkin,
-      centerBackground,
-      images,
-    };
-    const json = JSON.stringify(bundle, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `YourCuration-Gallery-${timestamp}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Presentation Mode + Top Controls */}
+      {/* Top Controls: Presentation Mode */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <AppReadyState
           heroImage={heroImage}
@@ -182,10 +154,10 @@ export default function ArtistDashboard() {
           clientSessions={[]}
         />
         <div style={{ marginTop: '1.5rem' }}>
-          <button onClick={exportGallery} style={controlButton}>
+          <button onClick={() => alert('Export logic coming soon!')} style={controlButton}>
             Export YourCuration Gallery
           </button>
-          <button onClick={() => alert('Import logic coming soon')} style={controlButton}>
+          <button onClick={() => alert('Import logic coming soon!')} style={controlButton}>
             Import YourCuration Gallery
           </button>
           <button
@@ -197,7 +169,7 @@ export default function ArtistDashboard() {
         </div>
       </div>
 
-      {/* Upload Sections */}
+      {/* Upload Sections: Hero, Border, Background */}
       {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
         ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
         ['Center Background', centerBackground, setCenterBackground, 'center-upload']
@@ -231,15 +203,7 @@ export default function ArtistDashboard() {
                   borderRadius: '0.5rem',
                   boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
                 }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const msg = e.target.nextElementSibling;
-                  if (msg) msg.style.display = 'block';
-                }}
               />
-              <p style={{ display: 'none', fontSize: '0.9rem', fontStyle: 'italic', color: '#991b1b' }}>
-                Preview not available
-              </p>
               <div style={{ marginTop: '0.5rem' }}>
                 <button
                   onClick={() => toggleScrape(setter)}
@@ -261,7 +225,19 @@ export default function ArtistDashboard() {
 
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag-and-drop + compression message */}
+      {/* Upload Warnings */}
+      {uploadWarnings.length > 0 && (
+        <div style={{ marginBottom: '1rem', textAlign: 'center', color: '#b91c1c' }}>
+          <p style={{ fontWeight: 600 }}>Some files were not added:</p>
+          <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+            {uploadWarnings.map((warn, i) => (
+              <li key={i} style={{ fontSize: '0.9rem' }}>{warn}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Drag-and-Drop Zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -290,14 +266,14 @@ export default function ArtistDashboard() {
       >
         <p style={{ marginBottom: '0.5rem' }}>Drag and drop images here</p>
         <p style={{ fontSize: '0.85rem', color: '#555' }}>
-          (JPEG, PNG, or WebP only — Max 10MB each)
+          (JPEG, PNG, or WebP only)
         </p>
         <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#666' }}>
-          YourCuration automatically optimizes images for preview. Use full-res outside this tool if needed.
+          YourCuration automatically optimizes uploaded images for preview. Use full-res outside this tool if needed.
         </p>
       </div>
 
-      {/* Multi-upload input */}
+      {/* File Picker */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -315,18 +291,6 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Warnings */}
-      {uploadWarnings.length > 0 && (
-        <div style={{ marginBottom: '1rem', textAlign: 'center', color: '#b91c1c' }}>
-          <p style={{ fontWeight: 600 }}>Some files were not added:</p>
-          <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-            {uploadWarnings.map((warn, i) => (
-              <li key={i} style={{ fontSize: '0.9rem' }}>{warn}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* Image Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
@@ -341,16 +305,8 @@ export default function ArtistDashboard() {
                   borderRadius: '0.5rem',
                   boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
                 }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const msg = e.target.nextElementSibling;
-                  if (msg) msg.style.display = 'block';
-                }}
               />
             ) : null}
-            <p style={{ display: 'none', fontSize: '0.9rem', fontStyle: 'italic', color: '#991b1b' }}>
-              Preview not available
-            </p>
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
             <button
               onClick={() => toggleImageScrape(img.id)}
