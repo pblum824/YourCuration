@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import generateMetadata from './utils/generateMetadata';
 import AppReadyState from './AppReadyState';
@@ -24,7 +23,48 @@ export default function ArtistDashboard() {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
 
-  const handleSingleUpload = (e, setState) => {
+  const compressImage = async (file, maxWidth = 1600) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            },
+            file.type,
+            0.75 // quality (JPEG/WebP)
+          );
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const createImageObject = async (file) => {
+    const compressed = await compressImage(file);
+    const url = URL.createObjectURL(compressed);
+    return {
+      name: file.name,
+      url,
+      scrapeEligible: true,
+      metadata: generateMetadata(file.name),
+    };
+  };
+
+  const handleSingleUpload = async (e, setState) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -42,12 +82,12 @@ export default function ArtistDashboard() {
       return;
     }
 
-    const metadata = generateMetadata(file.name);
+    const imageObj = await createImageObject(file);
     setUploadWarnings([]);
-    setState({ name: file.name, url: URL.createObjectURL(file), scrapeEligible: true, metadata });
+    setState(imageObj);
   };
 
-  const handleFiles = (fileList) => {
+  const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
     const newWarnings = [];
 
@@ -70,15 +110,7 @@ export default function ArtistDashboard() {
     setUploadWarnings(newWarnings);
     setUploadCount(validFiles.length);
 
-    const newImages = validFiles.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      url: URL.createObjectURL(file),
-      file,
-      scrapeEligible: true,
-      metadata: generateMetadata(file.name),
-    }));
-
+    const newImages = await Promise.all(validFiles.map(createImageObject));
     setImages((prev) => [...prev, ...newImages]);
   };
 
@@ -120,6 +152,14 @@ export default function ArtistDashboard() {
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
+
+      {/* Artist Upload Optimization Message */}
+      <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 2rem', fontSize: '0.95rem', color: '#555', fontStyle: 'italic' }}>
+        <p>
+          For efficiency, YourCuration automatically optimizes uploaded images for preview. 
+          We recommend reviewing full-resolution images with your client after their preferences are known.
+        </p>
+      </div>
 
       {/* Hero / Border / Background Upload Sections */}
       {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
@@ -185,60 +225,9 @@ export default function ArtistDashboard() {
 
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag-and-drop uploader */}
-      <div
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          handleFiles(e.dataTransfer.files);
-        }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        style={{
-          border: '2px dashed #aaa',
-          borderRadius: '1rem',
-          padding: '2rem',
-          textAlign: 'center',
-          backgroundColor: dragging ? '#f0fdfa' : '#fff',
-          cursor: 'pointer',
-          marginBottom: '1.25rem',
-          width: '80%',
-          maxWidth: '600px',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-        }}
-      >
-        <p style={{ marginBottom: '0.5rem' }}>Drag and drop images here</p>
-        <p style={{ fontSize: '0.85rem', color: '#555' }}>
-          (JPEG, PNG, or WebP only — Max 10MB each)
-        </p>
-      </div>
-
-      {/* Manual upload */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <label htmlFor="multiUpload" style={uploadButtonStyle}>
-          Choose Files
-          <input
-            id="multiUpload"
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp"
-            multiple
-            onChange={(e) => handleFiles(e.target.files)}
-            style={{ display: 'none' }}
-          />
-        </label>
-        <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-          {uploadCount === 0 ? 'No files selected' : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
-        </span>
-      </div>
-
-      {/* Warnings */}
+      {/* Upload warnings */}
       {uploadWarnings.length > 0 && (
-        <div style={{ marginTop: '1rem', textAlign: 'center', color: '#b91c1c' }}>
+        <div style={{ marginBottom: '1rem', textAlign: 'center', color: '#b91c1c' }}>
           <p style={{ fontWeight: 600 }}>Some files were not added:</p>
           <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
             {uploadWarnings.map((warn, i) => (
@@ -248,7 +237,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Library image grid */}
+      {/* Image Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
@@ -292,6 +281,7 @@ export default function ArtistDashboard() {
         ))}
       </div>
 
+      {/* Ready + Reset */}
       <AppReadyState
         heroImage={heroImage}
         borderSkin={borderSkin}
@@ -299,7 +289,6 @@ export default function ArtistDashboard() {
         images={images}
         clientSessions={[]}
       />
-
       <div style={{ textAlign: 'center', marginTop: '3rem' }}>
         <button
           onClick={resetDashboard}
@@ -320,7 +309,7 @@ export default function ArtistDashboard() {
   );
 }
 
-// Shared styles
+// Styles
 const heading = {
   fontSize: '2.25rem',
   fontWeight: 600,
