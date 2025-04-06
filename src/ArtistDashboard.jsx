@@ -44,7 +44,7 @@ export default function ArtistDashboard() {
               resolve(compressedFile);
             },
             file.type,
-            0.75 // quality (JPEG/WebP)
+            0.75
           );
         };
         img.src = event.target.result;
@@ -57,34 +57,12 @@ export default function ArtistDashboard() {
     const compressed = await compressImage(file);
     const url = URL.createObjectURL(compressed);
     return {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
       name: file.name,
       url,
       scrapeEligible: true,
       metadata: generateMetadata(file.name),
     };
-  };
-
-  const handleSingleUpload = async (e, setState) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const warnings = [];
-    if (!file.type || !file.size) {
-      warnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
-    } else if (!ACCEPTED_FORMATS.includes(file.type)) {
-      warnings.push(`${file.name} skipped: unsupported file type.`);
-    } else if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
-      warnings.push(`${file.name} skipped: file exceeds 10MB.`);
-    }
-
-    if (warnings.length > 0) {
-      setUploadWarnings(warnings);
-      return;
-    }
-
-    const imageObj = await createImageObject(file);
-    setUploadWarnings([]);
-    setState(imageObj);
   };
 
   const handleFiles = async (fileList) => {
@@ -153,7 +131,7 @@ export default function ArtistDashboard() {
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Artist Upload Optimization Message */}
+      {/* Optimization notice */}
       <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 2rem', fontSize: '0.95rem', color: '#555', fontStyle: 'italic' }}>
         <p>
           For efficiency, YourCuration automatically optimizes uploaded images for preview. 
@@ -161,69 +139,60 @@ export default function ArtistDashboard() {
         </p>
       </div>
 
-      {/* Hero / Border / Background Upload Sections */}
-      {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
-        ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
-        ['Center Background', centerBackground, setCenterBackground, 'center-upload']
-      ].map(([label, state, setter, inputId]) => (
-        <div key={inputId} style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h3 style={section}>Upload Your {label}</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <label htmlFor={inputId} style={uploadButtonStyle}>
-              Choose File
-              <input
-                id={inputId}
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp"
-                onChange={(e) => handleSingleUpload(e, setter)}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-              {state?.name || 'No file selected'}
-            </span>
-          </div>
-          {state?.url && (
-            <>
-              <img
-                src={state.url}
-                alt={state.name}
-                style={{
-                  maxWidth: '480px',
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
-                }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const msg = e.target.nextElementSibling;
-                  if (msg) msg.style.display = 'block';
-                }}
-              />
-              <p style={{ display: 'none', fontSize: '0.9rem', fontStyle: 'italic', color: '#991b1b' }}>
-                Preview not available
-              </p>
-              <div style={{ marginTop: '0.5rem' }}>
-                <button
-                  onClick={() => toggleScrape(setter)}
-                  style={imageButton(state.scrapeEligible ? '#d1fae5' : '#fee2e2')}
-                >
-                  {state.scrapeEligible ? 'Accepted' : 'Excluded'}
-                </button>
-                <button
-                  onClick={() => setter(null)}
-                  style={imageButton('#fef2f2', '#991b1b')}
-                >
-                  Remove
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      ))}
-
+      {/* You can re-insert the renderImageSection pattern here for heroImage, borderSkin, centerBackground */}
+      {/* Photo Library Section */}
       <h3 style={section}>Your Photo Library</h3>
+
+      {/* Drag-and-drop */}
+      <div
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          handleFiles(e.dataTransfer.files);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        style={{
+          border: '2px dashed #aaa',
+          borderRadius: '1rem',
+          padding: '2rem',
+          textAlign: 'center',
+          backgroundColor: dragging ? '#f0fdfa' : '#fff',
+          cursor: 'pointer',
+          marginBottom: '1.25rem',
+          width: '80%',
+          maxWidth: '600px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+        }}
+      >
+        <p style={{ marginBottom: '0.5rem' }}>Drag and drop images here</p>
+        <p style={{ fontSize: '0.85rem', color: '#555' }}>
+          (JPEG, PNG, or WebP only — Max 10MB each)
+        </p>
+      </div>
+
+      {/* Multi-upload button */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+        <label htmlFor="multiUpload" style={uploadButtonStyle}>
+          Choose Files
+          <input
+            id="multiUpload"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            multiple
+            onChange={(e) => handleFiles(e.target.files)}
+            style={{ display: 'none' }}
+          />
+        </label>
+        <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+          {uploadCount === 0 ? 'No files selected' : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
+        </span>
+      </div>
 
       {/* Upload warnings */}
       {uploadWarnings.length > 0 && (
@@ -237,7 +206,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Image Grid */}
+      {/* Image previews */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
@@ -289,6 +258,7 @@ export default function ArtistDashboard() {
         images={images}
         clientSessions={[]}
       />
+
       <div style={{ textAlign: 'center', marginTop: '3rem' }}>
         <button
           onClick={resetDashboard}
