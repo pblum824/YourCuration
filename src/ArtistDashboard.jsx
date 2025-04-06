@@ -149,6 +149,25 @@ export default function ArtistDashboard() {
     setUploadCount(0);
   };
 
+  const exportGallery = () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const bundle = {
+      timestamp,
+      heroImage,
+      borderSkin,
+      centerBackground,
+      images,
+    };
+    const json = JSON.stringify(bundle, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `YourCuration-Gallery-${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
@@ -163,16 +182,10 @@ export default function ArtistDashboard() {
           clientSessions={[]}
         />
         <div style={{ marginTop: '1.5rem' }}>
-          <button
-            onClick={() => alert('Export logic coming soon!')}
-            style={controlButton}
-          >
+          <button onClick={exportGallery} style={controlButton}>
             Export YourCuration Gallery
           </button>
-          <button
-            onClick={() => alert('Import logic coming soon!')}
-            style={controlButton}
-          >
+          <button onClick={() => alert('Import logic coming soon')} style={controlButton}>
             Import YourCuration Gallery
           </button>
           <button
@@ -248,7 +261,7 @@ export default function ArtistDashboard() {
 
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag & Drop Upload Box */}
+      {/* Drag-and-drop + compression message */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -280,11 +293,11 @@ export default function ArtistDashboard() {
           (JPEG, PNG, or WebP only — Max 10MB each)
         </p>
         <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#666' }}>
-          YourCuration automatically optimizes uploaded images for speed. Use full-res separately if needed.
+          YourCuration automatically optimizes images for preview. Use full-res outside this tool if needed.
         </p>
       </div>
 
-      {/* Manual File Upload */}
+      {/* Multi-upload input */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -314,7 +327,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Photo Preview Grid */}
+      {/* Image Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
