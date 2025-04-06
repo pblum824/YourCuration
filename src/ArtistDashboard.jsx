@@ -140,11 +140,30 @@ export default function ArtistDashboard() {
     setUploadCount(0);
   };
 
+  const exportGallery = () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const bundle = {
+      timestamp,
+      heroImage,
+      borderSkin,
+      centerBackground,
+      images,
+    };
+    const json = JSON.stringify(bundle, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `YourCuration-Gallery-${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Top Controls: Presentation Mode */}
+      {/* Top Buttons and Ready State */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <AppReadyState
           heroImage={heroImage}
@@ -169,7 +188,7 @@ export default function ArtistDashboard() {
         </div>
       </div>
 
-      {/* Upload Sections: Hero, Border, Background */}
+      {/* Uploads: Hero, Border, Background */}
       {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
         ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
         ['Center Background', centerBackground, setCenterBackground, 'center-upload']
@@ -237,7 +256,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Drag-and-Drop Zone */}
+      {/* Drag and Drop Upload */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -269,11 +288,11 @@ export default function ArtistDashboard() {
           (JPEG, PNG, or WebP only)
         </p>
         <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#666' }}>
-          YourCuration automatically optimizes uploaded images for preview. Use full-res outside this tool if needed.
+          YourCuration automatically optimizes uploaded images for preview. Use full-res separately if needed.
         </p>
       </div>
 
-      {/* File Picker */}
+      {/* Manual Upload Picker */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -291,11 +310,11 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Image Grid */}
+      {/* Image Preview Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
-            {img.url ? (
+            {img.url && (
               <img
                 src={img.url}
                 alt={img.name}
@@ -306,7 +325,7 @@ export default function ArtistDashboard() {
                   boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
                 }}
               />
-            ) : null}
+            )}
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
             <button
               onClick={() => toggleImageScrape(img.id)}
