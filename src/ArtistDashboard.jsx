@@ -63,6 +63,46 @@ export default function ArtistDashboard() {
     };
   };
 
+  const imageToBase64 = (url) => {
+    return new Promise((resolve) => {
+      fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+    });
+  };
+
+  const exportGallery = async () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+    const exportImage = async (img) => ({
+      name: img.name,
+      data: await imageToBase64(img.url),
+      scrapeEligible: img.scrapeEligible,
+      metadata: img.metadata,
+    });
+
+    const bundle = {
+      timestamp,
+      heroImage: heroImage ? await exportImage(heroImage) : null,
+      borderSkin: borderSkin ? await exportImage(borderSkin) : null,
+      centerBackground: centerBackground ? await exportImage(centerBackground) : null,
+      images: await Promise.all(images.map(exportImage)),
+    };
+
+    const json = JSON.stringify(bundle, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `YourCuration-Gallery-${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
     const newWarnings = [];
@@ -140,30 +180,11 @@ export default function ArtistDashboard() {
     setUploadCount(0);
   };
 
-  const exportGallery = () => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const bundle = {
-      timestamp,
-      heroImage,
-      borderSkin,
-      centerBackground,
-      images,
-    };
-    const json = JSON.stringify(bundle, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `YourCuration-Gallery-${timestamp}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Top Buttons and Ready State */}
+      {/* Top Controls: Presentation Mode + Export/Import/Reset */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <AppReadyState
           heroImage={heroImage}
@@ -188,7 +209,7 @@ export default function ArtistDashboard() {
         </div>
       </div>
 
-      {/* Uploads: Hero, Border, Background */}
+      {/* Upload Sections */}
       {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
         ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
         ['Center Background', centerBackground, setCenterBackground, 'center-upload']
@@ -256,7 +277,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Drag and Drop Upload */}
+      {/* Drag-and-Drop Zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -288,11 +309,11 @@ export default function ArtistDashboard() {
           (JPEG, PNG, or WebP only)
         </p>
         <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#666' }}>
-          YourCuration automatically optimizes uploaded images for preview. Use full-res separately if needed.
+          YourCuration automatically optimizes uploaded images for preview. Use full-res outside this tool if needed.
         </p>
       </div>
 
-      {/* Manual Upload Picker */}
+      {/* File Picker */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -310,7 +331,7 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Image Preview Grid */}
+      {/* Preview Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
