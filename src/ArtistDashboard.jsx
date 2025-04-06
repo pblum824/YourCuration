@@ -65,6 +65,29 @@ export default function ArtistDashboard() {
     };
   };
 
+  const handleSingleUpload = async (e, setState) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const warnings = [];
+    if (!file.type || !file.size) {
+      warnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
+    } else if (!ACCEPTED_FORMATS.includes(file.type)) {
+      warnings.push(`${file.name} skipped: unsupported file type.`);
+    } else if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
+      warnings.push(`${file.name} skipped: file exceeds 10MB.`);
+    }
+
+    if (warnings.length > 0) {
+      setUploadWarnings(warnings);
+      return;
+    }
+
+    const imageObj = await createImageObject(file);
+    setUploadWarnings([]);
+    setState(imageObj);
+  };
+
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
     const newWarnings = [];
@@ -131,19 +154,71 @@ export default function ArtistDashboard() {
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Optimization notice */}
-      <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 2rem', fontSize: '0.95rem', color: '#555', fontStyle: 'italic' }}>
-        <p>
-          For efficiency, YourCuration automatically optimizes uploaded images for preview. 
-          We recommend reviewing full-resolution images with your client after their preferences are known.
-        </p>
-      </div>
+      {/* Upload UI for Hero, Border, and Center */}
+      {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
+        ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
+        ['Center Background', centerBackground, setCenterBackground, 'center-upload']
+      ].map(([label, state, setter, inputId]) => (
+        <div key={inputId} style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <h3 style={section}>Upload Your {label}</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <label htmlFor={inputId} style={uploadButtonStyle}>
+              Choose File
+              <input
+                id={inputId}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={(e) => handleSingleUpload(e, setter)}
+                style={{ display: 'none' }}
+              />
+            </label>
+            <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+              {state?.name || 'No file selected'}
+            </span>
+          </div>
+          {state?.url && (
+            <>
+              <img
+                src={state.url}
+                alt={state.name}
+                style={{
+                  maxWidth: '480px',
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const msg = e.target.nextElementSibling;
+                  if (msg) msg.style.display = 'block';
+                }}
+              />
+              <p style={{ display: 'none', fontSize: '0.9rem', fontStyle: 'italic', color: '#991b1b' }}>
+                Preview not available
+              </p>
+              <div style={{ marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => toggleScrape(setter)}
+                  style={imageButton(state.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+                >
+                  {state.scrapeEligible ? 'Accepted' : 'Excluded'}
+                </button>
+                <button
+                  onClick={() => setter(null)}
+                  style={imageButton('#fef2f2', '#991b1b')}
+                >
+                  Remove
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
 
-      {/* You can re-insert the renderImageSection pattern here for heroImage, borderSkin, centerBackground */}
-      {/* Photo Library Section */}
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag-and-drop */}
+      {/* Drag and drop upload zone */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -174,9 +249,13 @@ export default function ArtistDashboard() {
         <p style={{ fontSize: '0.85rem', color: '#555' }}>
           (JPEG, PNG, or WebP only — Max 10MB each)
         </p>
+        <p style={{ fontSize: '0.85rem', color: '#666', fontStyle: 'italic', marginTop: '0.5rem' }}>
+          For efficiency, YourCuration automatically optimizes uploaded images for preview. 
+          Review full-resolution images separately once preferences are known.
+        </p>
       </div>
 
-      {/* Multi-upload button */}
+      {/* Manual file picker */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -206,7 +285,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Image previews */}
+      {/* Preview Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
@@ -250,7 +329,7 @@ export default function ArtistDashboard() {
         ))}
       </div>
 
-      {/* Ready + Reset */}
+      {/* AppReadyState + Reset */}
       <AppReadyState
         heroImage={heroImage}
         borderSkin={borderSkin}
@@ -279,7 +358,7 @@ export default function ArtistDashboard() {
   );
 }
 
-// Styles
+// Style definitions
 const heading = {
   fontSize: '2.25rem',
   fontWeight: 600,
