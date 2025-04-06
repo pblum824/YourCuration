@@ -13,7 +13,6 @@ export default function ArtistDashboard() {
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
-
   const [images, setImages] = useState(() => {
     const stored = localStorage.getItem('yourcuration_artistImages');
     return stored ? JSON.parse(stored) : [];
@@ -65,29 +64,6 @@ export default function ArtistDashboard() {
     };
   };
 
-  const handleSingleUpload = async (e, setState) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const warnings = [];
-    if (!file.type || !file.size) {
-      warnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
-    } else if (!ACCEPTED_FORMATS.includes(file.type)) {
-      warnings.push(`${file.name} skipped: unsupported file type.`);
-    } else if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
-      warnings.push(`${file.name} skipped: file exceeds 10MB.`);
-    }
-
-    if (warnings.length > 0) {
-      setUploadWarnings(warnings);
-      return;
-    }
-
-    const imageObj = await createImageObject(file);
-    setUploadWarnings([]);
-    setState(imageObj);
-  };
-
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
     const newWarnings = [];
@@ -115,6 +91,29 @@ export default function ArtistDashboard() {
     setImages((prev) => [...prev, ...newImages]);
   };
 
+  const handleSingleUpload = async (e, setState) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const warnings = [];
+    if (!file.type || !file.size) {
+      warnings.push(`${file.name || 'Unnamed file'} skipped: not fully downloaded or invalid format.`);
+    } else if (!ACCEPTED_FORMATS.includes(file.type)) {
+      warnings.push(`${file.name} skipped: unsupported file type.`);
+    } else if (file.size / 1024 / 1024 > MAX_FILE_SIZE_MB) {
+      warnings.push(`${file.name} skipped: file exceeds 10MB.`);
+    }
+
+    if (warnings.length > 0) {
+      setUploadWarnings(warnings);
+      return;
+    }
+
+    const imageObj = await createImageObject(file);
+    setUploadWarnings([]);
+    setState(imageObj);
+  };
+
   const toggleScrape = (imageSetter) => {
     imageSetter((prev) => ({
       ...prev,
@@ -135,7 +134,7 @@ export default function ArtistDashboard() {
   };
 
   const resetDashboard = () => {
-    const confirmed = window.confirm('Are you sure you want to reset your dashboard? All uploaded content will be cleared.');
+    const confirmed = window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.');
     if (!confirmed) return;
 
     localStorage.removeItem('yourcuration_artistImages');
@@ -154,7 +153,38 @@ export default function ArtistDashboard() {
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Upload UI for Hero, Border, and Center */}
+      {/* Presentation Mode + Top Controls */}
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <AppReadyState
+          heroImage={heroImage}
+          borderSkin={borderSkin}
+          centerBackground={centerBackground}
+          images={images}
+          clientSessions={[]}
+        />
+        <div style={{ marginTop: '1.5rem' }}>
+          <button
+            onClick={() => alert('Export logic coming soon!')}
+            style={controlButton}
+          >
+            Export YourCuration Gallery
+          </button>
+          <button
+            onClick={() => alert('Import logic coming soon!')}
+            style={controlButton}
+          >
+            Import YourCuration Gallery
+          </button>
+          <button
+            onClick={resetDashboard}
+            style={{ ...controlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
+          >
+            Reset Entire Dashboard
+          </button>
+        </div>
+      </div>
+
+      {/* Upload Sections */}
       {[['Hero Image', heroImage, setHeroImage, 'hero-upload'],
         ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],
         ['Center Background', centerBackground, setCenterBackground, 'center-upload']
@@ -218,7 +248,7 @@ export default function ArtistDashboard() {
 
       <h3 style={section}>Your Photo Library</h3>
 
-      {/* Drag and drop upload zone */}
+      {/* Drag & Drop Upload Box */}
       <div
         onDrop={(e) => {
           e.preventDefault();
@@ -249,13 +279,12 @@ export default function ArtistDashboard() {
         <p style={{ fontSize: '0.85rem', color: '#555' }}>
           (JPEG, PNG, or WebP only — Max 10MB each)
         </p>
-        <p style={{ fontSize: '0.85rem', color: '#666', fontStyle: 'italic', marginTop: '0.5rem' }}>
-          For efficiency, YourCuration automatically optimizes uploaded images for preview. 
-          Review full-resolution images separately once preferences are known.
+        <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#666' }}>
+          YourCuration automatically optimizes uploaded images for speed. Use full-res separately if needed.
         </p>
       </div>
 
-      {/* Manual file picker */}
+      {/* Manual File Upload */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <label htmlFor="multiUpload" style={uploadButtonStyle}>
           Choose Files
@@ -273,7 +302,7 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Upload warnings */}
+      {/* Warnings */}
       {uploadWarnings.length > 0 && (
         <div style={{ marginBottom: '1rem', textAlign: 'center', color: '#b91c1c' }}>
           <p style={{ fontWeight: 600 }}>Some files were not added:</p>
@@ -285,7 +314,7 @@ export default function ArtistDashboard() {
         </div>
       )}
 
-      {/* Preview Grid */}
+      {/* Photo Preview Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
@@ -328,37 +357,11 @@ export default function ArtistDashboard() {
           </div>
         ))}
       </div>
-
-      {/* AppReadyState + Reset */}
-      <AppReadyState
-        heroImage={heroImage}
-        borderSkin={borderSkin}
-        centerBackground={centerBackground}
-        images={images}
-        clientSessions={[]}
-      />
-
-      <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-        <button
-          onClick={resetDashboard}
-          style={{
-            padding: '0.75rem 2rem',
-            fontSize: '1.25rem',
-            borderRadius: '0.5rem',
-            backgroundColor: '#fee2e2',
-            color: '#b91c1c',
-            border: '1px solid #ccc',
-            cursor: 'pointer',
-          }}
-        >
-          Reset Dashboard
-        </button>
-      </div>
     </div>
   );
 }
 
-// Style definitions
+// Styles
 const heading = {
   fontSize: '2.25rem',
   fontWeight: 600,
@@ -397,3 +400,15 @@ const imageButton = (bg, color = '#1e3a8a') => ({
   color: color,
   cursor: 'pointer',
 });
+
+const controlButton = {
+  margin: '0.5rem',
+  padding: '0.75rem 1.5rem',
+  fontSize: '1rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  backgroundColor: '#f9f9f9',
+  color: '#1e3a8a',
+  cursor: 'pointer',
+  fontFamily: 'sans-serif',
+};
