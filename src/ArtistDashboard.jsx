@@ -154,7 +154,7 @@ export default function ArtistDashboard() {
           clientSessions={[]}
         />
         <div style={{ marginTop: '1.5rem' }}>
-          <button onClick={() => alert('Export logic coming soon!')} style={controlButton}>
+          <button onClick={exportGallery} style={controlButton}>
             Export YourCuration Gallery
           </button>
           <button onClick={() => alert('Import logic coming soon!')} style={controlButton}>
