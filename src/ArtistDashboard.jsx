@@ -194,7 +194,68 @@ export default function ArtistDashboard() {
     setUploadWarnings([]);
     setUploadCount(0);
   };
+  const importGallery = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const bundle = JSON.parse(reader.result);
+
+        const dataURItoBlob = (dataURI) => {
+          const byteString = atob(dataURI.split(',')[1]);
+          const mime = dataURI.split(',')[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          return new Blob([ab], { type: mime });
+        };
+
+        const toUrl = (data, name, meta, flag) => {
+          const blob = dataURItoBlob(data);
+          return {
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+            name,
+            url: URL.createObjectURL(blob),
+            scrapeEligible: flag,
+            metadata: meta,
+          };
+        };
+
+        if (bundle.heroImage) {
+          const { name, data, metadata, scrapeEligible } = bundle.heroImage;
+          setHeroImage(toUrl(data, name, metadata, scrapeEligible));
+        }
+
+        if (bundle.borderSkin) {
+          const { name, data, metadata, scrapeEligible } = bundle.borderSkin;
+          setBorderSkin(toUrl(data, name, metadata, scrapeEligible));
+        }
+
+        if (bundle.centerBackground) {
+          const { name, data, metadata, scrapeEligible } = bundle.centerBackground;
+          setCenterBackground(toUrl(data, name, metadata, scrapeEligible));
+        }
+
+        if (bundle.images && Array.isArray(bundle.images)) {
+          const gallery = bundle.images.map(img =>
+            toUrl(img.data, img.name, img.metadata, img.scrapeEligible)
+          );
+          setImages(gallery);
+        }
+
+        alert('Gallery imported successfully!');
+      } catch (err) {
+        console.error('Import failed:', err);
+        alert('Failed to import gallery. Please check your file.');
+      }
+    };
+
+    reader.readAsText(file);
+  };
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
