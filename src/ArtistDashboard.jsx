@@ -212,9 +212,15 @@ export default function ArtistDashboard() {
           <button onClick={exportGallery} style={controlButton}>
             Export YourCuration Gallery
           </button>
-          <button onClick={() => alert('Import logic coming soon!')} style={controlButton}>
+          <label style={{ ...controlButton, display: 'inline-block', cursor: 'pointer' }}>
             Import YourCuration Gallery
-          </button>
+            <input
+              type="file"
+              accept=".json"
+              onChange={importGallery}
+              style={{ display: 'none' }}
+            />
+          </label>
           <button
             onClick={resetDashboard}
             style={{ ...controlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
