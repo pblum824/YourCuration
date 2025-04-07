@@ -64,43 +64,58 @@ export default function ArtistDashboard() {
   };
 
   const imageToBase64 = (url) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       fetch(url)
-        .then(res => res.blob())
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch image blob');
+          return res.blob();
+        })
         .then(blob => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject('Failed to read image blob');
           reader.readAsDataURL(blob);
+        })
+        .catch((err) => {
+          console.error('Error during image fetch:', err);
+          reject(err);
         });
     });
   };
 
   const exportGallery = async () => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-    const exportImage = async (img) => ({
-      name: img.name,
-      data: await imageToBase64(img.url),
-      scrapeEligible: img.scrapeEligible,
-      metadata: img.metadata,
-    });
+      const exportImage = async (img) => ({
+        name: img.name,
+        data: await imageToBase64(img.url),
+        scrapeEligible: img.scrapeEligible,
+        metadata: img.metadata,
+      });
 
-    const bundle = {
-      timestamp,
-      heroImage: heroImage ? await exportImage(heroImage) : null,
-      borderSkin: borderSkin ? await exportImage(borderSkin) : null,
-      centerBackground: centerBackground ? await exportImage(centerBackground) : null,
-      images: await Promise.all(images.map(exportImage)),
-    };
+      const bundle = {
+        timestamp,
+        heroImage: heroImage ? await exportImage(heroImage) : null,
+        borderSkin: borderSkin ? await exportImage(borderSkin) : null,
+        centerBackground: centerBackground ? await exportImage(centerBackground) : null,
+        images: await Promise.all(images.map(exportImage)),
+      };
 
-    const json = JSON.stringify(bundle, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `YourCuration-Gallery-${timestamp}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const json = JSON.stringify(bundle, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `YourCuration-Gallery-${timestamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log('Export successful');
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Export failed. Check the console for details.');
+    }
   };
 
   const handleFiles = async (fileList) => {
@@ -184,7 +199,7 @@ export default function ArtistDashboard() {
     <div style={{ padding: '2rem' }}>
       <h2 style={heading}>Artist Dashboard</h2>
 
-      {/* Top Controls: Presentation Mode + Export/Import/Reset */}
+      {/* Presentation Mode + Export/Import/Reset Buttons */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <AppReadyState
           heroImage={heroImage}
@@ -331,7 +346,7 @@ export default function ArtistDashboard() {
         </span>
       </div>
 
-      {/* Preview Grid */}
+      {/* Image Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {images.map((img) => (
           <div key={img.id} style={{ width: '300px', textAlign: 'center' }}>
@@ -371,6 +386,57 @@ export default function ArtistDashboard() {
 }
 
 // Styles
+const heading = {
+  fontSize: '2.25rem',
+  fontWeight: 600,
+  textAlign: 'center',
+  marginBottom: '2rem',
+  color: '#1e3a8a',
+  fontFamily: 'Parisienne, cursive',
+};
+
+const section = {
+  fontSize: '1.5rem',
+  textAlign: 'center',
+  marginBottom: '0.75rem',
+  fontFamily: 'Parisienne, cursive',
+  color: '#1e3a8a',
+};
+
+const uploadButtonStyle = {
+  padding: '0.75rem 1.25rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  cursor: 'pointer',
+  fontFamily: 'sans-serif',
+  color: '#1e3a8a',
+  backgroundColor: '#f9f9f9',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+};
+
+const imageButton = (bg, color = '#1e3a8a') => ({
+  marginTop: '0.5rem',
+  padding: '0.5rem 1rem',
+  fontSize: '1rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  backgroundColor: bg,
+  color: color,
+  cursor: 'pointer',
+});
+
+const controlButton = {
+  margin: '0.5rem',
+  padding: '0.75rem 1.5rem',
+  fontSize: '1rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  backgroundColor: '#f9f9f9',
+  color: '#1e3a8a',
+  cursor: 'pointer',
+  fontFamily: 'sans-serif',
+};
+
 const heading = {
   fontSize: '2.25rem',
   fontWeight: 600,
