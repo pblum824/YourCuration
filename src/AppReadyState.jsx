@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import buildOfflineBundle from './utils/buildOfflineBundle';
 
-export default function AppReadyState() {
+export default function AppReadyState({
+  heroImage,
+  borderSkin,
+  centerBackground,
+  images,
+  clientSessions
+}) {
   const [isReady, setIsReady] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -16,23 +23,40 @@ export default function AppReadyState() {
   const handleToggle = () => {
     const newReady = !isReady;
     const timestamp = newReady ? new Date().toLocaleString() : null;
+
     setIsReady(newReady);
     setLastUpdated(timestamp);
+
     localStorage.setItem('yourcuration_ready', JSON.stringify({
       ready: newReady,
       timestamp,
     }));
+
+    if (newReady) {
+      buildOfflineBundle({
+        heroImage,
+        borderSkin,
+        centerBackground,
+        images,
+        layoutChoice: 'grid', // placeholder for future support
+        clientSessions,
+      });
+    }
   };
 
   return (
     <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h3 style={{ fontSize: '1.5rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
+      <h3 style={{
+        fontSize: '1.5rem',
+        fontFamily: 'Parisienne, cursive',
+        color: '#1e3a8a',
+        marginBottom: '1rem'
+      }}>
         Presentation Mode
       </h3>
       <button
         onClick={handleToggle}
         style={{
-          marginTop: '1rem',
           padding: '0.75rem 1.5rem',
           fontSize: '1.25rem',
           borderRadius: '0.5rem',
