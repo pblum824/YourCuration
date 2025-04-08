@@ -1,64 +1,51 @@
 import React, { useState } from 'react';
+import generateMetadata from './utils/generateMetadata';
 
 export default function MetadataBuilder() {
-  const [mode, setMode] = useState('');
-  const [tags, setTags] = useState([]);
+  const [filename, setFilename] = useState('sunset_dog.jpg');
+  const [metadata, setMetadata] = useState(generateMetadata('sunset_dog.jpg'));
 
-  const sampleImage = {
-    name: 'SampleImage.jpg',
-    url: 'https://via.placeholder.com/600x400?text=Sample+Image'
-  };
-
-  const handleModeSelect = (selected) => {
-    setMode(selected);
-
-    if (selected === 'auto') {
-      setTags(['romantic', 'backlit', 'soft-focus']);
-    } else if (selected === 'standard') {
-      setTags(['landscape', 'rule-of-thirds']);
-    } else if (selected === 'objective') {
-      setTags(['ISO 400', 'f/2.8', '35mm', 'shot at dusk']);
-    } else {
-      setTags([]);
-    }
+  const handleChange = (e) => {
+    const name = e.target.value;
+    setFilename(name);
+    setMetadata(generateMetadata(name));
   };
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
       <h2>Metadata Builder</h2>
 
-      <img
-        src={sampleImage.url}
-        alt={sampleImage.name}
-        style={{ width: '100%', maxWidth: '600px', borderRadius: '0.5rem', marginBottom: '1rem' }}
-      />
-
-      <h3>Select Metadata Mode</h3>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <button onClick={() => handleModeSelect('custom')} style={buttonStyle}>1. I'll use my own descriptors</button>{' '}
-        <button onClick={() => handleModeSelect('standard')} style={buttonStyle}>2. Use standard descriptors</button>{' '}
-        <button onClick={() => handleModeSelect('objective')} style={buttonStyle}>3. Use objective image data</button>{' '}
-        <button onClick={() => handleModeSelect('auto')} style={buttonStyle}>4. You decide</button>
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={{ fontWeight: 'bold' }}>Simulated Filename:</label>
+        <input
+          type="text"
+          value={filename}
+          onChange={handleChange}
+          style={{
+            marginLeft: '1rem',
+            padding: '0.5rem',
+            border: '1px solid #ccc',
+            borderRadius: '0.5rem',
+            width: '300px'
+          }}
+        />
       </div>
 
-      <h4>Current Mode: <span style={{ fontWeight: 500 }}>{mode || 'none selected'}</span></h4>
-
-      <h4>Tags Preview:</h4>
-      <div style={{ background: '#f9f9f9', padding: '1rem', borderRadius: '0.5rem' }}>
-        {tags.length > 0 ? tags.join(', ') : <em>No tags yet</em>}
+      <h4>Generated Tags:</h4>
+      <div style={{ background: '#eef', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+        {metadata.tags.length > 0 ? metadata.tags.join(', ') : <em>No tags detected</em>}
       </div>
+
+      <h4>Dimensions Breakdown:</h4>
+      <pre style={{
+        background: '#f9f9f9',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        fontSize: '0.9rem',
+        overflowX: 'auto'
+      }}>
+        {JSON.stringify(metadata.dimensions, null, 2)}
+      </pre>
     </div>
   );
 }
-
-const buttonStyle = {
-  margin: '0.25rem',
-  padding: '0.5rem 1rem',
-  fontSize: '0.95rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #ccc',
-  backgroundColor: '#fff',
-  color: '#1e3a8a',
-  cursor: 'pointer',
-  fontFamily: 'sans-serif',
-};
