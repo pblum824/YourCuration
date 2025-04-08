@@ -6,7 +6,7 @@ import CuratedGallery from './CuratedGallery';
 import SkinWrapper from './SkinWrapper';
 import loadReadyBundle from './utils/loadReadyBundle';
 import { AnimatePresence } from 'framer-motion';
-import MetadataBuilder from './MetadataBuilder';
+import MetadataBuilder from './MetadataBuilder.jsx';
 
 export default function App() {
   const bundle = loadReadyBundle();
