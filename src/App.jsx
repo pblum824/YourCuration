@@ -6,6 +6,7 @@ import CuratedGallery from './CuratedGallery';
 import SkinWrapper from './SkinWrapper';
 import loadReadyBundle from './utils/loadReadyBundle';
 import { AnimatePresence } from 'framer-motion';
+import MetadataBuilder from './MetadataBuilder';
 
 export default function App() {
   const bundle = loadReadyBundle();
@@ -56,14 +57,7 @@ export default function App() {
               </SkinWrapper>
             )}
             {page === 'artist' && (
-              <ArtistDashboard
-                key="artist"
-                heroImage={heroImage}
-                borderSkin={borderSkin}
-                centerBackground={centerBackground}
-                artistImages={artistImages}
-                clientSessions={clientSessions}
-              />
+              <MetadataBuilder key="builder" />
             )}
             {page === 'viewer' && (
               <SkinWrapper>
