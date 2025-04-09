@@ -11,9 +11,23 @@ export default function MetadataBuilder() {
     setMetadata(generateMetadata(name));
   };
 
+  const sampleImageUrl = 'https://dummyimage.com/600x400/cccccc/000000&text=Sample+Image';
+
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
       <h2>Metadata Builder</h2>
+
+      {/* Sample Image Preview */}
+      <img
+        src={sampleImageUrl}
+        alt="Sample Preview"
+        style={{
+          width: '100%',
+          maxWidth: '600px',
+          borderRadius: '0.5rem',
+          marginBottom: '1rem'
+        }}
+      />
 
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ fontWeight: 'bold' }}>Simulated Filename:</label>
@@ -32,7 +46,12 @@ export default function MetadataBuilder() {
       </div>
 
       <h4>Generated Tags:</h4>
-      <div style={{ background: '#eef', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{
+        background: '#eef',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        marginBottom: '1rem'
+      }}>
         {metadata.tags.length > 0 ? metadata.tags.join(', ') : <em>No tags detected</em>}
       </div>
 
