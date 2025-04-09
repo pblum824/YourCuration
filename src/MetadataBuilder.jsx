@@ -18,7 +18,9 @@ export default function MetadataBuilder() {
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        const { tags, dimensions } = analyzeImage(ctx, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const { tags, dimensions } = analyzeImage(ctx, canvas.width, canvas.height, imageData);
         setTags(tags);
         setDimensions(dimensions);
       };
@@ -28,13 +30,13 @@ export default function MetadataBuilder() {
     reader.readAsDataURL(file);
   };
 
-  const analyzeImage = (ctx, width, height) => {
-    const data = ctx.getImageData(0, 0, width, height).data;
+  const analyzeImage = (ctx, width, height, imageDataFull) => {
+    const data = imageDataFull.data;
     const totalPixels = width * height;
+    const brightnessValues = [];
     const colorCounts = {};
 
     let brightnessSum = 0;
-    let brightnessValues = [];
 
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
@@ -74,8 +76,9 @@ export default function MetadataBuilder() {
       message: []
     };
 
+    // COLOR CLASSIFICATION
     topColors.forEach(({ hue, saturation }) => {
-      if (saturation < 0.12) {
+      if (saturation < 0.1) {
         dimensions.colorPalette.push('monochrome');
         tags.push('monochrome');
       } else if (hue >= 0 && hue < 50) {
@@ -90,37 +93,77 @@ export default function MetadataBuilder() {
       }
     });
 
-    // Tone detection
-    if (stdDev > 50) {
-      dimensions.visualTone.push('high contrast');
-      tags.push('high contrast');
-    } else if (stdDev < 25) {
-      dimensions.visualTone.push('soft-focus');
-      tags.push('soft-focus');
-    }
-
-    if (avgBrightness < 60 && stdDev > 40) {
-      dimensions.visualTone.push('grainy');
-      tags.push('grainy');
-    }
-
-    // Rudimentary backlight guess: bright edges + dark center
-    const edgeBrightness = (
-      brightnessValues.slice(0, width).concat( // top row
-      brightnessValues.slice(-width))         // bottom row
-    ).reduce((sum, b) => sum + b, 0) / (2 * width);
-
-    const centerBrightness = brightnessValues[Math.floor(brightnessValues.length / 2)];
-
-    if (edgeBrightness > centerBrightness + 30) {
-      dimensions.visualTone.push('backlit');
-      tags.push('backlit');
-    }
+    // TONE DETECTION
+    const toneResults = detectTone(brightnessValues, avgBrightness, stdDev, width, data);
+    dimensions.visualTone = toneResults.tone;
+    tags.push(...toneResults.tags);
 
     return {
       tags: Array.from(new Set(tags)),
       dimensions
     };
+  };
+
+  const detectTone = (brightnessValues, avgBrightness, stdDev, width, imageData) => {
+    const tags = [];
+    const tone = [];
+
+    if (stdDev > 50) {
+      tone.push('high contrast');
+      tags.push('high contrast');
+    }
+
+    if (stdDev < 20) {
+      tone.push('soft-focus');
+      tags.push('soft-focus');
+    }
+
+    if (avgBrightness < 100 && stdDev > 35) {
+      tone.push('grainy');
+      tags.push('grainy');
+    }
+
+    const edgeBrightness =
+      brightnessValues.slice(0, width).concat(brightnessValues.slice(-width))
+      .reduce((sum, b) => sum + b, 0) / (2 * width);
+
+    const centerBrightness = brightnessValues[Math.floor(brightnessValues.length / 2)];
+
+    if (edgeBrightness > centerBrightness + 30) {
+      tone.push('backlit');
+      tags.push('backlit');
+    }
+
+    let monoScore = 0;
+    for (let i = 0; i < imageData.length; i += 4) {
+      const r = imageData[i];
+      const g = imageData[i + 1];
+      const b = imageData[i + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      if (sat < 0.1) monoScore++;
+    }
+    const satRatio = monoScore / (imageData.length / 4);
+    if (satRatio > 0.7) {
+      tone.push('monochrome');
+      tags.push('monochrome');
+    }
+
+    let bwScore = 0;
+    for (let i = 0; i < imageData.length; i += 4) {
+      const r = imageData[i];
+      const g = imageData[i + 1];
+      const b = imageData[i + 2];
+      if (Math.abs(r - g) < 10 && Math.abs(g - b) < 10) bwScore++;
+    }
+    const bwRatio = bwScore / (imageData.length / 4);
+    if (bwRatio > 0.7) {
+      tone.push('black and white');
+      tags.push('black and white');
+    }
+
+    return { tone: Array.from(new Set(tone)), tags: Array.from(new Set(tags)) };
   };
 
   const rgbToHue = (r, g, b) => {
@@ -137,7 +180,6 @@ export default function MetadataBuilder() {
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
       <h2>Metadata Builder (Color + Tone)</h2>
-
       <input type="file" accept="image/*" onChange={handleImageUpload} />
 
       {imageUrl && (
