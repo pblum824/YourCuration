@@ -4,6 +4,7 @@ export default function MetadataBuilder() {
   const [imageUrl, setImageUrl] = useState(null);
   const [tags, setTags] = useState([]);
   const [dimensions, setDimensions] = useState({});
+  const [dominantHue, setDominantHue] = useState(null);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -20,9 +21,10 @@ export default function MetadataBuilder() {
         ctx.drawImage(img, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const { tags, dimensions } = analyzeImage(ctx, canvas.width, canvas.height, imageData);
+        const { tags, dimensions, dominantHue } = analyzeImage(ctx, canvas.width, canvas.height, imageData);
         setTags(tags);
         setDimensions(dimensions);
+        setDominantHue(dominantHue);
       };
       img.src = reader.result;
       setImageUrl(reader.result);
@@ -37,6 +39,11 @@ export default function MetadataBuilder() {
     const colorCounts = {};
 
     let brightnessSum = 0;
+    let blackPixelCount = 0;
+    let whitePixelCount = 0;
+    let saturatedPixelCount = 0;
+
+    const hues = [];
 
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
@@ -45,6 +52,17 @@ export default function MetadataBuilder() {
       const brightness = (r + g + b) / 3;
       brightnessSum += brightness;
       brightnessValues.push(brightness);
+
+      if (brightness < 40) blackPixelCount++;
+      if (brightness > 220) whitePixelCount++;
+
+      const hue = rgbToHue(r, g, b);
+      hues.push(hue);
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const saturation = max === 0 ? 0 : (max - min) / max;
+      if (saturation > 0.1) saturatedPixelCount++;
 
       const key = `${Math.round(r / 32) * 32}-${Math.round(g / 32) * 32}-${Math.round(b / 32) * 32}`;
       colorCounts[key] = (colorCounts[key] || 0) + 1;
@@ -55,17 +73,9 @@ export default function MetadataBuilder() {
       brightnessValues.reduce((sum, val) => sum + Math.pow(val - avgBrightness, 2), 0) / totalPixels
     );
 
-    const topColors = Object.entries(colorCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([rgb]) => {
-        const [r, g, b] = rgb.split('-').map(Number);
-        const hue = rgbToHue(r, g, b);
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        const saturation = max === 0 ? 0 : (max - min) / max;
-        return { r, g, b, hue, saturation };
-      });
+    const blackRatio = blackPixelCount / totalPixels;
+    const whiteRatio = whitePixelCount / totalPixels;
+    const colorRatio = saturatedPixelCount / totalPixels;
 
     const tags = [];
     const dimensions = {
@@ -76,31 +86,58 @@ export default function MetadataBuilder() {
       message: []
     };
 
-    // COLOR CLASSIFICATION
-    topColors.forEach(({ hue, saturation }) => {
-      if (saturation < 0.1) {
-        dimensions.colorPalette.push('monochrome');
-        tags.push('monochrome');
-      } else if (hue >= 0 && hue < 50) {
-        dimensions.colorPalette.push('warm tones');
-        tags.push('warm tones');
-      } else if (hue >= 180 && hue < 260) {
-        dimensions.colorPalette.push('cool tones');
-        tags.push('cool tones');
-      } else {
-        dimensions.colorPalette.push('neutral');
-        tags.push('neutral');
-      }
-    });
+    let dominantHue = null;
 
-    // TONE DETECTION
+    if (blackRatio > 0.7 && colorRatio < 0.05) {
+      tags.push('low-key');
+      dimensions.colorPalette.push('low-key');
+    } else if (whiteRatio > 0.7 && colorRatio < 0.05) {
+      tags.push('high-key');
+      dimensions.colorPalette.push('high-key');
+    } else if (blackRatio > 0.7) {
+      tags.push('black-dominant');
+      dimensions.colorPalette.push('black-dominant');
+    } else if (whiteRatio > 0.7) {
+      tags.push('white-dominant');
+      dimensions.colorPalette.push('white-dominant');
+    } else {
+      const topColors = Object.entries(colorCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([rgb]) => {
+          const [r, g, b] = rgb.split('-').map(Number);
+          const hue = rgbToHue(r, g, b);
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const saturation = max === 0 ? 0 : (max - min) / max;
+          return { r, g, b, hue, saturation };
+        });
+
+      topColors.forEach(({ hue, saturation }) => {
+        if (saturation < 0.1) return;
+        if (hue >= 0 && hue < 50) {
+          dimensions.colorPalette.push('warm tones');
+          tags.push('warm tones');
+        } else if (hue >= 180 && hue < 260) {
+          dimensions.colorPalette.push('cool tones');
+          tags.push('cool tones');
+        } else {
+          dimensions.colorPalette.push('neutral');
+          tags.push('neutral');
+        }
+      });
+
+      dominantHue = Math.round(hues[0]);
+    }
+
     const toneResults = detectTone(brightnessValues, avgBrightness, stdDev, width, data);
     dimensions.visualTone = toneResults.tone;
     tags.push(...toneResults.tags);
 
     return {
       tags: Array.from(new Set(tags)),
-      dimensions
+      dimensions,
+      dominantHue
     };
   };
 
@@ -132,35 +169,6 @@ export default function MetadataBuilder() {
     if (edgeBrightness > centerBrightness + 30) {
       tone.push('backlit');
       tags.push('backlit');
-    }
-
-    let monoScore = 0;
-    for (let i = 0; i < imageData.length; i += 4) {
-      const r = imageData[i];
-      const g = imageData[i + 1];
-      const b = imageData[i + 2];
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const sat = max === 0 ? 0 : (max - min) / max;
-      if (sat < 0.1) monoScore++;
-    }
-    const satRatio = monoScore / (imageData.length / 4);
-    if (satRatio > 0.7) {
-      tone.push('monochrome');
-      tags.push('monochrome');
-    }
-
-    let bwScore = 0;
-    for (let i = 0; i < imageData.length; i += 4) {
-      const r = imageData[i];
-      const g = imageData[i + 1];
-      const b = imageData[i + 2];
-      if (Math.abs(r - g) < 10 && Math.abs(g - b) < 10) bwScore++;
-    }
-    const bwRatio = bwScore / (imageData.length / 4);
-    if (bwRatio > 0.7) {
-      tone.push('black and white');
-      tags.push('black and white');
     }
 
     return { tone: Array.from(new Set(tone)), tags: Array.from(new Set(tags)) };
@@ -218,6 +226,16 @@ export default function MetadataBuilder() {
           }}>
             {JSON.stringify(dimensions, null, 2)}
           </pre>
+
+          <h4>Dominant Hue:</h4>
+          <div style={{
+            background: '#eee',
+            padding: '0.5rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1rem'
+          }}>
+            {dominantHue !== null ? dominantHue : <em>n/a</em>}
+          </div>
         </>
       )}
     </div>
