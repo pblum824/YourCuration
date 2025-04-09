@@ -28,66 +28,17 @@ export default function MetadataBuilder() {
     reader.readAsDataURL(file);
   };
 
-    const analyzeColors = (ctx, width, height) => {
-      const imageData = ctx.getImageData(0, 0, width, height).data;
-      const colorCounts = {};
-      const totalPixels = width * height;
+  const analyzeColors = (ctx, width, height) => {
+    const imageData = ctx.getImageData(0, 0, width, height).data;
+    const colorCounts = {};
 
-      for (let i = 0; i < imageData.length; i += 4) {
-        const r = imageData[i];
-        const g = imageData[i + 1];
-        const b = imageData[i + 2];
-        const key = `${Math.round(r / 32) * 32}-${Math.round(g / 32) * 32}-${Math.round(b / 32) * 32}`;
-        colorCounts[key] = (colorCounts[key] || 0) + 1;
-      }
-
-      const topColors = Object.entries(colorCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([rgb]) => {
-          const [r, g, b] = rgb.split('-').map(Number);
-          const hue = rgbToHue(r, g, b);
-          const brightness = (r + g + b) / 3;
-          const max = Math.max(r, g, b);
-          const min = Math.min(r, g, b);
-          const saturation = max === 0 ? 0 : (max - min) / max;
-          return { r, g, b, hue, brightness, saturation };
-        });
-
-      const tags = [];
-      const dimensions = {
-        colorPalette: [],
-        visualTone: [],
-        mood: [],
-        subject: [],
-        message: []
-      };
-
-      topColors.forEach(({ hue, brightness, saturation }) => {
-        // Skip very dark colors (noise)
-        if (brightness < 30) return;
-
-        // Monochrome only if saturation is very low and brightness is moderate
-        if (saturation < 0.12 && brightness < 160) {
-          dimensions.colorPalette.push('monochrome');
-          tags.push('monochrome');
-        } else if (hue >= 0 && hue < 50) {
-          dimensions.colorPalette.push('warm tones');
-          tags.push('warm tones');
-        } else if (hue >= 180 && hue < 260) {
-          dimensions.colorPalette.push('cool tones');
-          tags.push('cool tones');
-        } else {
-          dimensions.colorPalette.push('neutral');
-          tags.push('neutral');
-        }
-      });
-
-      return {
-        tags: Array.from(new Set(tags)),
-        dimensions
-      };
-    };
+    for (let i = 0; i < imageData.length; i += 4) {
+      const r = imageData[i];
+      const g = imageData[i + 1];
+      const b = imageData[i + 2];
+      const key = `${Math.round(r / 32) * 32}-${Math.round(g / 32) * 32}-${Math.round(b / 32) * 32}`;
+      colorCounts[key] = (colorCounts[key] || 0) + 1;
+    }
 
     const topColors = Object.entries(colorCounts)
       .sort((a, b) => b[1] - a[1])
@@ -96,7 +47,10 @@ export default function MetadataBuilder() {
         const [r, g, b] = rgb.split('-').map(Number);
         const hue = rgbToHue(r, g, b);
         const brightness = (r + g + b) / 3;
-        return { r, g, b, hue, brightness };
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const saturation = max === 0 ? 0 : (max - min) / max;
+        return { r, g, b, hue, brightness, saturation };
       });
 
     const tags = [];
@@ -108,8 +62,10 @@ export default function MetadataBuilder() {
       message: []
     };
 
-    topColors.forEach(({ hue, brightness }) => {
-      if (brightness < 60) {
+    topColors.forEach(({ hue, brightness, saturation }) => {
+      if (brightness < 30) return;
+
+      if (saturation < 0.12 && brightness < 160) {
         dimensions.colorPalette.push('monochrome');
         tags.push('monochrome');
       } else if (hue >= 0 && hue < 50) {
@@ -163,7 +119,13 @@ export default function MetadataBuilder() {
           </div>
 
           <h4>Dimensions Breakdown:</h4>
-          <pre style={{ background: '#f9f9f9', padding: '1rem', borderRadius: '0.5rem' }}>
+          <pre style={{
+            background: '#f9f9f9',
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            fontSize: '0.9rem',
+            overflowX: 'auto'
+          }}>
             {JSON.stringify(dimensions, null, 2)}
           </pre>
         </>
