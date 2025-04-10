@@ -22,7 +22,7 @@ export default function MetadataBuilder() {
         ctx.drawImage(img, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const result = analyzeImage(ctx, canvas.width, canvas.height, imageData, file.name);
+        const result = analyzeImage(ctx, canvas.width, canvas.height, imageData);
         setTags(result.tags);
         setDimensions(result.dimensions);
         setDominantHue(result.dominantHue);
@@ -33,7 +33,7 @@ export default function MetadataBuilder() {
     reader.readAsDataURL(file);
   };
 
-  const analyzeImage = (ctx, width, height, imageDataFull, filename = '') => {
+    const analyzeImage = (ctx, width, height, imageDataFull) => {
     const data = imageDataFull.data;
     const totalPixels = width * height;
     const brightnessValues = [];
@@ -158,15 +158,6 @@ export default function MetadataBuilder() {
     dimensions.mood = moodResults;
     tags.push(...moodResults);
 
-    const { subject, action } = detectSubjectAndAction(filename);
-    if (subject.length) {
-      dimensions.subject.push(...subject);
-      tags.push(...subject);
-    }
-    if (action.length) {
-      dimensions.message.push(...action);
-      tags.push(...action);
-    }
 
     return {
       tags: Array.from(new Set(tags)),
@@ -175,40 +166,6 @@ export default function MetadataBuilder() {
     };
   };
 
-  const detectSubjectAndAction = (filename = '') => {
-    const SUBJECTS = [
-      'animal', 'figure', 'architecture', 'landscape', 'still-life', 'abstract', 'crowd', 'vehicle', 'sky'
-    ];
-
-    const SUBJECT_VERB_MAP = {
-      animal: ['chasing', 'sleeping', 'nursing', 'running', 'hunting', 'resting'],
-      figure: ['walking', 'smiling', 'alone', 'hugging', 'reading', 'dancing'],
-      architecture: ['modern', 'ruined', 'ornate', 'minimalist'],
-      landscape: ['misty', 'moonlit', 'sunset', 'foggy', 'snowy', 'arid'],
-      abstract: ['chaotic', 'soft', 'repeating', 'colorful'],
-      'still-life': ['isolated', 'symmetrical', 'minimal'],
-      crowd: ['protesting', 'celebrating', 'waiting'],
-      vehicle: ['moving', 'parked', 'vintage'],
-      sky: ['stormy', 'clear', 'dramatic']
-    };
-
-    const lower = filename.toLowerCase();
-    const result = { subject: [], action: [] };
-
-    for (const subject of SUBJECTS) {
-      if (lower.includes(subject)) {
-        result.subject.push(subject);
-        const verbs = SUBJECT_VERB_MAP[subject];
-        for (const v of verbs) {
-          if (lower.includes(v)) {
-            result.action.push(v);
-          }
-        }
-      }
-    }
-
-    return result;
-  };
 
   const detectTone = (brightnessValues, avgBrightness, stdDev, width, imageData) => {
     const tags = [];

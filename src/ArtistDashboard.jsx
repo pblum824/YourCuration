@@ -1,7 +1,9 @@
-
+import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
 import React, { useState, useEffect } from 'react';
-import generateMetadata from './utils/generateMetadata';
 import AppReadyState from './AppReadyState';
+import * as ort from 'onnxruntime-web';
+import { preprocessImage } from './utils/imageProcessing';
+import { getTextFeatures } from './utils/clipText';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -12,15 +14,58 @@ export default function ArtistDashboard() {
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
+  const [devMode, setDevMode] = useState(() => {
+    return localStorage.getItem('yourcuration_devMode') === 'true';
+  });
   const [images, setImages] = useState(() => {
     const stored = localStorage.getItem('yourcuration_artistImages');
     return stored ? JSON.parse(stored) : [];
   });
 
   useEffect(() => {
+    const TAG_PROMPTS = [
+      'person', 'child', 'animal', 'bird', 'dog', 'cat', 'tree', 'flower', 'building', 'vehicle', 'mountain', 'ocean', 'sky',
+      'portrait', 'landscape', 'seascape', 'still life', 'architecture', 'abstract', 'interior', 'urban scene', 'nature scene',
+      'black and white', 'high contrast', 'minimalist', 'surreal', 'vintage', 'dreamlike', 'dramatic lighting', 'moody'
+    ];
+
+    const sessionRef = useRef(null);
+    const textFeaturesRef = useRef(null);
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
+  const loadCLIP = async () => {
+    if (!sessionRef.current) {
+      const session = await ort.InferenceSession.create('/models/clip-vit-b32.onnx');
+      sessionRef.current = session;
+      textFeaturesRef.current = await getTextFeatures(TAG_PROMPTS, session);
+    }
+  };
 
+  const cosineSimilarity = (a, b) => {
+    let dot = 0, aMag = 0, bMag = 0;
+    for (let i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      aMag += a[i] ** 2;
+      bMag += b[i] ** 2;
+    }
+    return dot / (Math.sqrt(aMag) * Math.sqrt(bMag));
+  };
+
+  const getCLIPTags = async (imageDataURL) => {
+    await loadCLIP();
+    const img = new Image();
+    img.src = imageDataURL;
+    await new Promise((res) => (img.onload = res));
+    const tensor = await preprocessImage(img);
+    const output = await sessionRef.current.run({ image: tensor });
+    const imageFeatures = output['image_features'].data;
+    const similarities = TAG_PROMPTS.map((tag, i) => ({
+      tag,
+      score: cosineSimilarity(imageFeatures, textFeaturesRef.current[i]),
+    }));
+    similarities.sort((a, b) => b.score - a.score);
+    return similarities.slice(0, 5).map(s => s.tag);
+  };
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -54,12 +99,25 @@ export default function ArtistDashboard() {
   const createImageObject = async (file) => {
     const compressed = await compressImage(file);
     const url = URL.createObjectURL(compressed);
+    const base64 = await imageToBase64(url);
+
+    const [clipTags, visualData] = await Promise.all([
+      getCLIPTags(base64),
+      analyzeImageFromURL(base64)
+    ]);
+
+    const mergedTags = Array.from(new Set([...clipTags, ...visualData.tags]));
+
     return {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
       name: file.name,
       url,
       scrapeEligible: true,
-      metadata: generateMetadata(file.name),
+      metadata: {
+        tags: mergedTags,
+        dimensions: visualData.dimensions,
+        dominantHue: visualData.dominantHue
+      }
     };
   };
 
@@ -174,7 +232,11 @@ export default function ArtistDashboard() {
       )
     );
   };
-
+  const toggleDevMode = () => {
+    const next = !devMode;
+    setDevMode(next);
+    localStorage.setItem('yourcuration_devMode', String(next));
+  };
   const removeImage = (id) => {
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
@@ -258,6 +320,11 @@ export default function ArtistDashboard() {
   };
   return (
     <div style={{ padding: '2rem' }}>
+      <div style={{ textAlign: 'right', marginBottom: '0.5rem' }}>
+        <button onClick={toggleDevMode} style={{ fontSize: '0.75rem', opacity: 0.5 }}>
+          {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
+        </button>
+      </div>
       <h2 style={heading}>Artist Dashboard</h2>
 
       {/* Presentation Mode + Export/Import/Reset Buttons */}
@@ -345,8 +412,8 @@ export default function ArtistDashboard() {
         </div>
       ))}
 
-      <h3 style={section}>Your Photo Library</h3>
-
+        <h3 style={section}>Your Photo Library</h3>
+        
       {/* Upload Warnings */}
       {uploadWarnings.length > 0 && (
         <div style={{ marginBottom: '1rem', textAlign: 'center', color: '#b91c1c' }}>
@@ -442,9 +509,15 @@ export default function ArtistDashboard() {
             >
               Remove
             </button>
-            <p style={{ fontSize: '0.85rem', fontStyle: 'italic', marginTop: '0.5rem' }}>
-              Tags: {img.metadata?.tags?.join(', ') || 'No tags'}
-            </p>
+            {devMode && (
+              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                <strong>Tags:</strong> {img.metadata?.tags?.join(', ') || 'n/a'}<br />
+                <strong>Mood:</strong> {img.metadata?.dimensions?.mood?.join(', ') || 'n/a'}<br />
+                <strong>Tone:</strong> {img.metadata?.dimensions?.visualTone?.join(', ') || 'n/a'}<br />
+                <strong>Palette:</strong> {img.metadata?.dimensions?.colorPalette?.join(', ') || 'n/a'}<br />
+                <strong>Hue:</strong> {img.metadata?.dominantHue ?? 'n/a'}
+              </div>
+            )}
           </div>
         ))}
       </div>
