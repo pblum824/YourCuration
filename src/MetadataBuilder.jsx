@@ -21,10 +21,10 @@ export default function MetadataBuilder() {
         ctx.drawImage(img, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const { tags, dimensions, dominantHue } = analyzeImage(ctx, canvas.width, canvas.height, imageData);
-        setTags(tags);
-        setDimensions(dimensions);
-        setDominantHue(dominantHue);
+        const result = analyzeImage(ctx, canvas.width, canvas.height, imageData);
+        setTags(result.tags);
+        setDimensions(result.dimensions);
+        setDominantHue(result.dominantHue);
       };
       img.src = reader.result;
       setImageUrl(reader.result);
@@ -42,6 +42,7 @@ export default function MetadataBuilder() {
     let blackPixelCount = 0;
     let whitePixelCount = 0;
     let saturatedPixelCount = 0;
+    let bwScore = 0;
 
     const hues = [];
 
@@ -64,6 +65,8 @@ export default function MetadataBuilder() {
       const saturation = max === 0 ? 0 : (max - min) / max;
       if (saturation > 0.1) saturatedPixelCount++;
 
+      if (Math.abs(r - g) < 10 && Math.abs(g - b) < 10) bwScore++;
+
       const key = `${Math.round(r / 32) * 32}-${Math.round(g / 32) * 32}-${Math.round(b / 32) * 32}`;
       colorCounts[key] = (colorCounts[key] || 0) + 1;
     }
@@ -76,6 +79,7 @@ export default function MetadataBuilder() {
     const blackRatio = blackPixelCount / totalPixels;
     const whiteRatio = whitePixelCount / totalPixels;
     const colorRatio = saturatedPixelCount / totalPixels;
+    const bwRatio = bwScore / (totalPixels);
 
     const tags = [];
     const dimensions = {
@@ -88,19 +92,36 @@ export default function MetadataBuilder() {
 
     let dominantHue = null;
 
+    // A. Tag black/white dominant and high/low key if appropriate
     if (blackRatio > 0.7 && colorRatio < 0.05) {
       tags.push('low-key');
       dimensions.colorPalette.push('low-key');
     } else if (whiteRatio > 0.7 && colorRatio < 0.05) {
       tags.push('high-key');
       dimensions.colorPalette.push('high-key');
-    } else if (blackRatio > 0.7) {
+    }
+
+    if (blackRatio > 0.7) {
       tags.push('black-dominant');
       dimensions.colorPalette.push('black-dominant');
-    } else if (whiteRatio > 0.7) {
+    }
+    if (whiteRatio > 0.7) {
       tags.push('white-dominant');
       dimensions.colorPalette.push('white-dominant');
-    } else {
+    }
+
+    if (colorRatio < 0.1) {
+      tags.push('monochrome');
+      dimensions.colorPalette.push('monochrome');
+    }
+
+    if (bwRatio > 0.7) {
+      tags.push('black and white');
+      dimensions.colorPalette.push('black and white');
+    }
+
+    // B. Color palette (only if not strictly B/W)
+    if (blackRatio < 0.7 && whiteRatio < 0.7 && colorRatio >= 0.1) {
       const topColors = Object.entries(colorCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
@@ -116,20 +137,21 @@ export default function MetadataBuilder() {
       topColors.forEach(({ hue, saturation }) => {
         if (saturation < 0.1) return;
         if (hue >= 0 && hue < 50) {
-          dimensions.colorPalette.push('warm tones');
           tags.push('warm tones');
+          dimensions.colorPalette.push('warm tones');
         } else if (hue >= 180 && hue < 260) {
-          dimensions.colorPalette.push('cool tones');
           tags.push('cool tones');
+          dimensions.colorPalette.push('cool tones');
         } else {
-          dimensions.colorPalette.push('neutral');
           tags.push('neutral');
+          dimensions.colorPalette.push('neutral');
         }
       });
 
       dominantHue = Math.round(hues[0]);
     }
 
+    // C. Tone
     const toneResults = detectTone(brightnessValues, avgBrightness, stdDev, width, data);
     dimensions.visualTone = toneResults.tone;
     tags.push(...toneResults.tags);
@@ -162,7 +184,7 @@ export default function MetadataBuilder() {
 
     const edgeBrightness =
       brightnessValues.slice(0, width).concat(brightnessValues.slice(-width))
-      .reduce((sum, b) => sum + b, 0) / (2 * width);
+        .reduce((sum, b) => sum + b, 0) / (2 * width);
 
     const centerBrightness = brightnessValues[Math.floor(brightnessValues.length / 2)];
 
