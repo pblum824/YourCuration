@@ -1,3 +1,4 @@
+// Full working MetadataBuilder.jsx with subject, action, tone, mood, color, and hue detection
 import React, { useState } from 'react';
 
 export default function MetadataBuilder() {
@@ -21,7 +22,7 @@ export default function MetadataBuilder() {
         ctx.drawImage(img, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const result = analyzeImage(ctx, canvas.width, canvas.height, imageData);
+        const result = analyzeImage(ctx, canvas.width, canvas.height, imageData, file.name);
         setTags(result.tags);
         setDimensions(result.dimensions);
         setDominantHue(result.dominantHue);
@@ -32,7 +33,7 @@ export default function MetadataBuilder() {
     reader.readAsDataURL(file);
   };
 
-  const analyzeImage = (ctx, width, height, imageDataFull) => {
+  const analyzeImage = (ctx, width, height, imageDataFull, filename = '') => {
     const data = imageDataFull.data;
     const totalPixels = width * height;
     const brightnessValues = [];
@@ -157,11 +158,56 @@ export default function MetadataBuilder() {
     dimensions.mood = moodResults;
     tags.push(...moodResults);
 
+    const { subject, action } = detectSubjectAndAction(filename);
+    if (subject.length) {
+      dimensions.subject.push(...subject);
+      tags.push(...subject);
+    }
+    if (action.length) {
+      dimensions.message.push(...action);
+      tags.push(...action);
+    }
+
     return {
       tags: Array.from(new Set(tags)),
       dimensions,
       dominantHue
     };
+  };
+
+  const detectSubjectAndAction = (filename = '') => {
+    const SUBJECTS = [
+      'animal', 'figure', 'architecture', 'landscape', 'still-life', 'abstract', 'crowd', 'vehicle', 'sky'
+    ];
+
+    const SUBJECT_VERB_MAP = {
+      animal: ['chasing', 'sleeping', 'nursing', 'running', 'hunting', 'resting'],
+      figure: ['walking', 'smiling', 'alone', 'hugging', 'reading', 'dancing'],
+      architecture: ['modern', 'ruined', 'ornate', 'minimalist'],
+      landscape: ['misty', 'moonlit', 'sunset', 'foggy', 'snowy', 'arid'],
+      abstract: ['chaotic', 'soft', 'repeating', 'colorful'],
+      'still-life': ['isolated', 'symmetrical', 'minimal'],
+      crowd: ['protesting', 'celebrating', 'waiting'],
+      vehicle: ['moving', 'parked', 'vintage'],
+      sky: ['stormy', 'clear', 'dramatic']
+    };
+
+    const lower = filename.toLowerCase();
+    const result = { subject: [], action: [] };
+
+    for (const subject of SUBJECTS) {
+      if (lower.includes(subject)) {
+        result.subject.push(subject);
+        const verbs = SUBJECT_VERB_MAP[subject];
+        for (const v of verbs) {
+          if (lower.includes(v)) {
+            result.action.push(v);
+          }
+        }
+      }
+    }
+
+    return result;
   };
 
   const detectTone = (brightnessValues, avgBrightness, stdDev, width, imageData) => {
@@ -203,24 +249,19 @@ export default function MetadataBuilder() {
     if (avgBrightness > 180 && stdDev < 30 && colorRatio < 0.2) {
       mood.push('calm');
     }
-
     if (avgBrightness < 70 && stdDev < 20 && colorRatio < 0.1) {
       mood.push('lonely');
     }
-
     if (stdDev > 50 && avgBrightness < 120 && colorRatio < 0.15) {
       mood.push('eerie');
     }
-
     if (colorRatio > 0.2 && avgBrightness > 100 && stdDev < 35) {
       mood.push('romantic');
     }
-
     if (stdDev > 45 && colorRatio > 0.25) {
       mood.push('energetic');
     }
-
-    if (dominantHue !== null && (dominantHue >= 30 && dominantHue <= 70)) {
+    if (dominantHue !== null && dominantHue >= 30 && dominantHue <= 70) {
       mood.push('nostalgic');
     }
 
@@ -240,53 +281,31 @@ export default function MetadataBuilder() {
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>Metadata Builder (Color + Tone + Mood)</h2>
+      <h2>Metadata Builder</h2>
       <input type="file" accept="image/*" onChange={handleImageUpload} />
 
       {imageUrl && (
         <img
           src={imageUrl}
           alt="Preview"
-          style={{
-            width: '100%',
-            maxWidth: '600px',
-            marginTop: '1rem',
-            marginBottom: '1rem',
-            borderRadius: '0.5rem'
-          }}
+          style={{ width: '100%', maxWidth: '600px', margin: '1rem 0', borderRadius: '0.5rem' }}
         />
       )}
 
       {tags.length > 0 && (
         <>
           <h4>Generated Tags:</h4>
-          <div style={{
-            background: '#eef',
-            padding: '1rem',
-            borderRadius: '0.5rem',
-            marginBottom: '1rem'
-          }}>
+          <div style={{ background: '#eef', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
             {tags.join(', ')}
           </div>
 
           <h4>Dimensions Breakdown:</h4>
-          <pre style={{
-            background: '#f9f9f9',
-            padding: '1rem',
-            borderRadius: '0.5rem',
-            fontSize: '0.9rem',
-            overflowX: 'auto'
-          }}>
+          <pre style={{ background: '#f9f9f9', padding: '1rem', borderRadius: '0.5rem', fontSize: '0.9rem', overflowX: 'auto' }}>
             {JSON.stringify(dimensions, null, 2)}
           </pre>
 
           <h4>Dominant Hue:</h4>
-          <div style={{
-            background: '#eee',
-            padding: '0.5rem',
-            borderRadius: '0.5rem',
-            marginBottom: '1rem'
-          }}>
+          <div style={{ background: '#eee', padding: '0.5rem', borderRadius: '0.5rem' }}>
             {dominantHue !== null ? dominantHue : <em>n/a</em>}
           </div>
         </>
