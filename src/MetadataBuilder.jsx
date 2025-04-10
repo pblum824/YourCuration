@@ -92,7 +92,6 @@ export default function MetadataBuilder() {
 
     let dominantHue = null;
 
-    // A. Tag black/white dominant and high/low key if appropriate
     if (blackRatio > 0.7 && colorRatio < 0.05) {
       tags.push('low-key');
       dimensions.colorPalette.push('low-key');
@@ -120,7 +119,6 @@ export default function MetadataBuilder() {
       dimensions.colorPalette.push('black and white');
     }
 
-    // B. Color palette (only if not strictly B/W)
     if (blackRatio < 0.7 && whiteRatio < 0.7 && colorRatio >= 0.1) {
       const topColors = Object.entries(colorCounts)
         .sort((a, b) => b[1] - a[1])
@@ -151,10 +149,13 @@ export default function MetadataBuilder() {
       dominantHue = Math.round(hues[0]);
     }
 
-    // C. Tone
     const toneResults = detectTone(brightnessValues, avgBrightness, stdDev, width, data);
     dimensions.visualTone = toneResults.tone;
     tags.push(...toneResults.tags);
+
+    const moodResults = detectMood(avgBrightness, stdDev, colorRatio, dominantHue);
+    dimensions.mood = moodResults;
+    tags.push(...moodResults);
 
     return {
       tags: Array.from(new Set(tags)),
@@ -196,6 +197,36 @@ export default function MetadataBuilder() {
     return { tone: Array.from(new Set(tone)), tags: Array.from(new Set(tags)) };
   };
 
+  const detectMood = (avgBrightness, stdDev, colorRatio, dominantHue) => {
+    const mood = [];
+
+    if (avgBrightness > 180 && stdDev < 30 && colorRatio < 0.2) {
+      mood.push('calm');
+    }
+
+    if (avgBrightness < 70 && stdDev < 20 && colorRatio < 0.1) {
+      mood.push('lonely');
+    }
+
+    if (stdDev > 50 && avgBrightness < 120 && colorRatio < 0.15) {
+      mood.push('eerie');
+    }
+
+    if (colorRatio > 0.2 && avgBrightness > 100 && stdDev < 35) {
+      mood.push('romantic');
+    }
+
+    if (stdDev > 45 && colorRatio > 0.25) {
+      mood.push('energetic');
+    }
+
+    if (dominantHue !== null && (dominantHue >= 30 && dominantHue <= 70)) {
+      mood.push('nostalgic');
+    }
+
+    return Array.from(new Set(mood));
+  };
+
   const rgbToHue = (r, g, b) => {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -209,7 +240,7 @@ export default function MetadataBuilder() {
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>Metadata Builder (Color + Tone)</h2>
+      <h2>Metadata Builder (Color + Tone + Mood)</h2>
       <input type="file" accept="image/*" onChange={handleImageUpload} />
 
       {imageUrl && (
