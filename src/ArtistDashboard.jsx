@@ -34,7 +34,10 @@ export default function ArtistDashboard() {
       const session = await ort.InferenceSession.create('/models/clip-vit-b32.onnx');
       console.log('[YourCuration] CLIP model loaded.');
       sessionRef.current = session;
-      textFeaturesRef.current = await getTextFeatures(TAG_PROMPTS, session);
+
+      const features = await getTextFeatures(TAG_PROMPTS, session);
+      console.log('[YourCuration] Text features ready.');
+      textFeaturesRef.current = features;
     }
   };
   
