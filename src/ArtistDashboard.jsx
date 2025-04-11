@@ -14,6 +14,8 @@ export default function ArtistDashboard() {
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
+  const sessionRef = useRef(null);
+  const textFeaturesRef = useRef(null);
   const [devMode, setDevMode] = useState(() => {
     return localStorage.getItem('yourcuration_devMode') === 'true';
   });
@@ -22,15 +24,11 @@ export default function ArtistDashboard() {
     return stored ? JSON.parse(stored) : [];
   });
 
-  useEffect(() => {
-    const TAG_PROMPTS = [
-      'person', 'child', 'animal', 'bird', 'dog', 'cat', 'tree', 'flower', 'building', 'vehicle', 'mountain', 'ocean', 'sky',
-      'portrait', 'landscape', 'seascape', 'still life', 'architecture', 'abstract', 'interior', 'urban scene', 'nature scene',
-      'black and white', 'high contrast', 'minimalist', 'surreal', 'vintage', 'dreamlike', 'dramatic lighting', 'moody'
-    ];
+    useEffect(() => {
+      localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
+    }, [images]);
 
-    const sessionRef = useRef(null);
-    const textFeaturesRef = useRef(null);
+    
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
   const loadCLIP = async () => {
