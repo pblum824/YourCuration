@@ -47,19 +47,27 @@ export default function ArtistDashboard() {
   };
 
   const getCLIPTags = async (imageDataURL) => {
-    await loadCLIP();
-    const img = new Image();
-    img.src = imageDataURL;
-    await new Promise((res) => (img.onload = res));
-    const tensor = await preprocessImage(img);
-    const output = await sessionRef.current.run({ image: tensor });
-    const imageFeatures = output['image_features'].data;
-    const similarities = TAG_PROMPTS.map((tag, i) => ({
-      tag,
-      score: cosineSimilarity(imageFeatures, textFeaturesRef.current[i]),
-    }));
-    similarities.sort((a, b) => b.score - a.score);
-    return similarities.slice(0, 5).map(s => s.tag);
+    try {
+      await loadCLIP();
+      const img = new Image();
+      img.src = imageDataURL;
+      await new Promise((res) => (img.onload = res));
+
+      const tensor = await preprocessImage(img);
+      const output = await sessionRef.current.run({ image: tensor });
+      const imageFeatures = output['image_features'].data;
+
+      const similarities = TAG_PROMPTS.map((tag, i) => ({
+        tag,
+        score: cosineSimilarity(imageFeatures, textFeaturesRef.current[i]),
+      }));
+      similarities.sort((a, b) => b.score - a.score);
+
+      return similarities.slice(0, 5).map(s => s.tag);
+    } catch (err) {
+      console.warn('[YourCuration] CLIP tagging failed:', err);
+      return ['clip-error'];
+    }
   };
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
