@@ -30,7 +30,9 @@ export default function ArtistDashboard() {
 
   const loadCLIP = async () => {
     if (!sessionRef.current) {
+      console.log('[YourCuration] Loading ONNX CLIP model...');
       const session = await ort.InferenceSession.create('/models/clip-vit-b32.onnx');
+      console.log('[YourCuration] CLIP model loaded.');
       sessionRef.current = session;
       textFeaturesRef.current = await getTextFeatures(TAG_PROMPTS, session);
     }
