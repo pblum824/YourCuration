@@ -1,5 +1,5 @@
 import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AppReadyState from './AppReadyState';
 import * as ort from 'onnxruntime-web';
 import { preprocessImage } from './utils/imageProcessing';
@@ -24,13 +24,10 @@ export default function ArtistDashboard() {
     return stored ? JSON.parse(stored) : [];
   });
 
-    useEffect(() => {
-      localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
-    }, [images]);
-
-    
+  useEffect(() => {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
+
   const loadCLIP = async () => {
     if (!sessionRef.current) {
       const session = await ort.InferenceSession.create('/models/clip-vit-b32.onnx');
@@ -38,7 +35,7 @@ export default function ArtistDashboard() {
       textFeaturesRef.current = await getTextFeatures(TAG_PROMPTS, session);
     }
   };
-
+  
   const cosineSimilarity = (a, b) => {
     let dot = 0, aMag = 0, bMag = 0;
     for (let i = 0; i < a.length; i++) {
