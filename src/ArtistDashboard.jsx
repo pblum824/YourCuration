@@ -102,8 +102,9 @@ export default function ArtistDashboard() {
 
     try {
       const session = await ort.InferenceSession.create(
-        'https://huggingface.co/rocca/openai-clip-js/resolve/main/clip-image-vit-32-float32.onnx'
+        'https://yourcuration-models.s3.us-west-1.amazonaws.com/models/clip-vit-b32.onnx'
       );
+      
       console.log('[YourCuration] ONNX model loaded!');
       alert('[YourCuration] ONNX model loaded!');
 
