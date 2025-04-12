@@ -106,7 +106,16 @@ export default function ArtistDashboard() {
   };
 
   const createImageObject = async (file) => {
-    const url = URL.createObjectURL(file);
+    const compressed = await compressImage(file);
+    const url = URL.createObjectURL(compressed);
+    const base64 = await imageToBase64(url);
+
+    const [clipTags, visualData] = await Promise.all([
+      getCLIPTags(base64),
+      analyzeImageFromURL(base64)
+    ]);
+
+    const mergedTags = Array.from(new Set([...clipTags, ...visualData.tags]));
 
     return {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
@@ -114,9 +123,9 @@ export default function ArtistDashboard() {
       url,
       scrapeEligible: true,
       metadata: {
-        tags: ['test'],
-        dimensions: {},
-        dominantHue: null
+        tags: mergedTags,
+        dimensions: visualData.dimensions,
+        dominantHue: visualData.dominantHue
       }
     };
   };
