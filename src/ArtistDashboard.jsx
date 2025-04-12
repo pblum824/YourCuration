@@ -157,12 +157,6 @@ export default function ArtistDashboard() {
         }
       };
 
-    
-    } catch (err) {
-      console.warn('[YourCuration] CLIP tagging failed:', err);
-      return ['clip-error'];
-    }
-  };
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
