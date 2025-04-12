@@ -5,6 +5,75 @@ import * as ort from 'onnxruntime-web';
 import { preprocessImage } from './utils/imageProcessing';
 import { getTextFeatures } from './utils/clipText';
 
+const TAG_PROMPTS = [
+  // People & Figures
+  'person', 'woman', 'man', 'child', 'elderly person', 'couple', 'group of people', 'portrait', 'self-portrait',
+  'mother and child', 'silhouette', 'dancer', 'musician', 'hands', 'face', 'eyes', 'profile', 'back view',
+
+  // Animals
+  'dog', 'cat', 'horse', 'cow', 'zebra', 'elephant', 'bird', 'hawk', 'eagle', 'owl',
+  'rabbit', 'fox', 'deer', 'wolf', 'lion', 'tiger', 'bear', 'flamingo', 'fish', 'insect', 'bee', 'butterfly',
+
+  // Nature & Landscapes
+  'landscape', 'seascape', 'mountain', 'valley', 'forest', 'desert', 'snow', 'ice', 'sunset', 'sunrise',
+  'storm', 'clouds', 'rain', 'mist', 'fog', 'ocean', 'river', 'lake', 'waterfall', 'field', 'tree', 'flower',
+  'wildflower', 'cactus', 'leaf', 'moss', 'rock formation', 'coastline', 'cliff',
+
+  // Settings & Architecture
+  'interior', 'exterior', 'building', 'church', 'temple', 'ruin', 'archway', 'bridge', 'castle',
+  'abandoned place', 'urban street', 'alley', 'corridor', 'window', 'door', 'stairs', 'balcony', 'courtyard',
+  'market', 'train station', 'airport', 'road', 'path', 'tunnel',
+
+  // Styles & Concepts
+  'black and white', 'high contrast', 'minimalist', 'maximalist', 'surreal', 'dreamlike',
+  'vintage', 'retro', 'documentary', 'editorial', 'fashion', 'candid', 'soft focus', 'motion blur', 'shallow depth of field',
+
+  // Moods & Emotions
+  'moody', 'serene', 'energetic', 'romantic', 'lonely', 'nostalgic', 'mysterious',
+  'joyful', 'melancholy', 'introspective', 'spiritual', 'tense', 'playful', 'gritty', 'peaceful', 'eerie',
+
+  // Light & Color
+  'dramatic lighting', 'backlit', 'golden hour', 'blue hour', 'harsh light', 'soft light',
+  'shadow play', 'reflections', 'lens flare', 'warm tones', 'cool tones', 'neutral tones',
+
+  // Artistic & Abstract
+  'abstract', 'geometric', 'patterned', 'texture', 'motion', 'repetition',
+  'close-up', 'macro', 'bokeh', 'long exposure', 'double exposure',
+
+  // Objects & Still Life
+  'still life', 'book', 'clock', 'mirror', 'glass', 'vase', 'bottle', 'fruit', 'flower arrangement', 'chair',
+  'musical instrument', 'camera', 'bicycle', 'car', 'train', 'airplane', 'boat', 'bridge',
+
+  // Events & Scenes
+  'celebration', 'protest', 'wedding', 'funeral', 'festival', 'ceremony', 'crowd', 'solitude',
+  'travel', 'adventure', 'exploration', 'daily life', 'street photography', 'environmental portrait',
+
+  // Composition
+  'rule of thirds', 'leading lines', 'centered composition', 'symmetry', 'asymmetry', 'framing', 'negative space',
+];
+
+const ACTION_PROMPTS = [
+  // Expressive actions & emotions
+  'protesting', 'celebrating', 'waiting', 'marching', 'hugging', 'crying', 'smiling',
+  'laughing', 'embracing', 'running', 'sitting', 'standing', 'kneeling', 'reaching',
+  'pointing', 'gesturing', 'shouting', 'listening', 'watching', 'reading', 'writing',
+
+  // Artistic or passive movement
+  'posing', 'dancing', 'meditating', 'floating', 'jumping', 'stretching', 'sleeping', 'praying',
+
+  // Human–environment interactions
+  'working', 'cooking', 'serving', 'painting', 'cleaning', 'carrying', 'gardening',
+  'shopping', 'traveling', 'commuting', 'observing',
+
+  // Group/social dynamics
+  'gathering', 'arguing', 'negotiating', 'collaborating', 'playing', 'teaching', 'learning',
+  'competing', 'caring', 'nurturing', 'protecting',
+
+  // Narrative verbs
+  'protesting', 'resisting', 'demanding', 'mourning', 'celebrating', 'reflecting',
+  'struggling', 'enduring', 'believing', 'honoring'
+];
+
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard() {
@@ -36,7 +105,10 @@ export default function ArtistDashboard() {
       console.log('[YourCuration] ONNX model loaded!');
       alert('[YourCuration] ONNX model loaded!');
 
-      const features = await getTextFeatures(TAG_PROMPTS, session);
+      const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
+      const features = await getTextFeatures(allPrompts, session);
+      textFeaturesRef.current = features;
+      
       console.log('[YourCuration] Text features ready.');
 
       sessionRef.current = session;
@@ -57,24 +129,35 @@ export default function ArtistDashboard() {
     return dot / (Math.sqrt(aMag) * Math.sqrt(bMag));
   };
 
-  const getCLIPTags = async (imageDataURL) => {
-    try {
-      await loadCLIP();
-      const img = new Image();
-      img.src = imageDataURL;
-      await new Promise((res) => (img.onload = res));
+      const getCLIPTags = async (imageDataURL) => {
+        try {
+          await loadCLIP();
+          const img = new Image();
+          img.src = imageDataURL;
+          await new Promise((res) => (img.onload = res));
 
-      const tensor = await preprocessImage(img);
-      const output = await sessionRef.current.run({ image: tensor });
-      const imageFeatures = output['image_features'].data;
+          const tensor = await preprocessImage(img);
+          const output = await sessionRef.current.run({ image: tensor });
+          const imageFeatures = output['image_features'].data;
 
-      const similarities = TAG_PROMPTS.map((tag, i) => ({
-        tag,
-        score: cosineSimilarity(imageFeatures, textFeaturesRef.current[i]),
-      }));
-      similarities.sort((a, b) => b.score - a.score);
+          const allScores = textFeaturesRef.current.map((feature, i) => ({
+            tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
+            type: i < TAG_PROMPTS.length ? 'subject' : 'action',
+            score: cosineSimilarity(imageFeatures, feature),
+          }));
 
-      return similarities.slice(0, 5).map(s => s.tag);
+          allScores.sort((a, b) => b.score - a.score);
+
+          const topTags = allScores.slice(0, 7); // or 10, adjust as needed
+
+          return topTags.map(s => s.tag);
+        } catch (err) {
+          console.warn('[YourCuration] CLIP tagging failed:', err);
+          return ['clip-error'];
+        }
+      };
+
+    
     } catch (err) {
       console.warn('[YourCuration] CLIP tagging failed:', err);
       return ['clip-error'];
