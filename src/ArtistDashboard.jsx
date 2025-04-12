@@ -29,16 +29,21 @@ export default function ArtistDashboard() {
   }, [images]);
 
   const loadCLIP = async () => {
-    if (!sessionRef.current) {
-      console.log('[YourCuration] Loading ONNX CLIP model...');
+    console.log('[YourCuration] FORCED: Attempting to load ONNX CLIP model...');
+
+    try {
       const session = await ort.InferenceSession.create('/models/clip-vit-b32.onnx');
-      console.log('[YourCuration] CLIP model loaded.');
+      console.log('[YourCuration] ONNX model loaded!');
       alert('[YourCuration] ONNX model loaded!');
-      sessionRef.current = session;
 
       const features = await getTextFeatures(TAG_PROMPTS, session);
       console.log('[YourCuration] Text features ready.');
+
+      sessionRef.current = session;
       textFeaturesRef.current = features;
+    } catch (err) {
+      console.error('[YourCuration] ONNX load failed:', err);
+      alert('[YourCuration] ONNX model load failed. See console.');
     }
   };
   
