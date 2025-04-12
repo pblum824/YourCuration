@@ -101,7 +101,9 @@ export default function ArtistDashboard() {
     console.log('[YourCuration] FORCED: Attempting to load ONNX CLIP model...');
 
     try {
-      const session = await ort.InferenceSession.create('https://cdn.yourcuration.app/models/clip-vit-b32.onnx');
+      const session = await ort.InferenceSession.create(
+        'https://huggingface.co/rocca/openai-clip-js/resolve/main/clip-image-vit-32-float32.onnx'
+      );
       console.log('[YourCuration] ONNX model loaded!');
       alert('[YourCuration] ONNX model loaded!');
 
