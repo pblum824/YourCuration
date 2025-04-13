@@ -132,33 +132,35 @@ export default function ArtistDashboard() {
     return dot / (Math.sqrt(aMag) * Math.sqrt(bMag));
   };
 
-      const getCLIPTags = async (imageDataURL) => {
-        try {
-          await loadCLIP();
-          const img = new Image();
-          img.src = imageDataURL;
-          await new Promise((res) => (img.onload = res));
+  const getCLIPTags = async (imageDataURL) => {
+    try {
+      await loadCLIP();
+      const img = new Image();
+      img.src = imageDataURL;
+      await new Promise((res) => (img.onload = res));
 
-          const tensor = await preprocessImage(img);
-          const output = await sessionRef.current.run({ image: tensor });
-          const imageFeatures = output['image_features'].data;
+      const tensor = await preprocessImage(img);
+      const output = await sessionRef.current.run({ image: tensor });
+      const imageFeatures = output['image_features'].data;
 
-          const allScores = textFeaturesRef.current.map((feature, i) => ({
-            tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
-            type: i < TAG_PROMPTS.length ? 'subject' : 'action',
-            score: cosineSimilarity(imageFeatures, feature),
-          }));
+      const allScores = textFeaturesRef.current.map((feature, i) => ({
+        tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
+        type: i < TAG_PROMPTS.length ? 'subject' : 'action',
+        score: cosineSimilarity(imageFeatures, feature),
+      }));
 
-          allScores.sort((a, b) => b.score - a.score);
+      allScores.sort((a, b) => b.score - a.score);
+      const topTags = allScores.slice(0, 7);
 
-          const topTags = allScores.slice(0, 7); // or 10, adjust as needed
+      // ✅ THIS is the line you want:
+      console.log('[CLIP] Final top tags:', topTags);
 
-          return topTags.map(s => s.tag);
-        } catch (err) {
-          console.warn('[YourCuration] CLIP tagging failed:', err);
-          return ['clip-error'];
-        }
-      };
+      return topTags.map(s => s.tag);
+    } catch (err) {
+      console.warn('[YourCuration] CLIP tagging failed:', err);
+      return ['clip-error'];
+    }
+  };
 
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
