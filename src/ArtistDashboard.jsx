@@ -102,7 +102,7 @@ export default function ArtistDashboard() {
 
     try {
       const session = await ort.InferenceSession.create(
-        'https://yourcuration-models.s3.us-west-1.amazonaws.com/models/clip-vit-b32.onnx'
+        'https://yourcuration-static.s3.amazonaws.com/models/clip-vit-b32.onnx'
       );
       
       console.log('[YourCuration] ONNX model loaded!');
