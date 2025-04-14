@@ -133,6 +133,7 @@ export default function ArtistDashboard() {
 
   const getCLIPTags = async (imageDataURL) => {
     console.log('[YourCuration] Running getCLIPTags() for image');
+
     try {
       await loadCLIP();
 
@@ -151,7 +152,7 @@ export default function ArtistDashboard() {
       const output = await sessionRef.current.run({ image: tensor });
       const imageFeatures = output['image_features'].data;
 
-      console.log('[YourCuration] Computing cosine similarities');
+      console.log('[YourCuration] Computing cosine similarities...');
       const allScores = textFeaturesRef.current.map((feature, i) => ({
         tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
         type: i < TAG_PROMPTS.length ? 'subject' : 'action',
@@ -168,7 +169,6 @@ export default function ArtistDashboard() {
       return ['clip-error'];
     }
   };
-
       const tensor = await preprocessImage(img);
       const output = await sessionRef.current.run({ image: tensor });
       const imageFeatures = output['image_features'].data;
