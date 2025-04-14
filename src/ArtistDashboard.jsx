@@ -131,37 +131,43 @@ export default function ArtistDashboard() {
     return dot / (Math.sqrt(aMag) * Math.sqrt(bMag));
   };
 
-      const getCLIPTags = async (imageDataURL) => {
-        console.log('[YourCuration] Running getCLIPTags() for image');
-        try {
-          await loadCLIP();
+  const getCLIPTags = async (imageDataURL) => {
+    console.log('[YourCuration] Running getCLIPTags() for image');
+    try {
+      await loadCLIP();
 
-          const img = new Image();
-          img.src = imageDataURL;
-          await new Promise((res) => (img.onload = res));
+      const img = new Image();
+      img.src = imageDataURL;
 
-          console.log('[YourCuration] Calling preprocessImage and running session');
-          const tensor = await preprocessImage(img);
-          const output = await sessionRef.current.run({ image: tensor });
-          const imageFeatures = output['image_features'].data;
+      await new Promise((res) => {
+        img.onload = () => {
+          console.log('[YourCuration] Image loaded for CLIP tagging');
+          res();
+        };
+      });
 
-          const allScores = textFeaturesRef.current.map((feature, i) => ({
-            tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
-            type: i < TAG_PROMPTS.length ? 'subject' : 'action',
-            score: cosineSimilarity(imageFeatures, feature),
-          }));
+      console.log('[YourCuration] Calling preprocessImage and running session');
+      const tensor = await preprocessImage(img);
+      const output = await sessionRef.current.run({ image: tensor });
+      const imageFeatures = output['image_features'].data;
 
-          allScores.sort((a, b) => b.score - a.score);
-          const topTags = allScores.slice(0, 7); // adjust as needed
+      console.log('[YourCuration] Computing cosine similarities');
+      const allScores = textFeaturesRef.current.map((feature, i) => ({
+        tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
+        type: i < TAG_PROMPTS.length ? 'subject' : 'action',
+        score: cosineSimilarity(imageFeatures, feature),
+      }));
 
-          console.log('[YourCuration] Top tags:', topTags.map(t => t.tag));
-          return topTags.map(s => s.tag);
-        } catch (err) {
-          console.warn('[YourCuration] CLIP tagging failed:', err);
-          return ['clip-error'];
-        }
-      };
-      
+      allScores.sort((a, b) => b.score - a.score);
+      const topTags = allScores.slice(0, 7);
+      console.log('[CLIP] Final top tags:', topTags);
+
+      return topTags.map(s => s.tag);
+    } catch (err) {
+      console.warn('[YourCuration] CLIP tagging failed:', err);
+      return ['clip-error'];
+    }
+  };
 
       const tensor = await preprocessImage(img);
       const output = await sessionRef.current.run({ image: tensor });
