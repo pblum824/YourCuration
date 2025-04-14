@@ -102,7 +102,7 @@ export default function ArtistDashboard() {
 
     try {
       const session = await ort.InferenceSession.create(
-        'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx'
+        'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
       );
       
       console.log('[YourCuration] ONNX model loaded!');
@@ -111,7 +111,6 @@ export default function ArtistDashboard() {
       const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
       const features = await getTextFeatures(allPrompts, session);
       textFeaturesRef.current = features;
-      
       console.log('[YourCuration] Text features ready.');
 
       sessionRef.current = session;
