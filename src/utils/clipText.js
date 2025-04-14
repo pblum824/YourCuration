@@ -2,16 +2,28 @@ import * as ort from 'onnxruntime-web';
 
 // Prompts will be passed in by the caller
 export async function getTextFeatures(prompts, session) {
-  // Tokenizer config for BERT-style tokenization
+  console.log('[Tokenizer] Initializing BERT-style tokenizer...');
   const tokenizer = new BertTokenizer();
-  const inputIds = prompts.map(p => tokenizer.encode(p));
 
-  // Pad sequences to the same length
+  console.log('[Tokenizer] Encoding prompts:', prompts);
+  const inputIds = prompts.map(p => {
+    const encoded = tokenizer.encode(p);
+    console.log(`[Tokenizer] Encoded "${p}" as:`, encoded);
+    return encoded;
+  });
+
   const maxLen = Math.max(...inputIds.map(seq => seq.length));
-  const inputTensor = new ort.Tensor('int64', flattenAndPad(inputIds, maxLen), [prompts.length, maxLen]);
+  console.log('[Tokenizer] Max sequence length:', maxLen);
 
-  // Run inference
+  const paddedInput = flattenAndPad(inputIds, maxLen);
+  console.log('[Tokenizer] Flattened & padded tensor input:', paddedInput);
+
+  const inputTensor = new ort.Tensor('int64', paddedInput, [prompts.length, maxLen]);
+
+  console.log('[Tokenizer] Running inference...');
   const output = await session.run({ input_ids: inputTensor });
+
+  console.log('[Tokenizer] Inference output:', output);
   return output['text_features'].data;
 }
 
@@ -37,10 +49,14 @@ class BertTokenizer {
       this.vocab[w] = i;
       this.invVocab[i] = w;
     });
+    console.log('[Tokenizer] Loaded vocabulary of', words.length, 'tokens');
   }
 
   encode(text) {
     const tokens = ['[CLS]', ...text.toLowerCase().split(/\W+/), '[SEP]'];
-    return tokens.map(t => this.vocab[t] ?? this.vocab['[UNK]']);
+    const encoded = tokens.map(t => this.vocab[t] ?? this.vocab['[UNK]']);
+    console.log(`[Tokenizer] Tokens for "${text}":`, tokens);
+    console.log(`[Tokenizer] IDs for "${text}":`, encoded);
+    return encoded;
   }
 }
