@@ -104,21 +104,20 @@ export default function ArtistDashboard() {
       const session = await ort.InferenceSession.create(
         'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
       );
-      
+
       console.log('[YourCuration] ONNX model loaded!');
       alert('[YourCuration] ONNX model loaded!');
 
       const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
-      try {
-        const features = await getTextFeatures(allPrompts, session);
-        textFeaturesRef.current = features;
-        console.log('[YourCuration] Text features ready.');
-      } catch (err) {
-        console.error('[YourCuration] ERROR during text feature extraction:', err);
-      }
+      console.log('[YourCuration] Preparing to call getTextFeatures with prompts:', allPrompts);
 
-      sessionRef.current = session;
+      console.log('[YourCuration] About to call getTextFeatures...');
+      const features = await getTextFeatures(allPrompts, session);
+      console.log('[YourCuration] getTextFeatures returned:', features);
+
       textFeaturesRef.current = features;
+      sessionRef.current = session;
+      console.log('[YourCuration] Text features ready and saved.');
     } catch (err) {
       console.error('[YourCuration] ONNX load failed:', err);
       alert('[YourCuration] ONNX model load failed. See console.');
@@ -151,16 +150,10 @@ export default function ArtistDashboard() {
         };
       });
 
-      console.log('[YourCuration] Calling preprocessImage...');
+      console.log('[YourCuration] Calling preprocessImage and running session');
       const tensor = await preprocessImage(img);
-      console.log('[YourCuration] preprocessImage returned tensor:', tensor);
-
-      console.log('[YourCuration] Running session inference...');
       const output = await sessionRef.current.run({ image: tensor });
-      console.log('[YourCuration] session.run completed. Output:', output);
-
       const imageFeatures = output['image_features'].data;
-      console.log('[YourCuration] Extracted image_features:', imageFeatures);
 
       console.log('[YourCuration] Computing cosine similarities...');
       const allScores = textFeaturesRef.current.map((feature, i) => ({
