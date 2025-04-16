@@ -151,10 +151,16 @@ export default function ArtistDashboard() {
         };
       });
 
-      console.log('[YourCuration] Calling preprocessImage and running session');
+      console.log('[YourCuration] Calling preprocessImage...');
       const tensor = await preprocessImage(img);
+      console.log('[YourCuration] preprocessImage returned tensor:', tensor);
+
+      console.log('[YourCuration] Running session inference...');
       const output = await sessionRef.current.run({ image: tensor });
+      console.log('[YourCuration] session.run completed. Output:', output);
+
       const imageFeatures = output['image_features'].data;
+      console.log('[YourCuration] Extracted image_features:', imageFeatures);
 
       console.log('[YourCuration] Computing cosine similarities...');
       const allScores = textFeaturesRef.current.map((feature, i) => ({
