@@ -109,9 +109,13 @@ export default function ArtistDashboard() {
       alert('[YourCuration] ONNX model loaded!');
 
       const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
-      const features = await getTextFeatures(allPrompts, session);
-      textFeaturesRef.current = features;
-      console.log('[YourCuration] Text features ready.');
+      try {
+        const features = await getTextFeatures(allPrompts, session);
+        textFeaturesRef.current = features;
+        console.log('[YourCuration] Text features ready.');
+      } catch (err) {
+        console.error('[YourCuration] ERROR during text feature extraction:', err);
+      }
 
       sessionRef.current = session;
       textFeaturesRef.current = features;

@@ -2,29 +2,36 @@ import * as ort from 'onnxruntime-web';
 
 // Prompts will be passed in by the caller
 export async function getTextFeatures(prompts, session) {
-  console.log('[Tokenizer] Initializing BERT-style tokenizer...');
-  const tokenizer = new BertTokenizer();
+  try {
+    console.log('[Tokenizer] Initializing BERT-style tokenizer...');
+    const tokenizer = new BertTokenizer();
 
-  console.log('[Tokenizer] Encoding prompts:', prompts);
-  const inputIds = prompts.map(p => {
-    const encoded = tokenizer.encode(p);
-    console.log(`[Tokenizer] Encoded "${p}" as:`, encoded);
-    return encoded;
-  });
+    console.log('[Tokenizer] Encoding prompts:', prompts);
+    const inputIds = prompts.map(p => {
+      const encoded = tokenizer.encode(p);
+      console.log(`[Tokenizer] Encoded "${p}" as:`, encoded);
+      return encoded;
+    });
 
-  const maxLen = Math.max(...inputIds.map(seq => seq.length));
-  console.log('[Tokenizer] Max sequence length:', maxLen);
+    const maxLen = Math.max(...inputIds.map(seq => seq.length));
+    console.log('[Tokenizer] Max sequence length:', maxLen);
 
-  const paddedInput = flattenAndPad(inputIds, maxLen);
-  console.log('[Tokenizer] Flattened & padded tensor input:', paddedInput);
+    const paddedInput = flattenAndPad(inputIds, maxLen);
+    console.log('[Tokenizer] Flattened & padded tensor input:', paddedInput);
 
-  const inputTensor = new ort.Tensor('int64', paddedInput, [prompts.length, maxLen]);
+    const inputTensor = new ort.Tensor('int64', paddedInput, [prompts.length, maxLen]);
+    console.log('[Tokenizer] Running inference...');
 
-  console.log('[Tokenizer] Running inference...');
-  const output = await session.run({ input_ids: inputTensor });
+    const output = await session.run({ input_ids: inputTensor });
 
-  console.log('[Tokenizer] Inference output:', output);
-  return output['text_features'].data;
+    console.log('[Tokenizer] Inference output keys:', Object.keys(output));
+    console.log('[Tokenizer] text_features shape:', output['text_features']?.dims);
+
+    return output['text_features'].data;
+  } catch (err) {
+    console.error('[Tokenizer] FAILED inside getTextFeatures:', err);
+    return [];
+  }
 }
 
 function flattenAndPad(sequences, length) {
@@ -35,7 +42,6 @@ function flattenAndPad(sequences, length) {
   });
 }
 
-// Basic BERT-style tokenizer (simplified)
 class BertTokenizer {
   constructor() {
     this.vocab = {};
