@@ -169,28 +169,6 @@ export default function ArtistDashboard() {
       return ['clip-error'];
     }
   };
-      const tensor = await preprocessImage(img);
-      const output = await sessionRef.current.run({ image: tensor });
-      const imageFeatures = output['image_features'].data;
-
-      const allScores = textFeaturesRef.current.map((feature, i) => ({
-        tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
-        type: i < TAG_PROMPTS.length ? 'subject' : 'action',
-        score: cosineSimilarity(imageFeatures, feature),
-      }));
-
-      allScores.sort((a, b) => b.score - a.score);
-      const topTags = allScores.slice(0, 7);
-
-      // ✅ THIS is the line you want:
-      console.log('[CLIP] Final top tags:', topTags);
-
-      return topTags.map(s => s.tag);
-    } catch (err) {
-      console.warn('[YourCuration] CLIP tagging failed:', err);
-      return ['clip-error'];
-    }
-  };
 
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
