@@ -1,32 +1,38 @@
 import * as ort from 'onnxruntime-web';
 
 export async function getTextFeatures(prompts, session) {
-  console.log('[Tokenizer] Initializing BERT-style tokenizer...');
+  console.log('[Tokenizer] Initializing tokenizer...');
   const tokenizer = new BertTokenizer();
 
-  console.log('[Tokenizer] Encoding prompts:', prompts);
-  const inputIds = prompts.map(p => {
-    const encoded = tokenizer.encode(p);
-    console.log(`[Tokenizer] Encoded "${p}" as:`, encoded);
-    return encoded;
-  });
+  try {
+    console.log('[Tokenizer] Encoding prompts:', prompts);
+    const inputIds = prompts.map(p => {
+      try {
+        const encoded = tokenizer.encode(p);
+        console.log(`[Tokenizer] Encoded "${p}" →`, encoded);
+        return encoded;
+      } catch (e) {
+        console.error(`[Tokenizer] Error encoding prompt: "${p}"`, e);
+        return [1]; // fallback to [UNK]
+      }
+    });
 
-  const maxLen = Math.max(...inputIds.map(seq => seq.length));
-  console.log('[Tokenizer] Max sequence length:', maxLen);
+    const maxLen = Math.max(...inputIds.map(seq => seq.length));
+    console.log('[Tokenizer] Max length:', maxLen);
 
-  const paddedInput = flattenAndPad(inputIds, maxLen);
-  console.log('[Tokenizer] Flattened & padded tensor input:', paddedInput);
+    const flat = flattenAndPad(inputIds, maxLen);
+    console.log('[Tokenizer] Flattened input:', flat);
 
-  const inputTensor = new ort.Tensor('int64', paddedInput, [prompts.length, maxLen]);
-  console.log('[Tokenizer] Created ort.Tensor with shape:', inputTensor.dims);
+    const inputTensor = new ort.Tensor('int64', flat, [prompts.length, maxLen]);
+    console.log('[Tokenizer] Running session...');
+    const output = await session.run({ input_ids: inputTensor });
 
-  console.log('[Tokenizer] Running inference...');
-  const output = await session.run({ input_ids: inputTensor });
-
-  console.log('[Tokenizer] Inference output keys:', Object.keys(output));
-  console.log('[Tokenizer] Output text_features shape:', output['text_features'].dims);
-
-  return output['text_features'].data;
+    console.log('[Tokenizer] Output received:', output);
+    return output['text_features'].data;
+  } catch (err) {
+    console.error('[Tokenizer] FAILED during getTextFeatures:', err);
+    return [];
+  }
 }
 
 function flattenAndPad(sequences, length) {
@@ -45,24 +51,17 @@ class BertTokenizer {
   }
 
   loadVocab() {
-    const words = [
-      '[PAD]', '[UNK]', '[CLS]', '[SEP]', '[MASK]',
-      'a', 'an', 'the', 'person', 'animal', 'dog', 'cat',
-      'running', 'protesting', 'hugging', 'group', 'tree',
-      'sunset', 'shadow', 'abstract', 'city', 'architecture', 'joyful'
-    ];
+    const words = ['[PAD]', '[UNK]', '[CLS]', '[SEP]', '[MASK]', 'a', 'an', 'the', 'person', 'animal', 'dog', 'cat', 'running', 'protesting', 'hugging', 'group', 'tree', 'sunset', 'shadow', 'abstract'];
     words.forEach((w, i) => {
       this.vocab[w] = i;
       this.invVocab[i] = w;
     });
-    console.log('[Tokenizer] Loaded vocabulary of', words.length, 'tokens');
+    console.log('[Tokenizer] Vocabulary loaded:', this.vocab);
   }
 
   encode(text) {
     const tokens = ['[CLS]', ...text.toLowerCase().split(/\W+/), '[SEP]'];
-    const encoded = tokens.map(t => this.vocab[t] ?? this.vocab['[UNK]']);
     console.log(`[Tokenizer] Tokens for "${text}":`, tokens);
-    console.log(`[Tokenizer] IDs for "${text}":`, encoded);
-    return encoded;
+    return tokens.map(t => this.vocab[t] ?? this.vocab['[UNK]']);
   }
 }
