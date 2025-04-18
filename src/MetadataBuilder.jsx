@@ -33,7 +33,7 @@ export default function MetadataBuilder() {
     reader.readAsDataURL(file);
   };
 
-    const analyzeImage = (ctx, width, height, imageDataFull) => {
+  const analyzeImage = (ctx, width, height, imageDataFull) => {
     const data = imageDataFull.data;
     const totalPixels = width * height;
     const brightnessValues = [];
@@ -158,14 +158,12 @@ export default function MetadataBuilder() {
     dimensions.mood = moodResults;
     tags.push(...moodResults);
 
-
     return {
       tags: Array.from(new Set(tags)),
       dimensions,
       dominantHue
     };
   };
-
 
   const detectTone = (brightnessValues, avgBrightness, stdDev, width, imageData) => {
     const tags = [];
