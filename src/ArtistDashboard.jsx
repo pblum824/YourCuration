@@ -153,6 +153,7 @@ export default function ArtistDashboard() {
       console.log('[YourCuration] Calling preprocessImage and running session');
       const tensor = await preprocessImage(img);
       const output = await sessionRef.current.run({ image: tensor });
+      console.log('[YourCuration] CLIP raw output:', output);
       const imageFeatures = output['image_features'].data;
 
       console.log('[YourCuration] Computing cosine similarities...');
