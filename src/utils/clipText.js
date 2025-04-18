@@ -23,9 +23,22 @@ export async function getTextFeatures(prompts, session) {
     const flat = flattenAndPad(inputIds, maxLen);
     console.log('[Tokenizer] Flattened input:', flat);
 
-    const inputTensor = new ort.Tensor('int64', flat, [prompts.length, maxLen]);
-    console.log('[Tokenizer] Running session...');
-    const output = await session.run({ input_ids: inputTensor });
+    const inputTensor = new ort.Tensor('int64', paddedInput, [prompts.length, maxLen]);
+
+    // Build attention mask (1s where tokens exist, 0s for padding)
+    const attention = inputIds.map(seq => {
+      const mask = new Array(maxLen).fill(0);
+      for (let i = 0; i < seq.length; i++) mask[i] = 1;
+      return mask;
+    });
+    const flatMask = attention.flat();
+    const maskTensor = new ort.Tensor('int64', flatMask, [prompts.length, maxLen]);
+
+    console.log('[Tokenizer] Running session with input_ids and attention_mask...');
+    const output = await session.run({
+      input_ids: inputTensor,
+      attention_mask: maskTensor
+    });
 
     console.log('[Tokenizer] Output received:', output);
     return output['text_features'].data;
