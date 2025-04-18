@@ -37,7 +37,7 @@ export async function getTextFeatures(prompts, session) {
       attention_mask: maskTensor,
     });
     console.log('[Tokenizer] Inference output:', output);
-    return output['text_features'].data;
+    return output['text_embeds'].data;
   } catch (err) {
     console.error('[Tokenizer] FAILED during getTextFeatures:', err);
     return [];
