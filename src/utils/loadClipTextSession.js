@@ -5,7 +5,7 @@ let tokenizerSession = null;
 let textSession = null;
 let vocabMap = null;
 
-export async function loadTextModelSessions() {
+export async function loadTextModelSession() {
   if (tokenizerSession && textSession && vocabMap) {
     return { tokenizerSession, textSession, vocabMap };
   }
