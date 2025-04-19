@@ -14,7 +14,7 @@ export async function loadTextModelSession() {
 
   const [tokenizer, text] = await Promise.all([
     ort.InferenceSession.create(
-      'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-tokenizer-vit-b32.onnx'
+      'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
     ),
     ort.InferenceSession.create(
       'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
