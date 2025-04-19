@@ -3,7 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import AppReadyState from './AppReadyState';
 import * as ort from 'onnxruntime-web';
 import { preprocessImage } from './utils/imageProcessing';
-import { loadTextModelSession, getTextFeatures } from './utils/clipText';
+import {
+  loadTextModelSession,
+  loadImageModelSession,
+  getTextFeatures,
+  getImageFeatures
+} from './utils/clipText';
 
 const TAG_PROMPTS = [
   // People & Figures
