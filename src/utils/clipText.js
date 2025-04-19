@@ -1,30 +1,30 @@
 // utils/clipText.js
 import * as ort from 'onnxruntime-web';
-import { loadTextModelSessions } from './loadClipTextSessions';
 
-let tokenizerSession = null;
-let encoderSession = null;
+// Load ONNX CLIP text model session
+export async function loadTextModelSession() {
+  console.log('[Tokenizer] Loading ONNX CLIP text model...');
+  const session = await ort.InferenceSession.create(
+    'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
+  );
+  console.log('[Tokenizer] Model loaded.');
+  return session;
+}
 
+// Get text features from a list of prompts
 export async function getTextFeatures(prompts) {
   try {
-    if (!tokenizerSession || !encoderSession) {
-      const sessions = await loadTextModelSessions();
-      tokenizerSession = sessions.tokenizerSession;
-      encoderSession = sessions.textSession;
-    }
+    const session = await loadTextModelSession();
 
     console.log('[Tokenizer] Running ONNX inference with prompts...');
-    const inputTensor = new ort.Tensor('string', prompts, [prompts.length]);
+    const input = new ort.Tensor('string', prompts, [prompts.length]);
+    const output = await session.run({ text_input: input });
 
-    const tokenizerFeeds = { text: inputTensor };
-    const tokenizerOutput = await tokenizerSession.run(tokenizerFeeds);
-    const { input_ids, attention_mask } = tokenizerOutput;
+    if (!output || !output.text_features || !output.text_features.data) {
+      throw new Error('Missing text_features in model output');
+    }
 
-    const encoderFeeds = { input_ids, attention_mask };
-    const encoderOutput = await encoderSession.run(encoderFeeds);
-
-    const embeds = encoderOutput.text_embeds.data;
-    return Array.from(embeds);
+    return output.text_features.data;
   } catch (err) {
     console.error('[Tokenizer] FAILED during getTextFeatures:', err);
     return [];
