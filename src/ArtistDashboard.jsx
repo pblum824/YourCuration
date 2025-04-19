@@ -1,14 +1,17 @@
-import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
+// Corrected import block for ArtistDashboard.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import AppReadyState from './AppReadyState';
 import * as ort from 'onnxruntime-web';
 import { preprocessImage } from './utils/imageProcessing';
 import {
-  loadTextModelSession,
-  loadImageModelSession,
   getTextFeatures,
-  getImageFeatures
+  loadTextModelSession
 } from './utils/clipText';
+import {
+  getImageFeatures,
+  loadImageModelSession
+} from './utils/clipImage';
+import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
 
 const TAG_PROMPTS = [
   // People & Figures
