@@ -83,8 +83,7 @@ export default function ArtistDashboard() {
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
-  const sessionRef = useRef(null);
-  const textFeaturesRef = useRef(null);
+  
   const [devMode, setDevMode] = useState(() => {
     return localStorage.getItem('yourcuration_devMode') === 'true';
   });
@@ -98,28 +97,17 @@ export default function ArtistDashboard() {
   }, [images]);
 
   const loadCLIP = async () => {
-    console.log(`[YourCuration] ${new Date().toISOString()} — FORCED: Attempting to load ONNX CLIP model...`);
+    console.log(`[YourCuration] ${new Date().toISOString()} — FORCED: Loading CLIP text model...`);
 
     try {
-      const session = await ort.InferenceSession.create(
-        'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
-      );
-
-      console.log(`[YourCuration] ${new Date().toISOString()} — ONNX model loaded!`);
-
       const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
-      console.log('[YourCuration] Preparing to call getTextFeatures with prompts:', allPrompts);
-
-      console.log('[YourCuration] About to call getTextFeatures...');
-      const features = await getTextFeatures(allPrompts, session);
-      console.log('[YourCuration] getTextFeatures returned:', features);
+      const features = await getTextFeatures(allPrompts); // New logic handles session internally
 
       textFeaturesRef.current = features;
-      sessionRef.current = session;
       console.log('[YourCuration] Text features ready and saved.');
     } catch (err) {
-      console.error('[YourCuration] ONNX load failed:', err);
-      alert('[YourCuration] ONNX model load failed. See console.');
+      console.error('[YourCuration] CLIP text model load failed:', err);
+      alert('[YourCuration] Failed to load CLIP text model. See console.');
     }
   };
   
@@ -137,7 +125,16 @@ export default function ArtistDashboard() {
     console.log('[YourCuration] Running getCLIPTags() for image');
 
     try {
-      await loadCLIP();
+      const [textSession, imageSession] = await Promise.all([
+        loadTextModelSession(),
+        loadImageModelSession()
+      ]);
+
+      const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
+      console.log('[YourCuration] Preparing to call getTextFeatures with prompts:', allPrompts);
+
+      const textFeatures = await getTextFeatures(allPrompts, textSession);
+      console.log('[YourCuration] Text features generated.');
 
       const img = new Image();
       img.src = imageDataURL;
@@ -149,14 +146,13 @@ export default function ArtistDashboard() {
         };
       });
 
-      console.log('[YourCuration] Calling preprocessImage and running session');
+      console.log('[YourCuration] Calling preprocessImage and running image model session');
       const tensor = await preprocessImage(img);
-      const output = await sessionRef.current.run({ image: tensor });
-      console.log('[YourCuration] CLIP raw output:', output);
+      const output = await imageSession.run({ image: tensor });
       const imageFeatures = output['image_features'].data;
 
       console.log('[YourCuration] Computing cosine similarities...');
-      const allScores = textFeaturesRef.current.map((feature, i) => ({
+      const allScores = textFeatures.map((feature, i) => ({
         tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
         type: i < TAG_PROMPTS.length ? 'subject' : 'action',
         score: cosineSimilarity(imageFeatures, feature),
