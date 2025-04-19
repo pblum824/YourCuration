@@ -13,7 +13,7 @@ export async function loadTextModelSession() {
 // Load the ONNX image model (CLIP image encoder)
 export async function loadImageModelSession() {
   const session = await ort.InferenceSession.create(
-    'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-image-vit-b32.onnx'
+    'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx'
   );
   console.log('[CLIP] Image model session loaded');
   return session;
