@@ -22,20 +22,29 @@ export default function GenerateTags({ setView }) {
       setImages(parsed);
     }
 
-    // Load ONNX models
     async function loadModels() {
+      console.log('[GenerateTags] Starting model load...');
+
       try {
-        console.log('[GenerateTags] Loading ONNX models...');
+        console.log('[GenerateTags] Loading image model...');
         const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
-        const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
         setImageModelSession(imageSession);
-        setTextModelSession(textSession);
-        setModelsLoaded(true);
-        setShowGenerateButton(true);
-        console.log('[GenerateTags] ONNX models loaded');
+        console.log('[CLIP] Image model session loaded');
       } catch (err) {
-        console.error('[GenerateTags] Failed to load models:', err);
+        console.error('[GenerateTags] Failed to load image model:', err);
       }
+
+      try {
+        console.log('[GenerateTags] Loading text model...');
+        const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
+        setTextModelSession(textSession);
+        console.log('[CLIP] Text model session loaded');
+      } catch (err) {
+        console.error('[GenerateTags] Failed to load text model:', err);
+      }
+
+      setModelsLoaded(true);
+      setShowGenerateButton(true);
     }
 
     loadModels();
