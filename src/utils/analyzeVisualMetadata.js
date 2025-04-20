@@ -220,3 +220,10 @@ function rgbToHue(r, g, b) {
   else if (max === b) h = (60 * ((r - g) / (max - min)) + 240) % 360;
   return h;
 }
+export {
+  analyzeImageFromURL as analyzeVisualMetadataFromImage,
+  analyzeImage,
+  detectTone,
+  detectMood,
+  rgbToHue
+};

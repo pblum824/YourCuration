@@ -1,28 +1,23 @@
 // utils/loadClipTextSessions.js
-import * as ort from 'onnxruntime-web';
+import { loadTextModelSession } from "../utils/onnxHelpers";
 
 let tokenizerSession = null;
 let textSession = null;
 let vocabMap = null;
 
-export async function loadTextModelSession() {
+export async function loadClipTextSession() {
   if (tokenizerSession && textSession && vocabMap) {
     return { tokenizerSession, textSession, vocabMap };
   }
 
   console.log('[Tokenizer] Loading CLIP tokenizer and text encoder...');
 
-  const [tokenizer, text] = await Promise.all([
-    ort.InferenceSession.create(
-      'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
-    ),
-    ort.InferenceSession.create(
-      'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
-    ),
-  ]);
+  const session = await loadTextModelSession(
+    'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx'
+  );
 
-  tokenizerSession = tokenizer;
-  textSession = text;
+  tokenizerSession = session;
+  textSession = session;
 
   const vocabResponse = await fetch(
     'https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-tokenizer-vocab.json'

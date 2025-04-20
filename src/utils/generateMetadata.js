@@ -1,67 +1,64 @@
-export default function generateMetadata(filename) {
-  const lower = filename.toLowerCase();
+// utils/generateMetadata.js
+import { getCLIPTags } from "./onnxHelpers";
+import { analyzeVisualMetadataFromImage } from "./analyzeVisualMetadata";
 
-  const dimensions = {
-    colorPalette: [],
-    visualTone: [],
-    mood: [],
-    subject: [],
-    message: []
-  };
+export async function generateMetadata(base64Image, imageSession, textSession) {
+  const tags = [];
+  let dimensions = {};
+  let dominantHue = null;
 
-  // COLOR
-  if (lower.includes('sunset') || lower.includes('warm')) {
-    dimensions.colorPalette.push('warm tones');
-  }
-  if (lower.includes('mono') || lower.includes('bw')) {
-    dimensions.colorPalette.push('monochrome');
-  }
+  try {
+    const image = await loadImage(base64Image);
+    const visualData = await analyzeVisualMetadataFromImage(image);
 
-  // TONE
-  if (lower.includes('grainy')) {
-    dimensions.visualTone.push('grainy');
-  }
-  if (lower.includes('soft')) {
-    dimensions.visualTone.push('soft-focus');
-  }
-  if (lower.includes('sharp')) {
-    dimensions.visualTone.push('sharp');
-  }
+    if (visualData?.tags?.length) {
+      tags.push(...visualData.tags);
+    }
 
-  // MOOD
-  if (lower.includes('love') || lower.includes('romantic')) {
-    dimensions.mood.push('romantic');
-  }
-  if (lower.includes('fog') || lower.includes('quiet')) {
-    dimensions.mood.push('calm');
-  }
+    if (visualData?.dimensions) {
+      dimensions = visualData.dimensions;
 
-  // SUBJECT
-  if (lower.includes('dog') || lower.includes('bird') || lower.includes('cat')) {
-    dimensions.subject.push('animal');
-  }
-  if (lower.includes('building') || lower.includes('arch') || lower.includes('window')) {
-    dimensions.subject.push('architecture');
-  }
+      const { mood, visualTone, colorPalette } = dimensions;
 
-  // MESSAGE
-  if (lower.includes('storm') || lower.includes('wreck')) {
-    dimensions.message.push('chaos');
-  }
-  if (lower.includes('bridge') || lower.includes('trail')) {
-    dimensions.message.push('journey');
+      if (Array.isArray(mood)) {
+        tags.push(...mood.map(m => `mood:${m}`));
+      }
+      if (Array.isArray(visualTone)) {
+        tags.push(...visualTone.map(t => `tone:${t}`));
+      }
+      if (Array.isArray(colorPalette)) {
+        tags.push(...colorPalette.map(c => `palette:${c}`));
+      }
+    }
+
+    if (visualData?.dominantHue !== undefined) {
+      dominantHue = visualData.dominantHue;
+      tags.push(`hue:${dominantHue}`);
+    }
+
+    const clipTags = await getCLIPTags(base64Image, imageSession, textSession);
+    tags.push(...clipTags);
+  } catch (err) {
+    console.error("[Metadata] generation error:", err);
+    tags.push("metadata-error");
   }
 
-  // Fallback
-  if (
-    !Object.values(dimensions).some(arr => arr.length > 0)
-  ) {
-    dimensions.mood.push('neutral');
-    dimensions.visualTone.push('soft-focus');
-  }
+  const unique = Array.from(new Set(tags));
+  console.log("[Metadata] Final tag set:", unique);
 
   return {
-    tags: Object.values(dimensions).flat(),
-    dimensions
+    tags: unique,
+    dimensions,
+    dominantHue
   };
+}
+
+function loadImage(base64) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = base64;
+  });
 }

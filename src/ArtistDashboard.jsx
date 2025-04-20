@@ -1,86 +1,16 @@
-// Corrected import block for ArtistDashboard.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { TAG_PROMPTS, ACTION_PROMPTS } from './utils/tagPrompts';
 import AppReadyState from './AppReadyState';
 import * as ort from 'onnxruntime-web';
+import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
 import { preprocessImage } from './utils/imageProcessing';
+import { generateMetadata } from './utils/generateMetadata';
 import {
   getTextFeatures,
-  loadTextModelSession
-} from './utils/clipText';
-import {
   getImageFeatures,
+  loadTextModelSession,
   loadImageModelSession
-} from './utils/clipImage';
-import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
-
-const TAG_PROMPTS = [
-  // People & Figures
-  'person', 'woman', 'man', 'child', 'elderly person', 'couple', 'group of people', 'portrait', 'self-portrait',
-  'mother and child', 'silhouette', 'dancer', 'musician', 'hands', 'face', 'eyes', 'profile', 'back view',
-
-  // Animals
-  'dog', 'cat', 'horse', 'cow', 'zebra', 'elephant', 'bird', 'hawk', 'eagle', 'owl',
-  'rabbit', 'fox', 'deer', 'wolf', 'lion', 'tiger', 'bear', 'flamingo', 'fish', 'insect', 'bee', 'butterfly',
-
-  // Nature & Landscapes
-  'landscape', 'seascape', 'mountain', 'valley', 'forest', 'desert', 'snow', 'ice', 'sunset', 'sunrise',
-  'storm', 'clouds', 'rain', 'mist', 'fog', 'ocean', 'river', 'lake', 'waterfall', 'field', 'tree', 'flower',
-  'wildflower', 'cactus', 'leaf', 'moss', 'rock formation', 'coastline', 'cliff',
-
-  // Settings & Architecture
-  'interior', 'exterior', 'building', 'church', 'temple', 'ruin', 'archway', 'bridge', 'castle',
-  'abandoned place', 'urban street', 'alley', 'corridor', 'window', 'door', 'stairs', 'balcony', 'courtyard',
-  'market', 'train station', 'airport', 'road', 'path', 'tunnel',
-
-  // Styles & Concepts
-  'black and white', 'high contrast', 'minimalist', 'maximalist', 'surreal', 'dreamlike',
-  'vintage', 'retro', 'documentary', 'editorial', 'fashion', 'candid', 'soft focus', 'motion blur', 'shallow depth of field',
-
-  // Moods & Emotions
-  'moody', 'serene', 'energetic', 'romantic', 'lonely', 'nostalgic', 'mysterious',
-  'joyful', 'melancholy', 'introspective', 'spiritual', 'tense', 'playful', 'gritty', 'peaceful', 'eerie',
-
-  // Light & Color
-  'dramatic lighting', 'backlit', 'golden hour', 'blue hour', 'harsh light', 'soft light',
-  'shadow play', 'reflections', 'lens flare', 'warm tones', 'cool tones', 'neutral tones',
-
-  // Artistic & Abstract
-  'abstract', 'geometric', 'patterned', 'texture', 'motion', 'repetition',
-  'close-up', 'macro', 'bokeh', 'long exposure', 'double exposure',
-
-  // Objects & Still Life
-  'still life', 'book', 'clock', 'mirror', 'glass', 'vase', 'bottle', 'fruit', 'flower arrangement', 'chair',
-  'musical instrument', 'camera', 'bicycle', 'car', 'train', 'airplane', 'boat', 'bridge',
-
-  // Events & Scenes
-  'celebration', 'protest', 'wedding', 'funeral', 'festival', 'ceremony', 'crowd', 'solitude',
-  'travel', 'adventure', 'exploration', 'daily life', 'street photography', 'environmental portrait',
-
-  // Composition
-  'rule of thirds', 'leading lines', 'centered composition', 'symmetry', 'asymmetry', 'framing', 'negative space',
-];
-
-const ACTION_PROMPTS = [
-  // Expressive actions & emotions
-  'protesting', 'celebrating', 'waiting', 'marching', 'hugging', 'crying', 'smiling',
-  'laughing', 'embracing', 'running', 'sitting', 'standing', 'kneeling', 'reaching',
-  'pointing', 'gesturing', 'shouting', 'listening', 'watching', 'reading', 'writing',
-
-  // Artistic or passive movement
-  'posing', 'dancing', 'meditating', 'floating', 'jumping', 'stretching', 'sleeping', 'praying',
-
-  // Human–environment interactions
-  'working', 'cooking', 'serving', 'painting', 'cleaning', 'carrying', 'gardening',
-  'shopping', 'traveling', 'commuting', 'observing',
-
-  // Group/social dynamics
-  'gathering', 'arguing', 'negotiating', 'collaborating', 'playing', 'teaching', 'learning',
-  'competing', 'caring', 'nurturing', 'protecting',
-
-  // Narrative verbs
-  'protesting', 'resisting', 'demanding', 'mourning', 'celebrating', 'reflecting',
-  'struggling', 'enduring', 'believing', 'honoring'
-];
+} from './utils/clipText';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -91,7 +21,7 @@ export default function ArtistDashboard() {
   const [dragging, setDragging] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
-  
+
   const [devMode, setDevMode] = useState(() => {
     return localStorage.getItem('yourcuration_devMode') === 'true';
   });
@@ -116,64 +46,6 @@ export default function ArtistDashboard() {
     } catch (err) {
       console.error('[YourCuration] CLIP text model load failed:', err);
       alert('[YourCuration] Failed to load CLIP text model. See console.');
-    }
-  };
-  
-  const cosineSimilarity = (a, b) => {
-    let dot = 0, aMag = 0, bMag = 0;
-    for (let i = 0; i < a.length; i++) {
-      dot += a[i] * b[i];
-      aMag += a[i] ** 2;
-      bMag += b[i] ** 2;
-    }
-    return dot / (Math.sqrt(aMag) * Math.sqrt(bMag));
-  };
-
-  const getCLIPTags = async (imageDataURL) => {
-    console.log('[YourCuration] Running getCLIPTags() for image');
-
-    try {
-      const [textSession, imageSession] = await Promise.all([
-        loadTextModelSession(),
-        loadImageModelSession()
-      ]);
-
-      const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
-      console.log('[YourCuration] Preparing to call getTextFeatures with prompts:', allPrompts);
-
-      const textFeatures = await getTextFeatures(allPrompts, textSession);
-      console.log('[YourCuration] Text features generated.');
-
-      const img = new Image();
-      img.src = imageDataURL;
-
-      await new Promise((res) => {
-        img.onload = () => {
-          console.log('[YourCuration] Image loaded for CLIP tagging');
-          res();
-        };
-      });
-
-      console.log('[YourCuration] Calling preprocessImage and running image model session');
-      const tensor = await preprocessImage(img);
-      const output = await imageSession.run({ image: tensor });
-      const imageFeatures = output['image_features'].data;
-
-      console.log('[YourCuration] Computing cosine similarities...');
-      const allScores = textFeatures.map((feature, i) => ({
-        tag: i < TAG_PROMPTS.length ? TAG_PROMPTS[i] : ACTION_PROMPTS[i - TAG_PROMPTS.length],
-        type: i < TAG_PROMPTS.length ? 'subject' : 'action',
-        score: cosineSimilarity(imageFeatures, feature),
-      }));
-
-      allScores.sort((a, b) => b.score - a.score);
-      const topTags = allScores.slice(0, 7);
-      console.log('[CLIP] Final top tags:', topTags);
-
-      return topTags.map(s => s.tag);
-    } catch (err) {
-      console.warn('[YourCuration] CLIP tagging failed:', err);
-      return ['clip-error'];
     }
   };
 
@@ -207,32 +79,27 @@ export default function ArtistDashboard() {
     });
   };
 
-  const createImageObject = async (file) => {
-    console.log('[YourCuration] Starting image processing for:', file.name);
-    const compressed = await compressImage(file);
-    const url = URL.createObjectURL(compressed);
-    const base64 = await imageToBase64(url);
+const createImageObject = async (file) => {
+  if (!imageModelSession || !textModelSession) {
+    console.warn('[YourCuration] Skipping metadata — ONNX models not yet loaded.');
+    return null;
+  }
 
-    console.log('[YourCuration] Starting metadata generation from image');
-    const [clipTags, visualData] = await Promise.all([
-      getCLIPTags(base64),
-      analyzeImageFromURL(base64)
-    ]);
+  console.log('[YourCuration] Starting image processing for:', file.name);
+  const compressed = await compressImage(file);
+  const url = URL.createObjectURL(compressed);
+  const base64 = await imageToBase64(url);
 
-    const mergedTags = Array.from(new Set([...clipTags, ...visualData.tags]));
+  const metadata = await generateMetadata(base64, imageModelSession, textModelSession);
 
-    return {
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-      name: file.name,
-      url,
-      scrapeEligible: true,
-      metadata: {
-        tags: mergedTags,
-        dimensions: visualData.dimensions,
-        dominantHue: visualData.dominantHue
-      }
-    };
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+    name: file.name,
+    url,
+    scrapeEligible: true,
+    metadata
   };
+};
 
   const imageToBase64 = (url) => {
     return new Promise((resolve, reject) => {
@@ -526,7 +393,7 @@ export default function ArtistDashboard() {
       ))}
 
         <h3 style={section}>Your Photo Library</h3>
-        
+
       {/* Upload Warnings */}
       {uploadWarnings.length > 0 && (
         <div style={{ marginBottom: '1rem', textAlign: 'center', color: '#b91c1c' }}>
