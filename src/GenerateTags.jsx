@@ -14,7 +14,13 @@ export default function GenerateTags({ setView }) {
   useEffect(() => {
     // Load artist images from localStorage
     const stored = localStorage.getItem('yourcuration_artistImages');
-    if (stored) setImages(JSON.parse(stored));
+    const parsed = stored ? JSON.parse(stored) : [];
+    if (parsed.length === 0) {
+      alert("No images available. Please upload in Artist Dashboard first.");
+      setView('dashboard');
+    } else {
+      setImages(parsed);
+    }
 
     // Load ONNX models
     async function loadModels() {
@@ -56,13 +62,27 @@ export default function GenerateTags({ setView }) {
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <style>
+        {`
+          @keyframes slideProgress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(0%); }
+          }
+        `}
+      </style>
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>Generate Tags</h2>
 
       {!modelsLoaded && (
         <div>
           <p style={{ fontStyle: 'italic', color: '#666' }}>Loading large tag generator database, please be patient...</p>
           <div style={{ width: '80%', margin: '1rem auto', background: '#eee', borderRadius: '1rem', overflow: 'hidden' }}>
-            <div style={{ width: '100%', height: '1rem', background: '#1e3a8a', animation: 'pulse 2s infinite' }}></div>
+            <div style={{
+              width: '100%',
+              height: '1rem',
+              background: '#1e3a8a',
+              transform: 'translateX(-100%)',
+              animation: 'slideProgress 120s linear forwards'
+            }}></div>
           </div>
         </div>
       )}
