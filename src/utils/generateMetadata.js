@@ -1,4 +1,5 @@
 // utils/generateMetadata.js
+console.log("[Metadata] Starting metadata generation");
 import { getCLIPTags } from "./onnxHelpers";
 import { analyzeVisualMetadataFromImage } from "./analyzeVisualMetadata";
 
@@ -9,6 +10,7 @@ export async function generateMetadata(base64Image, imageSession, textSession) {
 
   try {
     const image = await loadImage(base64Image);
+    console.log("[Metadata] Image loaded, calling visual metadata analysis...");
     const visualData = await analyzeVisualMetadataFromImage(image);
 
     if (visualData?.tags?.length) {
@@ -17,7 +19,7 @@ export async function generateMetadata(base64Image, imageSession, textSession) {
 
     if (visualData?.dimensions) {
       dimensions = visualData.dimensions;
-
+      console.log("[Metadata] Visual data returned:", visualData);
       const { mood, visualTone, colorPalette } = dimensions;
 
       if (Array.isArray(mood)) {
@@ -35,7 +37,7 @@ export async function generateMetadata(base64Image, imageSession, textSession) {
       dominantHue = visualData.dominantHue;
       tags.push(`hue:${dominantHue}`);
     }
-
+    console.log("[Metadata] Calling getCLIPTags...");
     const clipTags = await getCLIPTags(base64Image, imageSession, textSession);
     tags.push(...clipTags);
   } catch (err) {
