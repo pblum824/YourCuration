@@ -17,7 +17,7 @@ import {
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
-export default function ArtistDashboard() {
+  export default function ArtistDashboard({ setView }) {
   const [heroImage, setHeroImage] = useState(null);
   const [borderSkin, setBorderSkin] = useState(null);
   const [centerBackground, setCenterBackground] = useState(null);
@@ -32,8 +32,6 @@ export default function ArtistDashboard() {
     const stored = localStorage.getItem('yourcuration_artistImages');
     return stored ? JSON.parse(stored) : [];
   });
-const [imageModelSession, setImageModelSession] = useState(null);
-const [textModelSession, setTextModelSession] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
@@ -53,15 +51,6 @@ const [textModelSession, setTextModelSession] = useState(null);
       alert('[YourCuration] Failed to load CLIP text model. See console.');
     }
   };
-useEffect(() => {
-  async function loadModels() {
-    const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
-    const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
-    setImageModelSession(imageSession);
-    setTextModelSession(textSession);
-  }
-  loadModels();
-}, []);
 
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
@@ -92,28 +81,6 @@ useEffect(() => {
       reader.readAsDataURL(file);
     });
   };
-
-const createImageObject = async (file) => {
-  if (!imageModelSession || !textModelSession) {
-    console.warn('[YourCuration] Skipping metadata — ONNX models not yet loaded.');
-    return null;
-  }
-
-  console.log('[YourCuration] Starting image processing for:', file.name);
-  const compressed = await compressImage(file);
-  const url = URL.createObjectURL(compressed);
-  const base64 = await imageToBase64(url);
-
-  const metadata = await generateMetadata(base64, imageModelSession, textModelSession);
-
-  return {
-    id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-    name: file.name,
-    url,
-    scrapeEligible: true,
-    metadata
-  };
-};
 
   const imageToBase64 = (url) => {
     return new Promise((resolve, reject) => {
@@ -189,7 +156,17 @@ const createImageObject = async (file) => {
     setUploadWarnings(newWarnings);
     setUploadCount(validFiles.length);
 
-    const newImages = await Promise.all(validFiles.map(createImageObject));
+    const newImages = await Promise.all(validFiles.map(async (file) => {
+      const compressed = await compressImage(file);
+      const url = URL.createObjectURL(compressed);
+      return {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+        name: file.name,
+        url,
+        scrapeEligible: true,
+        metadata: {} // leave blank for now
+      };
+    }));
     setImages((prev) => [...prev, ...newImages.filter(Boolean)]);
   };
 
@@ -335,7 +312,7 @@ const createImageObject = async (file) => {
             Export YourCuration Gallery
           </button>
           <button
-            onClick={() => window.location.href = "/generate-tags"}
+            onClick={() => setView('generate')}
             style={{ ...controlButton, backgroundColor: '#e0f2fe', color: '#075985' }}
           >
             Generate Tags →
