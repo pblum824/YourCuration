@@ -334,6 +334,12 @@ const createImageObject = async (file) => {
           <button onClick={exportGallery} style={controlButton}>
             Export YourCuration Gallery
           </button>
+          <button
+            onClick={() => window.location.href = "/generate-tags"}
+            style={{ ...controlButton, backgroundColor: '#e0f2fe', color: '#075985' }}
+          >
+            Generate Tags →
+          </button>
           <label style={{ ...controlButton, display: 'inline-block', cursor: 'pointer' }}>
             Import YourCuration Gallery
             <input
