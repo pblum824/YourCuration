@@ -7,10 +7,13 @@ import { preprocessImage } from './utils/imageProcessing';
 import { generateMetadata } from './utils/generateMetadata';
 import {
   getTextFeatures,
-  getImageFeatures,
+  getImageFeatures
+} from './utils/clipText';
+
+import {
   loadTextModelSession,
   loadImageModelSession
-} from './utils/clipText';
+} from './utils/onnxHelpers';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -29,6 +32,8 @@ export default function ArtistDashboard() {
     const stored = localStorage.getItem('yourcuration_artistImages');
     return stored ? JSON.parse(stored) : [];
   });
+const [imageModelSession, setImageModelSession] = useState(null);
+const [textModelSession, setTextModelSession] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
@@ -48,6 +53,15 @@ export default function ArtistDashboard() {
       alert('[YourCuration] Failed to load CLIP text model. See console.');
     }
   };
+useEffect(() => {
+  async function loadModels() {
+    const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
+    const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
+    setImageModelSession(imageSession);
+    setTextModelSession(textSession);
+  }
+  loadModels();
+}, []);
 
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {
@@ -557,3 +571,4 @@ const controlButton = {
   cursor: 'pointer',
   fontFamily: 'sans-serif',
 };
+
