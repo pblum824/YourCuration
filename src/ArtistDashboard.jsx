@@ -190,7 +190,7 @@ const createImageObject = async (file) => {
     setUploadCount(validFiles.length);
 
     const newImages = await Promise.all(validFiles.map(createImageObject));
-    setImages((prev) => [...prev, ...newImages]);
+    setImages((prev) => [...prev, ...newImages.filter(Boolean)]);
   };
 
   const handleSingleUpload = async (e, setState) => {
