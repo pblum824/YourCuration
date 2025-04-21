@@ -115,12 +115,17 @@ export default function GenerateTags({ setView }) {
       )}
 
       <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
-        {images.map((img) => (
+        {taggedImages.length > 0 ? taggedImages : images}.map((img) => (
           <div key={img.id} style={{ width: '240px' }}>
             <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }} />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
+            {img.metadata?.tags && (
+              <div style={{ fontSize: '0.8rem', color: '#444', marginTop: '0.5rem' }}>
+                <strong>Tags:</strong> {img.metadata.tags.join(', ')}
+              </div>
+            )}
           </div>
-        ))}
+        ))
       </div>
     </div>
   );
