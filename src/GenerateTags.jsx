@@ -14,11 +14,22 @@ export default function GenerateTags({ setView }) {
   useEffect(() => {
     // Load artist images from localStorage
     const stored = localStorage.getItem('yourcuration_artistImages');
-    const parsed = stored ? JSON.parse(stored) : [];
+    let parsed = [];
+
+    try {
+      parsed = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(parsed)) parsed = [];
+    } catch (err) {
+      console.error('[GenerateTags] Failed to parse localStorage:', err);
+      parsed = [];
+    }
+
     if (parsed.length === 0) {
+      console.warn('[GenerateTags] No images found in storage. Redirecting to dashboard.');
       alert("No images available. Please upload in Artist Dashboard first.");
       setView('dashboard');
     } else {
+      console.log('[GenerateTags] Loaded images:', parsed.length, parsed);
       setImages(parsed);
     }
 
@@ -42,8 +53,8 @@ export default function GenerateTags({ setView }) {
   }, []);
 
   const handleGenerate = async () => {
-    if (!imageModelSession || !textModelSession) {
-      alert('Models are not ready yet.');
+    if (!imageModelSession) {
+      alert('Image model is not ready yet.');
       return;
     }
 

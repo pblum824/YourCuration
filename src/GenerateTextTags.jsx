@@ -17,6 +17,7 @@ export default function GenerateTextTags({ setView }) {
       alert("No images available. Please upload in Artist Dashboard first.");
       setView('dashboard');
     } else {
+      console.log('[GenerateTags] Loaded images:', parsed.length, parsed);
       setImages(parsed);
     }
 
