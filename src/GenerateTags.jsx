@@ -27,20 +27,11 @@ export default function GenerateTags({ setView }) {
 
       try {
         console.log('[GenerateTags] Loading image model...');
-        //const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
-        //setImageModelSession(imageSession);
-        //console.log('[CLIP] Image model session loaded');
+        const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
+        setImageModelSession(imageSession);
+        console.log('[CLIP] Image model session loaded');
       } catch (err) {
         console.error('[GenerateTags] Failed to load image model:', err);
-      }
-
-      try {
-        console.log('[GenerateTags] Loading text model...');
-       const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
-       setTextModelSession(textSession);
-       console.log('[CLIP] Text model session loaded');
-      } catch (err) {
-        console.error('[GenerateTags] Failed to load text model:', err);
       }
 
       setModelsLoaded(true);
@@ -68,7 +59,6 @@ export default function GenerateTags({ setView }) {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
     alert('MetaTags generated and saved!');
   };
-  setView('text'); // or route to /generate-text-tags if using React Router
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
