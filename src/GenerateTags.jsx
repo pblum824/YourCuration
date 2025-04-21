@@ -1,18 +1,16 @@
 // GenerateTags.jsx
 import React, { useState, useEffect } from 'react';
-import { loadImageModelSession, loadTextModelSession } from './utils/onnxHelpers';
+import { loadImageModelSession } from './utils/onnxHelpers';
 import { generateMetadata } from './utils/generateMetadata';
 
 export default function GenerateTags({ setView }) {
   const [images, setImages] = useState([]);
   const [taggedImages, setTaggedImages] = useState([]);
   const [imageModelSession, setImageModelSession] = useState(null);
-  const [textModelSession, setTextModelSession] = useState(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [showGenerateButton, setShowGenerateButton] = useState(false);
 
   useEffect(() => {
-    // Load artist images from localStorage
     const stored = localStorage.getItem('yourcuration_artistImages');
     let parsed = [];
 
@@ -35,7 +33,6 @@ export default function GenerateTags({ setView }) {
 
     async function loadModels() {
       console.log('[GenerateTags] Starting model load...');
-
       try {
         console.log('[GenerateTags] Loading image model...');
         const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
@@ -115,7 +112,7 @@ export default function GenerateTags({ setView }) {
       )}
 
       <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
-        {taggedImages.length > 0 ? taggedImages : images}.map((img) => (
+        {(taggedImages.length > 0 ? taggedImages : images)?.map((img) => (
           <div key={img.id} style={{ width: '240px' }}>
             <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }} />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
@@ -125,7 +122,7 @@ export default function GenerateTags({ setView }) {
               </div>
             )}
           </div>
-        ))
+        ))}
       </div>
     </div>
   );
