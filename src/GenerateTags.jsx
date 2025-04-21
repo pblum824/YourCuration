@@ -36,9 +36,9 @@ export default function GenerateTags({ setView }) {
 
       try {
         console.log('[GenerateTags] Loading text model...');
-        const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
-        setTextModelSession(textSession);
-        console.log('[CLIP] Text model session loaded');
+       // const textSession = await loadTextModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-text-vit-b32.onnx");
+       // setTextModelSession(textSession);
+       // console.log('[CLIP] Text model session loaded');
       } catch (err) {
         console.error('[GenerateTags] Failed to load text model:', err);
       }
@@ -59,7 +59,7 @@ export default function GenerateTags({ setView }) {
     console.log('[GenerateTags] Generating metadata for all images...');
     const tagged = await Promise.all(
       images.map(async (img) => {
-        const metadata = await generateMetadata(img.url, imageModelSession, textModelSession);
+        const metadata = await generateMetadata(img.url, imageModelSession, null);
         return { ...img, metadata };
       })
     );
