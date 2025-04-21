@@ -68,6 +68,7 @@ export default function GenerateTags({ setView }) {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
     alert('MetaTags generated and saved!');
   };
+  setView('text'); // or route to /generate-text-tags if using React Router
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
