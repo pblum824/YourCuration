@@ -46,13 +46,20 @@ export default function GenerateTextTags({ setView }) {
     console.log('[GenerateTextTags] Generating metadata for all images...');
     const tagged = await Promise.all(
       images.map(async (img) => {
-        const metadata = await generateMetadata(img.url, null, textModelSession);
-        return { ...img, metadata: {
-          ...img.metadata,
-          tags: Array.from(new Set([...(img.metadata?.tags || []), ...(metadata?.tags || [])])),
-          dimensions: img.metadata?.dimensions || {},
-          dominantHue: img.metadata?.dominantHue ?? null
-        }};
+        console.log('[GenerateTextTags] Image object:', img);
+        console.log('[GenerateTextTags] Image URL for tagging:', img.url);
+
+        const metadata = await generateMetadata(String(img.url), null, textModelSession);
+
+        return {
+          ...img,
+          metadata: {
+            ...img.metadata,
+            tags: Array.from(new Set([...(img.metadata?.tags || []), ...(metadata?.tags || [])])),
+            dimensions: img.metadata?.dimensions || {},
+            dominantHue: img.metadata?.dominantHue ?? null
+          }
+        };
       })
     );
 
