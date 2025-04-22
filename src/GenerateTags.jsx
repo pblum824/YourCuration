@@ -11,6 +11,11 @@ export default function GenerateTags({ setView }) {
   const [showGenerateButton, setShowGenerateButton] = useState(false);
 
   useEffect(() => {
+    window.addEventListener('error', (e) => {
+      console.error('[Global Error]', e.message, e);
+    });
+  }, []);
+  useEffect(() => {
     const stored = localStorage.getItem('yourcuration_artistImages');
     let parsed = [];
 
@@ -67,32 +72,38 @@ export default function GenerateTags({ setView }) {
         });
     });
   };
-  const handleGenerate = async () => {
-    if (!imageModelSession) {
-      alert('Image model is not ready yet.');
-      return;
-    }
+    const handleGenerate = async () => {
+      if (!imageModelSession) {
+        alert('Image model not ready.');
+        return;
+      }
 
-    console.log('[GenerateTags] Generating metadata for all images...');
-    const tagged = await Promise.all(
-      images.map(async (img) => {
-        console.log('[GenerateTags] Image object:', img);
-        console.log('[GenerateTags] Image URL for tagging:', img.url);
+      try {
+        console.log('[GenerateTags] Starting metadata tagging...');
+        const tagged = await Promise.all(
+          images.map(async (img) => {
+            console.log('[GenerateTags] Tagging image:', img.name, img.url);
 
-        const base64 = await imageToBase64(img.url);
-        const metadata = await generateMetadata(base64, imageModelSession, null);
+            const metadata = await generateMetadata(String(img.url), imageModelSession, null);
 
-        return {
-          ...img,
-          metadata
-        };
-      })
-    );
+            console.log('[GenerateTags] Metadata returned:', metadata);
 
-    setTaggedImages(tagged);
-    localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
-    alert('MetaTags generated and saved!');
-  };
+            return {
+              ...img,
+              metadata
+            };
+          })
+        );
+
+        console.log('[GenerateTags] Final tagged data:', tagged);
+        setTaggedImages(tagged);
+        localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
+        alert('Image-based MetaTags generated and saved!');
+      } catch (err) {
+        console.error('[GenerateTags] ERROR during tagging:', err);
+        alert('Something went wrong during tag generation. Check the console.');
+      }
+    };
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
