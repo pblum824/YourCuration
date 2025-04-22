@@ -48,7 +48,25 @@ export default function GenerateTags({ setView }) {
 
     loadModels();
   }, []);
-
+  const imageToBase64 = (url) => {
+    return new Promise((resolve, reject) => {
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch image blob');
+          return res.blob();
+        })
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject('Failed to read image blob');
+          reader.readAsDataURL(blob);
+        })
+        .catch((err) => {
+          console.error('[imageToBase64] Error:', err);
+          reject(err);
+        });
+    });
+  };
   const handleGenerate = async () => {
     if (!imageModelSession) {
       alert('Image model is not ready yet.');
@@ -61,7 +79,8 @@ export default function GenerateTags({ setView }) {
         console.log('[GenerateTags] Image object:', img);
         console.log('[GenerateTags] Image URL for tagging:', img.url);
 
-        const metadata = await generateMetadata(String(img.url), imageModelSession, null);
+        const base64 = await imageToBase64(img.url);
+        const metadata = await generateMetadata(base64, imageModelSession, null);
 
         return {
           ...img,
