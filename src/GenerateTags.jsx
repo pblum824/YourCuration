@@ -9,12 +9,16 @@ export default function GenerateTags({ setView }) {
   const [imageModelSession, setImageModelSession] = useState(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [showGenerateButton, setShowGenerateButton] = useState(false);
+  const [logs, setLogs] = useState([]);
+
+  const logToScreen = (message) => setLogs((prev) => [...prev, message]);
 
   useEffect(() => {
     window.addEventListener('error', (e) => {
-      console.error('[Global Error]', e.message, e);
+      logToScreen(`[Global Error] ${e.message}`);
     });
   }, []);
+
   useEffect(() => {
     const stored = localStorage.getItem('yourcuration_artistImages');
     let parsed = [];
@@ -23,31 +27,26 @@ export default function GenerateTags({ setView }) {
       parsed = stored ? JSON.parse(stored) : [];
       if (!Array.isArray(parsed)) parsed = [];
     } catch (err) {
-      console.error('[GenerateTags] Failed to parse localStorage:', err);
+      logToScreen('[GenerateTags] Failed to parse localStorage');
       parsed = [];
     }
 
     if (parsed.length === 0) {
-      console.warn('[GenerateTags] No images found in storage. Redirecting to dashboard.');
-      alert("No images available. Please upload in Artist Dashboard first.");
-      setView('dashboard');
-      console.log('[GenerateTags] REDIRECT TRIGGERED: parsed.length = 0');
-        // setView('dashboard');  // ← temporarily disable this for debugging
-      }
-  else {
-      console.log('[GenerateTags] Loaded images:', parsed.length, parsed);
+      logToScreen('[GenerateTags] No images found in storage. Skipping redirect for debug.');
+    } else {
+      logToScreen(`[GenerateTags] Loaded images: ${parsed.length}`);
       setImages(parsed);
     }
 
     async function loadModels() {
-      console.log('[GenerateTags] Starting model load...');
+      logToScreen('[GenerateTags] Starting model load...');
       try {
-        console.log('[GenerateTags] Loading image model...');
+        logToScreen('[GenerateTags] Loading image model...');
         const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
         setImageModelSession(imageSession);
-        console.log('[CLIP] Image model session loaded');
+        logToScreen('[CLIP] Image model session loaded');
       } catch (err) {
-        console.error('[GenerateTags] Failed to load image model:', err);
+        logToScreen('[GenerateTags] Failed to load image model');
       }
 
       setModelsLoaded(true);
@@ -56,57 +55,30 @@ export default function GenerateTags({ setView }) {
 
     loadModels();
   }, []);
-  const imageToBase64 = (url) => {
-    return new Promise((resolve, reject) => {
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch image blob');
-          return res.blob();
+
+  const handleGenerate = async () => {
+    if (!imageModelSession) {
+      alert('Image model not ready.');
+      return;
+    }
+
+    try {
+      logToScreen('[GenerateTags] Starting metadata tagging...');
+      const tagged = await Promise.all(
+        images.map(async (img) => {
+          logToScreen(`[GenerateTags] Tagging image: ${img.name}`);
+          const metadata = await generateMetadata(String(img.url), imageModelSession, null);
+          logToScreen(`[GenerateTags] Metadata returned for ${img.name}`);
+          return { ...img, metadata };
         })
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = () => reject('Failed to read image blob');
-          reader.readAsDataURL(blob);
-        })
-        .catch((err) => {
-          console.error('[imageToBase64] Error:', err);
-          reject(err);
-        });
-    });
+      );
+      setTaggedImages(tagged);
+      localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
+      logToScreen('[GenerateTags] Image-based MetaTags generated and saved!');
+    } catch (err) {
+      logToScreen(`[GenerateTags] ERROR during tagging: ${err.message}`);
+    }
   };
-    const handleGenerate = async () => {
-      if (!imageModelSession) {
-        alert('Image model not ready.');
-        return;
-      }
-
-      try {
-        console.log('[GenerateTags] Starting metadata tagging...');
-        const tagged = await Promise.all(
-          images.map(async (img) => {
-            console.log('[GenerateTags] Tagging image:', img.name, img.url);
-
-            const metadata = await generateMetadata(String(img.url), imageModelSession, null);
-
-            console.log('[GenerateTags] Metadata returned:', metadata);
-
-            return {
-              ...img,
-              metadata
-            };
-          })
-        );
-
-        console.log('[GenerateTags] Final tagged data:', tagged);
-        setTaggedImages(tagged);
-        localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
-        alert('Image-based MetaTags generated and saved!');
-      } catch (err) {
-        console.error('[GenerateTags] ERROR during tagging:', err);
-        alert('Something went wrong during tag generation. Check the console.');
-      }
-    };
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -143,6 +115,12 @@ export default function GenerateTags({ setView }) {
           Generate MetaTags
         </button>
       )}
+
+      <div style={{ marginTop: '2rem', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' }}>
+        {logs.map((log, index) => (
+          <div key={index} style={{ fontSize: '0.85rem', color: '#333', marginBottom: '0.25rem' }}>📝 {log}</div>
+        ))}
+      </div>
 
       <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {(taggedImages.length > 0 ? taggedImages : images)?.map((img) => (
