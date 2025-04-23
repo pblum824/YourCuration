@@ -31,6 +31,12 @@ export default function GenerateTags({ setView }) {
       console.warn('[GenerateTags] No images found in storage. Redirecting to dashboard.');
       alert("No images available. Please upload in Artist Dashboard first.");
       setView('dashboard');
+      console.log('[GenerateTags] REDIRECT TRIGGERED: parsed.length = 0');
+      if (parsed.length === 0) {
+        console.warn('[GenerateTags] No images found. Redirect skipped for debug.');
+        alert("No images available. Please upload in Artist Dashboard first.");
+        // setView('dashboard');  // ← temporarily disable this for debugging
+      }
     } else {
       console.log('[GenerateTags] Loaded images:', parsed.length, parsed);
       setImages(parsed);
@@ -126,7 +132,7 @@ export default function GenerateTags({ setView }) {
               height: '1rem',
               background: '#1e3a8a',
               transform: 'translateX(-100%)',
-              animation: 'slideProgress 120s linear forwards'
+              animation: 'slideProgress 180s linear forwards'
             }}></div>
           </div>
         </div>
