@@ -32,12 +32,9 @@ export default function GenerateTags({ setView }) {
       alert("No images available. Please upload in Artist Dashboard first.");
       setView('dashboard');
       console.log('[GenerateTags] REDIRECT TRIGGERED: parsed.length = 0');
-      if (parsed.length === 0) {
-        console.warn('[GenerateTags] No images found. Redirect skipped for debug.');
-        alert("No images available. Please upload in Artist Dashboard first.");
         // setView('dashboard');  // ← temporarily disable this for debugging
       }
-    } else {
+  else {
       console.log('[GenerateTags] Loaded images:', parsed.length, parsed);
       setImages(parsed);
     }
