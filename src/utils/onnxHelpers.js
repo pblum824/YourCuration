@@ -43,7 +43,9 @@ export async function getCLIPTags(base64Image, imageSession, textSession) {
 
     const image = await loadImage(base64Image);
     const imageTensor = preprocessImage(image);
-    const output = await imageSession.run({ image: imageTensor });
+    console.log('[CLIP] Running ONNX inference...');
+    const output = await imageSession.run({ image: tensor });
+    console.log('[CLIP] Inference completed.');
     const imageFeature = normalize(output.image_features.data);
 
     const similarities = textEmbeddings.map(textVec =>
