@@ -57,29 +57,39 @@ export default function GenerateTags({ setView }) {
   }, []);
 
   const handleGenerate = async () => {
-    if (!imageModelSession) {
-      alert('Image model not ready.');
-      return;
-    }
-
     try {
-      logToScreen('[GenerateTags] Starting metadata tagging...');
+      console.log('[GenerateTags] Starting remote tagging...');
+
       const tagged = await Promise.all(
         images.map(async (img) => {
-          logToScreen(`[GenerateTags] Tagging image: ${img.name}`);
-          const metadata = await generateMetadata(String(img.url), imageModelSession, null);
-          logToScreen(`[GenerateTags] Metadata returned for ${img.name}`);
+          console.log('[GenerateTags] Uploading image:', img.name);
+
+          const response = await fetch('/.netlify/functions/tagImage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64Image: img.url })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Tagging failed for ${img.name}`);
+          }
+
+          const { metadata } = await response.json();
+          console.log('[GenerateTags] Metadata received for:', img.name, metadata);
+
           return { ...img, metadata };
         })
       );
+
+      console.log('[GenerateTags] All metadata received, updating localStorage');
       setTaggedImages(tagged);
       localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
-      logToScreen('[GenerateTags] Image-based MetaTags generated and saved!');
+      alert('Image-based MetaTags generated and saved!');
     } catch (err) {
-      logToScreen(`[GenerateTags] ERROR during tagging: ${err.message}`);
+      console.error('[GenerateTags] Remote tagging error:', err);
+      alert('Something went wrong during tagging. Check console for details.');
     }
   };
-
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
       <style>
