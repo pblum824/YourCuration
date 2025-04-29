@@ -34,36 +34,37 @@ export default function GenerateTags({ setView }) {
   const handleGenerate = async () => {
     try {
       setLoading(true);
-      console.log('[GenerateTags] Starting remote tagging...');
+      logToScreen('[GenerateTags] Starting remote tagging...');
 
       const tagged = await Promise.all(
         images.map(async (img) => {
-          console.log('[GenerateTags] Uploading image:', img.name);
+          logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
 
-            const response = await fetch('http://44.223.11.189:3000/batch-tag', {
+          const response = await fetch('http://44.223.11.189:3000/batch-tag', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ images: [img.url] })
           });
 
           if (!response.ok) {
+            logToScreen(`[GenerateTags] ERROR: Tagging failed for ${img.name}`);
             throw new Error(`Tagging failed for ${img.name}`);
           }
 
           const { metadata } = await response.json();
-          console.log('[GenerateTags] Metadata received for:', img.name, metadata);
+          logToScreen(`[GenerateTags] Metadata received for ${img.name}: ${JSON.stringify(metadata)}`);
 
           return { ...img, metadata };
         })
       );
 
-      console.log('[GenerateTags] All metadata received, updating localStorage');
+      logToScreen('[GenerateTags] All metadata received, updating localStorage');
       setTaggedImages(tagged);
       localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
       alert('MetaTags generated and saved!');
     } catch (err) {
-      console.error('[GenerateTags] Remote tagging error:', err);
-      alert('Something went wrong during tagging. Check console for details.');
+      logToScreen(`[GenerateTags] Remote tagging error: ${err.message}`);
+      alert('Something went wrong during tagging. Check logs below.');
     } finally {
       setLoading(false);
     }
