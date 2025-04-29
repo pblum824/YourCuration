@@ -1,7 +1,7 @@
 // netlify/functions/tagImage.js
 const ort = require('onnxruntime-node');
 const fetch = require('node-fetch');
-const { createCanvas, loadImage } = require('canvas');
+const Jimp = require('jimp');
 
 let session = null;
 
@@ -40,29 +40,25 @@ exports.handler = async function(event, context) {
   }
 };
 
-// Helper to preprocess base64 image into ONNX tensor
+// Preprocess image using Jimp
 async function preprocessImage(base64) {
-  const img = await loadImage(base64);
-  const canvas = createCanvas(224, 224);
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, 224, 224);
+  const image = await Jimp.read(Buffer.from(base64.split(',')[1], 'base64'));
+  image.resize(224, 224);
 
-  const imageData = ctx.getImageData(0, 0, 224, 224).data;
   const floatData = new Float32Array(3 * 224 * 224);
+  let i = 0;
+  image.scan(0, 0, 224, 224, function (x, y, idx) {
+    floatData[i] = this.bitmap.data[idx] / 255;
+    floatData[i + 224 * 224] = this.bitmap.data[idx + 1] / 255;
+    floatData[i + 2 * 224 * 224] = this.bitmap.data[idx + 2] / 255;
+    i++;
+  });
 
-  for (let i = 0; i < 224 * 224; i++) {
-    floatData[i] = imageData[i * 4] / 255.0;         // R
-    floatData[i + 224 * 224] = imageData[i * 4 + 1] / 255.0; // G
-    floatData[i + 2 * 224 * 224] = imageData[i * 4 + 2] / 255.0; // B
-  }
-
-  const tensor = new ort.Tensor('float32', floatData, [1, 3, 224, 224]);
-  return tensor;
+  return new ort.Tensor('float32', floatData, [1, 3, 224, 224]);
 }
 
-// Helper to create dummy metadata
+// Temporary metadata extractor (stub)
 function extractMetadata(output) {
-  // You'll customize this later
-  const dummyTags = ["sample-tag-1", "sample-tag-2"];
-  return { tags: dummyTags };
+  // TODO: Replace this with actual tag logic
+  return { tags: ['sample-tag-1', 'sample-tag-2'] };
 }
