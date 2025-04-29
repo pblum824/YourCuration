@@ -1,23 +1,14 @@
 // GenerateTags.jsx
 import React, { useState, useEffect } from 'react';
-import { loadImageModelSession } from './utils/onnxHelpers';
-import { generateMetadata } from './utils/generateMetadata';
 
 export default function GenerateTags({ setView }) {
   const [images, setImages] = useState([]);
   const [taggedImages, setTaggedImages] = useState([]);
-  const [imageModelSession, setImageModelSession] = useState(null);
-  const [modelsLoaded, setModelsLoaded] = useState(false);
   const [showGenerateButton, setShowGenerateButton] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const logToScreen = (message) => setLogs((prev) => [...prev, message]);
-
-  useEffect(() => {
-    window.addEventListener('error', (e) => {
-      logToScreen(`[Global Error] ${e.message}`);
-    });
-  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem('yourcuration_artistImages');
@@ -32,42 +23,27 @@ export default function GenerateTags({ setView }) {
     }
 
     if (parsed.length === 0) {
-      logToScreen('[GenerateTags] No images found in storage. Skipping redirect for debug.');
+      logToScreen('[GenerateTags] No images found in storage.');
     } else {
       logToScreen(`[GenerateTags] Loaded images: ${parsed.length}`);
       setImages(parsed);
-    }
-
-    async function loadModels() {
-      logToScreen('[GenerateTags] Starting model load...');
-      try {
-        logToScreen('[GenerateTags] Loading image model...');
-        const imageSession = await loadImageModelSession("https://yourcuration-static.s3.us-east-2.amazonaws.com/models/clip-vit-b32.onnx");
-        setImageModelSession(imageSession);
-        logToScreen('[CLIP] Image model session loaded');
-      } catch (err) {
-        logToScreen('[GenerateTags] Failed to load image model');
-      }
-
-      setModelsLoaded(true);
       setShowGenerateButton(true);
     }
-
-    loadModels();
   }, []);
 
   const handleGenerate = async () => {
     try {
+      setLoading(true);
       console.log('[GenerateTags] Starting remote tagging...');
 
       const tagged = await Promise.all(
         images.map(async (img) => {
           console.log('[GenerateTags] Uploading image:', img.name);
 
-          const response = await fetch('/.netlify/functions/tagImage', {
+            const response = await fetch('http://44.223.11.189:3000/batch-tag', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ base64Image: img.url })
+            body: JSON.stringify({ images: [img.url] })
           });
 
           if (!response.ok) {
@@ -84,12 +60,15 @@ export default function GenerateTags({ setView }) {
       console.log('[GenerateTags] All metadata received, updating localStorage');
       setTaggedImages(tagged);
       localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
-      alert('Image-based MetaTags generated and saved!');
+      alert('MetaTags generated and saved!');
     } catch (err) {
       console.error('[GenerateTags] Remote tagging error:', err);
       alert('Something went wrong during tagging. Check console for details.');
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
       <style>
@@ -102,9 +81,9 @@ export default function GenerateTags({ setView }) {
       </style>
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>Generate Tags</h2>
 
-      {!modelsLoaded && (
+      {loading && (
         <div>
-          <p style={{ fontStyle: 'italic', color: '#666' }}>Loading large tag generator database, please be patient...</p>
+          <p style={{ fontStyle: 'italic', color: '#666' }}>Tagging images, please wait...</p>
           <div style={{ width: '80%', margin: '1rem auto', background: '#eee', borderRadius: '1rem', overflow: 'hidden' }}>
             <div style={{
               width: '100%',
@@ -117,7 +96,7 @@ export default function GenerateTags({ setView }) {
         </div>
       )}
 
-      {showGenerateButton && (
+      {showGenerateButton && !loading && (
         <button
           onClick={handleGenerate}
           style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', borderRadius: '0.5rem', backgroundColor: '#1e3a8a', color: 'white', cursor: 'pointer' }}

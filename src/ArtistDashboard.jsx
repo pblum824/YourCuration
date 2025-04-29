@@ -1,19 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TAG_PROMPTS, ACTION_PROMPTS } from './utils/tagPrompts';
 import AppReadyState from './AppReadyState';
-import * as ort from 'onnxruntime-web';
-import { analyzeImageFromURL } from './utils/analyzeVisualMetadata';
-import { preprocessImage } from './utils/imageProcessing';
-import { generateMetadata } from './utils/generateMetadata';
-import {
-  getTextFeatures,
-  getImageFeatures
-} from './utils/clipText';
-
-import {
-  loadTextModelSession,
-  loadImageModelSession
-} from './utils/onnxHelpers';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -36,21 +22,6 @@ const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
   useEffect(() => {
     localStorage.setItem('yourcuration_artistImages', JSON.stringify(images));
   }, [images]);
-
-  const loadCLIP = async () => {
-    console.log(`[YourCuration] ${new Date().toISOString()} — FORCED: Loading CLIP text model...`);
-
-    try {
-      const allPrompts = [...TAG_PROMPTS, ...ACTION_PROMPTS];
-      const features = await getTextFeatures(allPrompts); // New logic handles session internally
-
-      textFeaturesRef.current = features;
-      console.log('[YourCuration] Text features ready and saved.');
-    } catch (err) {
-      console.error('[YourCuration] CLIP text model load failed:', err);
-      alert('[YourCuration] Failed to load CLIP text model. See console.');
-    }
-  };
 
   const compressImage = async (file, maxWidth = 1600) => {
     return new Promise((resolve) => {

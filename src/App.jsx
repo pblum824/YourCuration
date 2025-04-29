@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ArtistDashboard from './ArtistDashboard';
-import MetadataBuilder from './MetadataBuilder';
+//import MetadataBuilder from './MetadataBuilder';
 import GenerateTags from './GenerateTags';
 import GenerateTextTags from './GenerateTextTags';
 
@@ -44,7 +44,6 @@ export default function App() {
         <ErrorCatcher onError={setError}>
           {view === 'artist' && <ArtistDashboard setView={setView} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
-          {view === 'meta' && <MetadataBuilder setView={setView} />}
           {view === 'text' && <GenerateTextTags setView={setView} />}
         </ErrorCatcher>
       )}
