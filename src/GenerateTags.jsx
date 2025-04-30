@@ -40,18 +40,30 @@ export default function GenerateTags({ setView }) {
         images.map(async (img) => {
           logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
 
-          const response = await fetch('https://hostels-informative-home-restructuring.trycloudflare.com/batch-tag', {
+          const response = await fetch('http://44.223.11.189:3000/batch-tag', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ images: [img.url] })
           });
 
-          if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Tagging failed for ${img.name}: ${text}`);
-          }
+          const text = await response.text();
 
-          const json = await response.json();
+          try {
+            const json = JSON.parse(text);
+            if (!response.ok) {
+              throw new Error(`Tagging failed for ${img.name}: ${json.error || 'Unknown error'}`);
+            }
+            if (!json.metadata) {
+              console.error('[GenerateTags] Unexpected response format:', json);
+              throw new Error(`Tagging failed: No metadata returned for ${img.name}`);
+            }
+            const metadata = json.metadata;
+            console.log('[GenerateTags] Metadata received for:', img.name, metadata);
+            return { ...img, metadata };
+          } catch (err) {
+            console.error('[GenerateTags] Remote response not JSON:', text);
+            throw new Error(`Remote tagging error for ${img.name}: ${text}`);
+          }
           if (!json.metadata) {
             console.error('[GenerateTags] Unexpected response:', json);
             throw new Error(`Tagging failed: No metadata returned for ${img.name}`);
