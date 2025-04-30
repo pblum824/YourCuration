@@ -47,11 +47,17 @@ export default function GenerateTags({ setView }) {
           });
 
           if (!response.ok) {
-            logToScreen(`[GenerateTags] ERROR: Tagging failed for ${img.name}`);
-            throw new Error(`Tagging failed for ${img.name}`);
+            const text = await response.text();
+            throw new Error(`Tagging failed for ${img.name}: ${text}`);
           }
 
-          const { metadata } = await response.json();
+          const json = await response.json();
+          if (!json.metadata) {
+            console.error('[GenerateTags] Unexpected response:', json);
+            throw new Error(`Tagging failed: No metadata returned for ${img.name}`);
+          }
+
+          const metadata = json.metadata;
           logToScreen(`[GenerateTags] Metadata received for ${img.name}: ${JSON.stringify(metadata)}`);
 
           return { ...img, metadata };
