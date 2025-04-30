@@ -40,7 +40,7 @@ export default function GenerateTags({ setView }) {
         images.map(async (img) => {
           logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
 
-          const response = await fetch('http://44.223.11.189:3000/batch-tag', {
+          const response = await fetch('https://hostels-informative-home-restructuring.trycloudflare.com/batch-tag', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ images: [img.url] })
