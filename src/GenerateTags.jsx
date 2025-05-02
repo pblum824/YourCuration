@@ -32,57 +32,37 @@ export default function GenerateTags({ setView }) {
   }, []);
 
   const handleGenerate = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      logToScreen('[GenerateTags] Starting remote tagging...');
-
       const tagged = await Promise.all(
         images.map(async (img) => {
           logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
 
+          const blob = await fetch(img.url).then(res => res.blob());
+          const formData = new FormData();
+          formData.append('image', blob, img.name);
+
           const response = await fetch('http://44.223.11.189:3000/batch-tag', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ images: [img.url] })
+            body: formData
           });
 
-          const text = await response.text();
-
-          try {
-            const json = JSON.parse(text);
-            if (!response.ok) {
-              throw new Error(`Tagging failed for ${img.name}: ${json.error || 'Unknown error'}`);
-            }
-            if (!json.metadata) {
-              console.error('[GenerateTags] Unexpected response format:', json);
-              throw new Error(`Tagging failed: No metadata returned for ${img.name}`);
-            }
-            const metadata = json.metadata;
-            console.log('[GenerateTags] Metadata received for:', img.name, metadata);
-            return { ...img, metadata };
-          } catch (err) {
-            console.error('[GenerateTags] Remote response not JSON:', text);
-            throw new Error(`Remote tagging error for ${img.name}: ${text}`);
-          }
-          if (!json.metadata) {
-            console.error('[GenerateTags] Unexpected response:', json);
-            throw new Error(`Tagging failed: No metadata returned for ${img.name}`);
+          if (!response.ok) {
+            throw new Error(`Tagging failed for ${img.name}`);
           }
 
-          const metadata = json.metadata;
-          logToScreen(`[GenerateTags] Metadata received for ${img.name}: ${JSON.stringify(metadata)}`);
-
-          return { ...img, metadata };
+          const { tags } = await response.json();
+          logToScreen(`[GenerateTags] Metadata received for: ${img.name}`);
+          return { ...img, metadata: { tags } };
         })
       );
 
-      logToScreen('[GenerateTags] All metadata received, updating localStorage');
       setTaggedImages(tagged);
       localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
       alert('MetaTags generated and saved!');
     } catch (err) {
-      logToScreen(`[GenerateTags] Remote tagging error: ${err.message}`);
-      alert('Something went wrong during tagging. Check logs below.');
+      console.error('[GenerateTags] Remote tagging error:', err);
+      alert('Something went wrong during tagging. Check logs.');
     } finally {
       setLoading(false);
     }
