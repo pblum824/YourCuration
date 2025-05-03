@@ -31,9 +31,10 @@ export default function App() {
 
         <div style={{ textAlign: 'right', marginBottom: '0.5rem' }}>
           <button onClick={toggleView} style={{ fontSize: '0.75rem', opacity: 0.5 }}>
-            {view === 'artist' ? 'Switch to Generate Tags' :
-             view === 'generate' ? 'Switch to Sample Rater' :
-             'Switch to Artist Dashboard'}
+            {view === 'landing' ? 'Enter Artist Dashboard' :
+             view === 'artist' ? 'Go to Generate Tags' :
+             view === 'generate' ? 'Rate Samples' :
+             'Back to Welcome'}
           </button>
         </div>
 
