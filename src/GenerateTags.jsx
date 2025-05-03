@@ -1,10 +1,21 @@
+// Updated GenerateTags.jsx with tagging toggle between samples and gallery
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 
 export default function GenerateTags() {
-  const { artistSamples, setArtistSamples } = useCuration();
+  const {
+    artistSamples,
+    setArtistSamples,
+    artistGallery,
+    setArtistGallery
+  } = useCuration();
+
+  const [target, setTarget] = useState('samples'); // 'samples' or 'gallery'
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const images = target === 'samples' ? artistSamples : artistGallery;
+  const setImages = target === 'samples' ? setArtistSamples : setArtistGallery;
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
@@ -12,7 +23,7 @@ export default function GenerateTags() {
     setLoading(true);
     try {
       const tagged = await Promise.all(
-        artistSamples.map(async (img) => {
+        images.map(async (img) => {
           try {
             logToScreen(`[GenerateTags] Uploading ${img.name}`);
             const formData = new FormData();
@@ -29,15 +40,15 @@ export default function GenerateTags() {
             const imageTags = result.metadata?.imageTags || [];
             const textTags = result.metadata?.textTags || [];
 
-            return { ...img, metadata: { imageTags, textTags } };
+            return { ...img, metadata: { ...img.metadata, imageTags, textTags } };
           } catch (err) {
             logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
-            return { ...img, metadata: { imageTags: [], textTags: [], error: err.message } };
+            return { ...img, metadata: { ...img.metadata, imageTags: [], textTags: [], error: err.message } };
           }
         })
       );
 
-      setArtistSamples(tagged);
+      setImages(tagged);
     } finally {
       setLoading(false);
     }
@@ -45,6 +56,18 @@ export default function GenerateTags() {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+        <label style={{ marginRight: '1rem' }}>Tagging Target:</label>
+        <select
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          style={{ padding: '0.5rem' }}
+        >
+          <option value="samples">Sample Images</option>
+          <option value="gallery">Gallery Images</option>
+        </select>
+      </div>
+
       <button onClick={handleGenerate} disabled={loading} style={{ padding: '0.75rem 1.25rem' }}>
         {loading ? 'Generating Tags...' : 'Generate MetaTags'}
       </button>
