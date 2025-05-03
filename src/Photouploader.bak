@@ -1,0 +1,37 @@
+import React from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useCuration } from './YourCurationContext';
+
+export default function PhotoUploader({ mode }) {
+  const {
+    artistSamples,
+    setArtistSamples,
+    artistGallery,
+    setArtistGallery,
+  } = useCuration();
+
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files).map((file) => ({
+      id: uuidv4(),
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file,
+      metadata: {},
+    }));
+
+    if (mode === 'samples') {
+      setArtistSamples([...artistSamples, ...files]);
+    } else {
+      setArtistGallery([...artistGallery, ...files]);
+    }
+  };
+
+  return (
+    <div style={{ margin: '1rem 0' }}>
+      <label style={{ fontWeight: 'bold' }}>
+        Upload {mode === 'samples' ? 'Sample Images' : 'Gallery Images'}:
+      </label>
+      <input type="file" accept="image/*" multiple onChange={handleFileChange} />
+    </div>
+  );
+}

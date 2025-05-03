@@ -1,77 +1,23 @@
+// src/CuratedGallery.jsx
 import React from 'react';
-import generateMetadata from './utils/generateMetadata';
+import { useCuration } from './YourCurationContext';
 
-const artistLibrary = [
-  {
-    id: 'a101',
-    src: '/artist-images/a101.jpg',
-    scrapeEligible: true,
-    metadata: {
-      tags: ['animal', 'backlit', 'rule-of-thirds', 'nostalgic'],
-    },
-  },
-  {
-    id: 'a102',
-    src: '/artist-images/a102.jpg',
-    scrapeEligible: true,
-    metadata: {
-      tags: ['figure', 'monochrome', 'soft-focus', 'centered-subject'],
-    },
-  },
-  {
-    id: 'a103',
-    src: '/artist-images/a103.jpg',
-    scrapeEligible: true,
-    metadata: {
-      tags: ['landscape', 'cool-toned', 'symmetry', 'calm'],
-    },
-  },
-  {
-    id: 'a104',
-    src: '/artist-images/a104.jpg',
-    scrapeEligible: true,
-    metadata: {
-      tags: ['animal', 'grainy', 'negative-space', 'eerie'],
-    },
-  },
-  {
-    id: 'a105',
-    src: '/artist-images/a105.jpg',
-    scrapeEligible: false,
-    metadata: {
-      tags: ['still-life', 'warm-toned', 'sharp'],
-    },
-  },
-];
+export default function CuratedGallery() {
+  const { artistGallery, artistSamples, ratings } = useCuration();
 
-function findSimilarPhotos(lovedSamples, dislikedSamples, artistLibrary) {
-  const lovedTags = lovedSamples.flatMap(sample =>
-    generateMetadata(sample.id).metadata.tags
-  );
+  const lovedSamples = artistSamples.filter(img => ratings[img.id] === 'up');
+  const dislikedSamples = artistSamples.filter(img => ratings[img.id] === 'down');
 
-  const dislikedTags = dislikedSamples.flatMap(sample =>
-    generateMetadata(sample.id).metadata.tags
-  );
+  const lovedTags = lovedSamples.flatMap(img => img.metadata?.imageTags || []);
+  const dislikedTags = dislikedSamples.flatMap(img => img.metadata?.imageTags || []);
 
-  const matched = artistLibrary.filter(photo => {
-    if (!photo.scrapeEligible) return false;
-
-    const tags = photo.metadata.tags;
+  const matched = artistGallery.filter(photo => {
+    if (!photo.metadata?.imageTags) return false;
+    const tags = photo.metadata.imageTags;
     const hasPositive = tags.some(tag => lovedTags.includes(tag));
     const hasNegative = tags.some(tag => dislikedTags.includes(tag));
-
     return hasPositive && !hasNegative;
   });
-
-  return { matched, lovedTags, dislikedTags };
-}
-
-export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
-  const { matched, lovedTags, dislikedTags } = findSimilarPhotos(
-    lovedSamples,
-    dislikedSamples,
-    artistLibrary
-  );
 
   return (
     <div style={{ paddingBottom: '2rem' }}>
@@ -96,7 +42,7 @@ export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
 
       {matched.length === 0 ? (
         <p style={{ textAlign: 'center', fontSize: '1.25rem', fontStyle: 'italic' }}>
-          No matches found from artist library.
+          No matches found from artist gallery.
         </p>
       ) : (
         <div
@@ -110,7 +56,7 @@ export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
           {matched.map((img, index) => (
             <div key={img?.id || index} style={{ maxWidth: '320px', textAlign: 'center' }}>
               <img
-                src={img?.src}
+                src={img?.url || img?.src}
                 alt={`Matched ${img?.id}`}
                 style={{
                   maxWidth: '320px',
@@ -122,7 +68,7 @@ export default function CuratedGallery({ lovedSamples, dislikedSamples }) {
                 }}
               />
               <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginTop: '0.5rem' }}>
-                Tags: {img?.metadata?.tags?.join(', ')}
+                Tags: {img?.metadata?.imageTags?.join(', ')}
               </p>
             </div>
           ))}
