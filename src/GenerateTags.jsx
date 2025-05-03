@@ -53,12 +53,13 @@ export default function GenerateTags({ setView }) {
             }
 
             const result = await response.json();
-            const tags = result.metadata?.tags || [];
+            const imageTags = result.metadata?.imageTags || [];
+            const textTags = result.metadata?.textTags || [];
             logToScreen(`[GenerateTags] Metadata received for: ${img.name}`);
-            return { ...img, metadata: { tags } };
+            return { ...img, metadata: { imageTags, textTags } };
           } catch (error) {
             logToScreen(`[GenerateTags] Error tagging ${img.name}: ${error.message}`);
-            return { ...img, metadata: { tags: [], error: error.message } };
+            return { ...img, metadata: { imageTags: [], textTags: [], error: error.message } };
           }
         })
       );
@@ -121,9 +122,14 @@ export default function GenerateTags({ setView }) {
           <div key={img.id} style={{ width: '240px' }}>
             <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }} />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
-            {img.metadata?.tags?.length > 0 && (
+            {img.metadata?.imageTags?.length > 0 && (
               <div style={{ fontSize: '0.8rem', color: '#444', marginTop: '0.5rem' }}>
-                <strong>Tags:</strong> {img.metadata.tags.join(', ')}
+                <strong>Image Tags:</strong> {img.metadata.imageTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.textTags?.length > 0 && (
+              <div style={{ fontSize: '0.8rem', color: '#444', marginTop: '0.5rem' }}>
+                <strong>Text Tags:</strong> {img.metadata.textTags.join(', ')}
               </div>
             )}
             {img.metadata?.error && (
