@@ -1,5 +1,6 @@
 // GenerateTags.jsx
 import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function GenerateTags({ setView }) {
   const [images, setImages] = useState([]);
@@ -10,26 +11,18 @@ export default function GenerateTags({ setView }) {
 
   const logToScreen = (message) => setLogs((prev) => [...prev, message]);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('yourcuration_artistImages');
-    let parsed = [];
-
-    try {
-      parsed = stored ? JSON.parse(stored) : [];
-      if (!Array.isArray(parsed)) parsed = [];
-    } catch (err) {
-      logToScreen('[GenerateTags] Failed to parse localStorage');
-      parsed = [];
-    }
-
-    if (parsed.length === 0) {
-      logToScreen('[GenerateTags] No images found in storage.');
-    } else {
-      logToScreen(`[GenerateTags] Loaded images: ${parsed.length}`);
-      setImages(parsed);
-      setShowGenerateButton(true);
-    }
-  }, []);
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    const prepared = files.map(file => ({
+      id: uuidv4(),
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file
+    }));
+    setImages(prepared);
+    setShowGenerateButton(true);
+    setLogs([]);
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -39,7 +32,7 @@ export default function GenerateTags({ setView }) {
           try {
             logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
 
-            const blob = await fetch(img.url).then(res => res.blob());
+            const blob = img.file;
             const formData = new FormData();
             formData.append('image', blob, img.name);
 
@@ -65,8 +58,13 @@ export default function GenerateTags({ setView }) {
       );
 
       setTaggedImages(tagged);
-      localStorage.setItem('yourcuration_artistImages', JSON.stringify(tagged));
-      alert('MetaTags generated and saved!');
+
+      const successCount = tagged.filter(img => !img.metadata?.error).length;
+      if (successCount === tagged.length) {
+        alert('MetaTags generated and saved!');
+      } else {
+        alert('Some images failed to generate tags. Check logs.');
+      }
     } catch (err) {
       console.error('[GenerateTags] Remote tagging error:', err);
       alert('Something went wrong during tagging. Check logs.');
@@ -86,6 +84,8 @@ export default function GenerateTags({ setView }) {
         `}
       </style>
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>Generate Tags</h2>
+
+      <input type="file" accept="image/*" multiple onChange={handleFileUpload} style={{ marginBottom: '1rem' }} />
 
       {loading && (
         <div>
