@@ -36,24 +36,30 @@ export default function GenerateTags({ setView }) {
     try {
       const tagged = await Promise.all(
         images.map(async (img) => {
-          logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
+          try {
+            logToScreen(`[GenerateTags] Uploading image: ${img.name}`);
 
-          const blob = await fetch(img.url).then(res => res.blob());
-          const formData = new FormData();
-          formData.append('image', blob, img.name);
+            const blob = await fetch(img.url).then(res => res.blob());
+            const formData = new FormData();
+            formData.append('image', blob, img.name);
 
-          const response = await fetch('http://44.223.11.189:3000/batch-tag', {
-            method: 'POST',
-            body: formData
-          });
+            const response = await fetch('http://44.223.11.189:3000/batch-tag', {
+              method: 'POST',
+              body: formData
+            });
 
-          if (!response.ok) {
-            throw new Error(`Tagging failed for ${img.name}`);
+            if (!response.ok) {
+              throw new Error(`Tagging failed with status ${response.status}`);
+            }
+
+            const result = await response.json();
+            const tags = result.metadata?.tags || [];
+            logToScreen(`[GenerateTags] Metadata received for: ${img.name}`);
+            return { ...img, metadata: { tags } };
+          } catch (error) {
+            logToScreen(`[GenerateTags] Error tagging ${img.name}: ${error.message}`);
+            return { ...img, metadata: { tags: [], error: error.message } };
           }
-
-          const { tags } = await response.json();
-          logToScreen(`[GenerateTags] Metadata received for: ${img.name}`);
-          return { ...img, metadata: { tags } };
         })
       );
 
@@ -115,9 +121,14 @@ export default function GenerateTags({ setView }) {
           <div key={img.id} style={{ width: '240px' }}>
             <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }} />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
-            {img.metadata?.tags && (
+            {img.metadata?.tags?.length > 0 && (
               <div style={{ fontSize: '0.8rem', color: '#444', marginTop: '0.5rem' }}>
                 <strong>Tags:</strong> {img.metadata.tags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.error && (
+              <div style={{ fontSize: '0.75rem', color: 'red', marginTop: '0.5rem' }}>
+                <strong>Error:</strong> {img.metadata.error}
               </div>
             )}
           </div>
