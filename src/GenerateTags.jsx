@@ -35,6 +35,8 @@ export default function GenerateTags({ setView }) {
             const formData = new FormData();
             formData.append('image', blob, img.name);
 
+            console.log('Uploading FormData for:', img.name, blob);
+
             const response = await fetch('http://44.223.11.189:3000/batch-tag', {
               method: 'POST',
               body: formData
