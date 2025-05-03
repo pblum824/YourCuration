@@ -14,9 +14,10 @@ export default function App() {
 
   const toggleView = () => {
     let next;
-    if (view === 'artist') next = 'generate';
+    if (view === 'landing') next = 'artist';
+    else if (view === 'artist') next = 'generate';
     else if (view === 'generate') next = 'rate';
-    else next = 'artist';
+    else next = 'landing';
 
     setView(next);
     localStorage.setItem('yourcuration_view', next);
@@ -39,11 +40,20 @@ export default function App() {
           <button
             onClick={() => {
               localStorage.removeItem('yourcuration_view');
-              window.location.reload();
+              setView('landing');
             }}
-            style={{ fontSize: '0.75rem', opacity: 0.3, marginLeft: '1rem' }}
+            style={{
+              fontSize: '0.9rem',
+              backgroundColor: '#e0e7ff',
+              color: '#1e3a8a',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid #c7d2fe',
+              marginLeft: '1rem',
+              cursor: 'pointer',
+            }}
           >
-            Reset to Landing
+            Switch to Client View
           </button>
         </div>
 
@@ -54,6 +64,7 @@ export default function App() {
           </div>
         ) : (
           <ErrorCatcher onError={setError}>
+            {view === 'landing' && <ArtClientLanding setView={setView} />}
             {view === 'artist' && <ArtistDashboard setView={setView} />}
             {view === 'generate' && <GenerateTags setView={setView} />}
             {view === 'rate' && <SampleRater />}
