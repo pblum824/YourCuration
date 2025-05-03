@@ -34,6 +34,19 @@ All core state is managed with **React Context** via `YourCurationContext.jsx`, 
 - Enables full offline reuse after preparation
 - Architecture follows the “Prepare online. Use offline.” philosophy
 
+## Artist Bundle Transfer
+
+Artists can export their gallery, including hero, border, center, and tagged images as a `.json` bundle.
+
+This bundle can be:
+- Saved locally
+- Shared with curators, interior designers, or other devices
+- Re-imported to resume curation on any compatible YourCuration instance
+
+Export/import is handled directly in `ArtistDashboard.jsx` via:
+- `exportGallery()`
+- `importGallery()`
+- 
 ## Backend Responsibilities
 
 - Receives image uploads and runs ONNX-based inference

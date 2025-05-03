@@ -1,6 +1,7 @@
+// ArtClientLanding.jsx — merged best-of-both versions
 import React from 'react';
 
-export default function ArtClientLanding({ onStart }) {
+export default function ArtClientLanding({ setView }) {
   return (
     <div
       style={{
@@ -24,7 +25,7 @@ export default function ArtClientLanding({ onStart }) {
         </p>
       </div>
       <button
-        onClick={onStart}
+        onClick={() => setView('artist')}
         style={{
           padding: '1rem 2rem',
           fontSize: '1.5rem',

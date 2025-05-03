@@ -3,10 +3,11 @@ import ArtistDashboard from './ArtistDashboard';
 import GenerateTags from './GenerateTags';
 import SampleRater from './SampleRater';
 import { YourCurationProvider } from './YourCurationContext';
+import ArtClientLanding from './ArtClientLanding';
 
 export default function App() {
   const [view, setView] = useState(() => {
-    return localStorage.getItem('yourcuration_view') || 'artist';
+    return localStorage.getItem('yourcuration_view') || 'landing';
   });
 
   const [error, setError] = useState(null);

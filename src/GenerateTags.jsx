@@ -58,11 +58,17 @@ export default function GenerateTags() {
     <div style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
         <label style={{ marginRight: '1rem' }}>Tagging Target:</label>
-        <select
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          style={{ padding: '0.5rem' }}
-        >
+          <select
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            style={{
+              padding: '0.75rem 1.25rem',
+              fontSize: '1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid #ccc',
+              backgroundColor: '#fff',
+            }}
+          >
           <option value="samples">Sample Images</option>
           <option value="gallery">Gallery Images</option>
         </select>
