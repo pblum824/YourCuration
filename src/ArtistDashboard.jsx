@@ -289,10 +289,13 @@ export default function ArtistDashboard({ setView }) {
             </label>
             <button
               onClick={() => {
+                if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
                 setHeroImage(null);
                 setBorderSkin(null);
                 setCenterBackground(null);
                 setArtistGallery([]);
+                setUploadCount(0);
+                setUploadWarnings([]);
               }}
               style={{ ...controlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
             >
@@ -329,12 +332,6 @@ export default function ArtistDashboard({ setView }) {
                   }}
                 />
                 <div style={{ marginTop: '0.5rem' }}>
-                  <button
-                    onClick={() => toggleScrape(setter)}
-                    style={imageButton(state.scrapeEligible ? '#d1fae5' : '#fee2e2')}
-                  >
-                    {state.scrapeEligible ? 'Accepted' : 'Excluded'}
-                  </button>
                   <button
                     onClick={() => setter(null)}
                     style={imageButton('#fef2f2', '#991b1b')}
