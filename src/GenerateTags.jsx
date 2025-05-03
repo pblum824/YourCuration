@@ -1,11 +1,10 @@
 // GenerateTags.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function GenerateTags({ setView }) {
   const [images, setImages] = useState([]);
   const [taggedImages, setTaggedImages] = useState([]);
-  const [showGenerateButton, setShowGenerateButton] = useState(false);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +19,7 @@ export default function GenerateTags({ setView }) {
       file
     }));
     setImages(prepared);
-    setShowGenerateButton(true);
+    setTaggedImages([]);
     setLogs([]);
   };
 
@@ -102,7 +101,7 @@ export default function GenerateTags({ setView }) {
         </div>
       )}
 
-      {showGenerateButton && !loading && (
+      {images.length > 0 && !loading && (
         <button
           onClick={handleGenerate}
           style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', borderRadius: '0.5rem', backgroundColor: '#1e3a8a', color: 'white', cursor: 'pointer' }}
