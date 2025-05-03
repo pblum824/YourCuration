@@ -205,7 +205,7 @@ export default function ArtistDashboard({ setView }) {
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
     setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
-    setUploadCount(valid.length);
+    setUploadCount(prev => prev + valid.length);
 
     const newImages = await Promise.all(
       valid.map(async (file) => {
@@ -253,8 +253,10 @@ export default function ArtistDashboard({ setView }) {
       )
     );
 
-  const removeImage = (id) =>
-    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
+  const removeImage = (id) => {
+    setArtistGallery(prev => prev.filter(img => img.id !== id));
+    setUploadCount(prev => Math.max(0, prev - 1));
+  };
     return (
       <div style={{ padding: '2rem' }}>
         <div style={{ textAlign: 'right', marginBottom: '0.5rem' }}>
