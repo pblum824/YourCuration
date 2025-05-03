@@ -36,6 +36,15 @@ export default function App() {
              view === 'generate' ? 'Rate Samples' :
              'Back to Welcome'}
           </button>
+          <button
+            onClick={() => {
+              localStorage.removeItem('yourcuration_view');
+              window.location.reload();
+            }}
+            style={{ fontSize: '0.75rem', opacity: 0.3, marginLeft: '1rem' }}
+          >
+            Reset to Landing
+          </button>
         </div>
 
         {error ? (
