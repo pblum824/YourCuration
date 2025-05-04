@@ -27,7 +27,9 @@ export default function GenerateTags() {
           try {
             logToScreen(`[GenerateTags] Uploading ${img.name}`);
             const formData = new FormData();
-            formData.append('image', img.file, img.name);
+            const response = await fetch(img.url);
+            const blob = await response.blob();
+            formData.append('image', blob, img.name);
 
             const res = await fetch('http://44.223.11.189:3000/batch-tag', {
               method: 'POST',
