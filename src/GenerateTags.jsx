@@ -88,6 +88,23 @@ export default function GenerateTags() {
                 <strong>Image Tags:</strong> {img.metadata.imageTags.join(', ')}
               </div>
             )}
+
+            {img.metadata?.textTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>Text Tags:</strong> {img.metadata.textTags.join(', ')}
+              </div>
+            )}
+
+            {img.metadata?.error && (
+              <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                <strong>Error:</strong> {img.metadata.error}
+              </div>
+            )}
+            {img.metadata?.imageTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>Image Tags:</strong> {img.metadata.imageTags.join(', ')}
+              </div>
+            )}
             {img.metadata?.textTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
                 <strong>Text Tags:</strong> {img.metadata.textTags.join(', ')}
