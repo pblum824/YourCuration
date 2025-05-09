@@ -27,9 +27,16 @@ export default function GenerateTags() {
           try {
             logToScreen(`[GenerateTags] Uploading ${img.name}`);
             const formData = new FormData();
-            const response = await fetch(img.url);
-            const blob = await response.blob();
-            formData.append('image', blob, img.name);
+
+            let blob;
+            try {
+              const response = await fetch(img.url);
+              blob = await response.blob();
+              formData.append('image', blob, img.name);
+            } catch (blobErr) {
+              logToScreen(`[BlobFetch] Failed for ${img.name}: ${blobErr.message}`);
+              throw new Error("Load failed");
+            }
 
             const res = await fetch('https://api.yourcuration.app/batch-tag', {
               method: 'POST',
