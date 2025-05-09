@@ -42,7 +42,7 @@ export default function GenerateTags() {
             const imageTags = result.metadata?.imageTags || [];
             const textTags = result.metadata?.textTags || [];
 
-            const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
+           // const frontendMeta = await analyzeVisualMetadataFromImage(img.url);//
             const frontendTags = frontendMeta.tags || [];
             const visualTone = frontendMeta.dimensions?.visualTone || [];
             const mood = frontendMeta.dimensions?.mood || [];
