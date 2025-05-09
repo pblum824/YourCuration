@@ -51,7 +51,7 @@ export default function GenerateTags() {
 
             let frontendTags = [], visualTone = [], mood = [], colorPalette = [];
             try {
-              const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
+             // const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
               frontendTags = frontendMeta.tags || [];
               visualTone = frontendMeta.dimensions?.visualTone || [];
               mood = frontendMeta.dimensions?.mood || [];

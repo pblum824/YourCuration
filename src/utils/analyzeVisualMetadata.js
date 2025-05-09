@@ -32,7 +32,10 @@ function loadImage(src) {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => resolve(img);
-    img.onerror = reject;
+      img.onerror = (e) => {
+        console.warn(`[IMG ERROR] ${src}`, e);
+        reject(e);
+      };
     img.src = src;
   });
 }
