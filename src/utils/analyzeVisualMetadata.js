@@ -1,5 +1,7 @@
 // analyzeVisualMetadata.js
 
+import { logToScreen } from '../GenerateTags';
+
 export async function analyzeImageFromURL(url) {
   try {
     const img = await loadImage(url);
@@ -12,7 +14,9 @@ export async function analyzeImageFromURL(url) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     return analyzeImage(ctx, canvas.width, canvas.height, imageData);
   } catch (e) {
-    console.warn(`[AVM] Failed to analyze ${url}: ${e.message}`);
+    const msg = `[AVM] Failed to analyze ${url}: ${e.message}`;
+    console.warn(msg);
+    alert(msg);
     return {
       tags: [],
       dimensions: {
@@ -32,10 +36,12 @@ function loadImage(src) {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => resolve(img);
-      img.onerror = (e) => {
-        console.warn(`[IMG ERROR] ${src}`, e);
-        reject(e);
-      };
+    img.onerror = (e) => {
+      const msg = `[IMG ERROR] ${src}`;
+      console.warn(msg, e);
+      alert(msg);
+      reject(e);
+    };
     img.src = src;
   });
 }
