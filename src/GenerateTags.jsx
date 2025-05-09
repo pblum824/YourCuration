@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { analyzeVisualMetadataFromImage } from './utils/analyzeVisualMetadata';
 
 export default function GenerateTags() {
   const {
@@ -42,39 +41,10 @@ export default function GenerateTags() {
             const imageTags = result.metadata?.imageTags || [];
             const textTags = result.metadata?.textTags || [];
 
-           // const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
-//            const frontendTags = frontendMeta.tags || [];
-//            const visualTone = frontendMeta.dimensions?.visualTone || [];
- //           const mood = frontendMeta.dimensions?.mood || [];
- //           const colorPalette = frontendMeta.dimensions?.colorPalette || [];
-
-            return {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                imageTags,
-                textTags,
-                frontendTags,
-                toneTags: visualTone,
-                moodTags: mood,
-                paletteTags: colorPalette
-              }
-            };
+            return { ...img, metadata: { ...img.metadata, imageTags, textTags } };
           } catch (err) {
             logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
-            return {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                imageTags: [],
-                textTags: [],
-                frontendTags: [],
-                toneTags: [],
-                moodTags: [],
-                paletteTags: [],
-                error: err.message
-              }
-            };
+            return { ...img, metadata: { ...img.metadata, imageTags: [], textTags: [], error: err.message } };
           }
         })
       );
@@ -123,26 +93,6 @@ export default function GenerateTags() {
             {img.metadata?.textTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
                 <strong>[text]</strong> {img.metadata.textTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.frontendTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[frontend]</strong> {img.metadata.frontendTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.toneTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.moodTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.paletteTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
               </div>
             )}
             {img.metadata?.error && (
