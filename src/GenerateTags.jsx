@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
+import { analyzeVisualMetadataFromImage } from './utils/analyzeVisualMetadata';
 
 export default function GenerateTags() {
   const {
@@ -41,10 +42,44 @@ export default function GenerateTags() {
             const imageTags = result.metadata?.imageTags || [];
             const textTags = result.metadata?.textTags || [];
 
-            return { ...img, metadata: { ...img.metadata, imageTags, textTags } };
+            let frontendTags = [], visualTone = [], mood = [], colorPalette = [];
+            try {
+              const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
+              frontendTags = frontendMeta.tags || [];
+              visualTone = frontendMeta.dimensions?.visualTone || [];
+              mood = frontendMeta.dimensions?.mood || [];
+              colorPalette = frontendMeta.dimensions?.colorPalette || [];
+            } catch (e) {
+              console.warn(`[FrontendMeta] analysis failed for ${img.name}: ${e.message}`);
+            }
+
+            return {
+              ...img,
+              metadata: {
+                ...img.metadata,
+                imageTags,
+                textTags,
+                frontendTags,
+                toneTags: visualTone,
+                moodTags: mood,
+                paletteTags: colorPalette
+              }
+            };
           } catch (err) {
             logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
-            return { ...img, metadata: { ...img.metadata, imageTags: [], textTags: [], error: err.message } };
+            return {
+              ...img,
+              metadata: {
+                ...img.metadata,
+                imageTags: [],
+                textTags: [],
+                frontendTags: [],
+                toneTags: [],
+                moodTags: [],
+                paletteTags: [],
+                error: err.message
+              }
+            };
           }
         })
       );
@@ -93,6 +128,26 @@ export default function GenerateTags() {
             {img.metadata?.textTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
                 <strong>[text]</strong> {img.metadata.textTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.frontendTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[frontend]</strong> {img.metadata.frontendTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.toneTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.moodTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.paletteTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
               </div>
             )}
             {img.metadata?.error && (
