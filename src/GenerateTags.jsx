@@ -19,78 +19,87 @@ export default function GenerateTags() {
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
+  const processImage = async (img) => {
+    try {
+      logToScreen(`[GenerateTags] Uploading ${img.name}`);
+      const formData = new FormData();
+
+      let blob;
+      try {
+        const response = await fetch(img.url);
+        blob = await response.blob();
+        formData.append('image', blob, img.name);
+      } catch (blobErr) {
+        const msg = `[BlobFetch] Failed for ${img.name}: ${blobErr.message}`;
+        alert(msg);
+        logToScreen(msg);
+        throw new Error("Load failed");
+      }
+
+      const res = await fetch('https://api.yourcuration.app/batch-tag', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error(`Failed (${res.status})`);
+
+      const result = await res.json();
+      const imageTags = result.metadata?.imageTags || [];
+      const textTags = result.metadata?.textTags || [];
+
+      let frontendTags = [], visualTone = [], mood = [], colorPalette = [];
+      try {
+        alert(`[AVM] Starting ${img.name}`);
+        const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
+        alert(`[AVM] Done ${img.name}`);
+        frontendTags = frontendMeta.tags || [];
+        visualTone = frontendMeta.dimensions?.visualTone || [];
+        mood = frontendMeta.dimensions?.mood || [];
+        colorPalette = frontendMeta.dimensions?.colorPalette || [];
+      } catch (e) {
+        const msg = `[AVM] Failed for ${img.name}: ${e.message}`;
+        alert(msg);
+        logToScreen(msg);
+      }
+
+      return {
+        ...img,
+        metadata: {
+          ...img.metadata,
+          imageTags,
+          textTags,
+          frontendTags,
+          toneTags: visualTone,
+          moodTags: mood,
+          paletteTags: colorPalette
+        }
+      };
+    } catch (err) {
+      logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
+      return {
+        ...img,
+        metadata: {
+          ...img.metadata,
+          imageTags: [],
+          textTags: [],
+          frontendTags: [],
+          toneTags: [],
+          moodTags: [],
+          paletteTags: [],
+          error: err.message
+        }
+      };
+    }
+  };
+
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const tagged = await Promise.all(
-        images.map(async (img) => {
-          try {
-            logToScreen(`[GenerateTags] Uploading ${img.name}`);
-            const formData = new FormData();
-
-            let blob;
-            try {
-              const response = await fetch(img.url);
-              blob = await response.blob();
-              formData.append('image', blob, img.name);
-            } catch (blobErr) {
-              logToScreen(`[BlobFetch] Failed for ${img.name}: ${blobErr.message}`);
-              throw new Error("Load failed");
-            }
-
-            const res = await fetch('https://api.yourcuration.app/batch-tag', {
-              method: 'POST',
-              body: formData,
-            });
-
-            if (!res.ok) throw new Error(`Failed (${res.status})`);
-
-            const result = await res.json();
-            const imageTags = result.metadata?.imageTags || [];
-            const textTags = result.metadata?.textTags || [];
-
-            let frontendTags = [], visualTone = [], mood = [], colorPalette = [];
-            try {
-             // const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
-              frontendTags = frontendMeta.tags || [];
-              visualTone = frontendMeta.dimensions?.visualTone || [];
-              mood = frontendMeta.dimensions?.mood || [];
-              colorPalette = frontendMeta.dimensions?.colorPalette || [];
-            } catch (e) {
-              console.warn(`[FrontendMeta] analysis failed for ${img.name}: ${e.message}`);
-            }
-
-            return {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                imageTags,
-                textTags,
-                frontendTags,
-                toneTags: visualTone,
-                moodTags: mood,
-                paletteTags: colorPalette
-              }
-            };
-          } catch (err) {
-            logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
-            return {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                imageTags: [],
-                textTags: [],
-                frontendTags: [],
-                toneTags: [],
-                moodTags: [],
-                paletteTags: [],
-                error: err.message
-              }
-            };
-          }
-        })
-      );
-
+      const tagged = [];
+      for (const img of images) {
+        const taggedImg = await processImage(img);
+        tagged.push(taggedImg);
+      }
       setImages(tagged);
     } finally {
       setLoading(false);
