@@ -1,6 +1,6 @@
-// Updated GenerateTags.jsx with image grid display under toggle
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
+import { analyzeVisualMetadataFromImage } from './utils/analyzeVisualMetadata';
 
 export default function GenerateTags() {
   const {
@@ -10,7 +10,7 @@ export default function GenerateTags() {
     setArtistGallery
   } = useCuration();
 
-  const [target, setTarget] = useState('samples'); // 'samples' or 'gallery'
+  const [target, setTarget] = useState('samples');
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -42,10 +42,39 @@ export default function GenerateTags() {
             const imageTags = result.metadata?.imageTags || [];
             const textTags = result.metadata?.textTags || [];
 
-            return { ...img, metadata: { ...img.metadata, imageTags, textTags } };
+            const frontendMeta = await analyzeVisualMetadataFromImage(img.url);
+            const frontendTags = frontendMeta.tags || [];
+            const visualTone = frontendMeta.dimensions?.visualTone || [];
+            const mood = frontendMeta.dimensions?.mood || [];
+            const colorPalette = frontendMeta.dimensions?.colorPalette || [];
+
+            return {
+              ...img,
+              metadata: {
+                ...img.metadata,
+                imageTags,
+                textTags,
+                frontendTags,
+                toneTags: visualTone,
+                moodTags: mood,
+                paletteTags: colorPalette
+              }
+            };
           } catch (err) {
             logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
-            return { ...img, metadata: { ...img.metadata, imageTags: [], textTags: [], error: err.message } };
+            return {
+              ...img,
+              metadata: {
+                ...img.metadata,
+                imageTags: [],
+                textTags: [],
+                frontendTags: [],
+                toneTags: [],
+                moodTags: [],
+                paletteTags: [],
+                error: err.message
+              }
+            };
           }
         })
       );
@@ -85,14 +114,35 @@ export default function GenerateTags() {
           <div key={img.id} style={{ width: '280px', textAlign: 'center' }}>
             <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem' }} />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
+
             {img.metadata?.imageTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>Image Tags:</strong> {img.metadata.imageTags.join(', ')}
+                <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
               </div>
             )}
             {img.metadata?.textTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>Text Tags:</strong> {img.metadata.textTags.join(', ')}
+                <strong>[text]</strong> {img.metadata.textTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.frontendTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[frontend]</strong> {img.metadata.frontendTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.toneTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.moodTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.paletteTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
               </div>
             )}
             {img.metadata?.error && (
