@@ -28,7 +28,9 @@ export default function GenerateTags() {
             const formData = new FormData();
             const response = await fetch(img.url);
             const blob = await response.blob();
-            formData.append('image', blob, img.name);
+            const fileType = blob.type || 'image/jpeg';
+            const file = new File([blob], img.name, { type: fileType });
+            formData.append('image', file);
 
             const res = await fetch('https://api.yourcuration.app/visual-tag', {
               method: 'POST',
