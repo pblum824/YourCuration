@@ -26,7 +26,10 @@ export default function GenerateTags() {
           try {
             logToScreen(`[GenerateTags] Uploading ${img.name}`);
             const formData = new FormData();
+            logToScreen(`[GenerateTags] Fetching image blob from: ${img.url}`);
             const response = await fetch(img.url);
+            if (!response.ok) throw new Error(`Image fetch failed (${response.status})`);
+            logToScreen(`[GenerateTags] Image fetch OK: ${img.name}`);
             const blob = await response.blob();
             const fileType = blob.type || 'image/jpeg';
             const file = new File([blob], img.name, { type: fileType });
