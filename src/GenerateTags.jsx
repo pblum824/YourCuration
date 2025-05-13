@@ -25,9 +25,9 @@ export default function GenerateTags() {
         images.map(async (img) => {
           try {
             logToScreen(`[GenerateTags] Uploading ${img.name}`);
-            const formData = new FormData();
-
             if (!img.file) throw new Error('Missing file reference');
+
+            const formData = new FormData();
             formData.append('image', img.file);
 
             const res = await fetch('https://api.yourcuration.app/visual-tag', {
