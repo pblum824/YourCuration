@@ -28,7 +28,7 @@ export default function GenerateTags() {
             if (!img.file) throw new Error('Missing file reference');
 
             const formData = new FormData();
-            formData.append('image', img.file);
+            formData.append('file', img.file);
 
             const res = await fetch('https://api.yourcuration.app/visual-tag', {
               method: 'POST',
