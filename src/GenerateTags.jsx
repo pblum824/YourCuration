@@ -38,6 +38,7 @@ export default function GenerateTags() {
             if (!res.ok) throw new Error(`Failed (${res.status})`);
 
             const result = await res.json();
+            console.log('Result:', result);
             const imageTags = result.imageTags || [];
             const textTags = result.textTags || [];
             const frontendTags = result.frontendTags || [];
