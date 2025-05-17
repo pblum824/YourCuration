@@ -30,7 +30,7 @@ export default function GenerateTags() {
             const formData = new FormData();
             formData.append('file', img.file);
 
-            const res = await fetch('https://api.yourcuration.app/visual-tag', {
+            const res = await fetch('https://api.yourcuration.app/batch-tag', {
               method: 'POST',
               body: formData,
             });
