@@ -38,7 +38,6 @@ export default function GenerateTags() {
             if (!res.ok) throw new Error(`Failed (${res.status})`);
 
             const result = await res.json();
-            logToScreen(`[GenerateTags] Response: ${JSON.stringify(result)}`);
 
             const {
               metadata: {
