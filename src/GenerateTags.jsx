@@ -56,7 +56,6 @@ export default function GenerateTags() {
             ...img.metadata,
             imageTags: [],
             textTags: [],
-            frontendTags: [],
             toneTags: [],
             moodTags: [],
             paletteTags: [],
@@ -108,11 +107,6 @@ export default function GenerateTags() {
             {img.metadata?.textTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
                 <strong>[text]</strong> {img.metadata.textTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.frontendTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[frontend]</strong> {img.metadata.frontendTags.join(', ')}
               </div>
             )}
             {img.metadata?.toneTags?.length > 0 && (
