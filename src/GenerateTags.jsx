@@ -21,67 +21,50 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const tagged = await Promise.all(
-        images.map(async (img) => {
-          try {
-            logToScreen(`[GenerateTags] Uploading ${img.name}`);
-            if (!img.file) throw new Error('Missing file reference');
+      try {
+        logToScreen(`[GenerateTags] Uploading ${images.length} images`);
 
-            const formData = new FormData();
-            formData.append('files', img.file);
+        const formData = new FormData();
+        images.forEach((img) => {
+          if (!img.file) throw new Error(`Missing file reference for ${img.name}`);
+          formData.append('files', img.file);
+        });
 
-            const res = await fetch('https://api.yourcuration.app/batch-tag', {
-              method: 'POST',
-              body: formData,
-            });
+        const res = await fetch('https://api.yourcuration.app/batch-tag', {
+          method: 'POST',
+          body: formData
+        });
 
-            if (!res.ok) throw new Error(`Failed (${res.status})`);
+        if (!res.ok) throw new Error(`Failed (${res.status})`);
 
-            const result = await res.json();
+        const result = await res.json();
 
-            const {
-              metadata: {
-                imageTags = [],
-                textTags = [],
-                frontendTags = [],
-                toneTags = [],
-                moodTags = [],
-                paletteTags = []
-              } = {}
-            } = result;
-
-            return {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                imageTags,
-                textTags,
-                frontendTags,
-                toneTags,
-                moodTags,
-                paletteTags
-              }
-            };
-          } catch (err) {
-            logToScreen(`[GenerateTags] Failed for ${img.name}: ${err.message}`);
-            return {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                imageTags: [],
-                textTags: [],
-                frontendTags: [],
-                toneTags: [],
-                moodTags: [],
-                paletteTags: [],
-                error: err.message
-              }
-            };
+        const tagged = result.results.map((r, i) => ({
+          ...images[i],
+          metadata: {
+            ...images[i].metadata,
+            ...r.metadata
           }
-        })
-      );
+        }));
 
-      setImages(tagged);
+        setImages(tagged);
+      } catch (err) {
+        logToScreen(`[GenerateTags] Batch error: ${err.message}`);
+        const tagged = images.map((img) => ({
+          ...img,
+          metadata: {
+            ...img.metadata,
+            imageTags: [],
+            textTags: [],
+            frontendTags: [],
+            toneTags: [],
+            moodTags: [],
+            paletteTags: [],
+            error: err.message
+          }
+        }));
+        setImages(tagged);
+      }
     } finally {
       setLoading(false);
     }
