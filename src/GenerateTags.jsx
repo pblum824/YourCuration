@@ -28,7 +28,7 @@ export default function GenerateTags() {
             if (!img.file) throw new Error('Missing file reference');
 
             const formData = new FormData();
-            formData.append('file', img.file);
+            formData.append('files', img.file);
 
             const res = await fetch('https://api.yourcuration.app/batch-tag', {
               method: 'POST',
