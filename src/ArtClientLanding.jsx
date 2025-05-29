@@ -25,7 +25,7 @@ export default function ArtClientLanding({ setView }) {
         </p>
       </div>
       <button
-        onClick={() => setView('artist')}
+        onClick={() => setView('rate')}
         style={{
           padding: '1rem 2rem',
           fontSize: '1.5rem',
