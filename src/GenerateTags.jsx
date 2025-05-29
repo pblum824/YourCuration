@@ -9,12 +9,11 @@ export default function GenerateTags() {
     setArtistGallery
   } = useCuration();
 
-  const [target, setTarget] = useState('samples');
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const images = target === 'samples' ? artistSamples : artistGallery;
-  const setImages = target === 'samples' ? setArtistSamples : setArtistGallery;
+  const images = artistGallery.filter(img => img.sampleEligible || img.galleryEligible);
+  const setImages = setArtistGallery;
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
@@ -93,19 +92,45 @@ export default function GenerateTags() {
       setLoading(false);
     }
   };
+  const toggleImageSample = (id) =>
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+      )
+    );
 
+  const toggleImageGallery = (id) =>
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
+
+  const toggleImageScrape = (id) =>
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
+
+  const removeImage = (id) =>
+    setArtistGallery(prev => prev.filter(img => img.id !== id));
+  const imageButton = (bg, color = '#1e3a8a') => ({
+    marginTop: '0.5rem',
+    padding: '0.5rem 1rem',
+    fontSize: '1rem',
+    borderRadius: '0.5rem',
+    border: '1px solid #ccc',
+    backgroundColor: bg,
+    color: color,
+    cursor: 'pointer',
+  });
+  
   return (
     <div style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
         <label style={{ marginRight: '1rem' }}>Tagging Target:</label>
-        <select
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          style={{ padding: '0.75rem 1.25rem', fontSize: '1rem', borderRadius: '0.5rem', border: '1px solid #ccc', backgroundColor: '#fff' }}
-        >
-          <option value="samples">Sample Images</option>
-          <option value="gallery">Gallery Images</option>
-        </select>
+        
       </div>
 
       <button onClick={handleGenerate} disabled={loading} style={{ padding: '0.75rem 1.25rem' }}>
@@ -123,6 +148,32 @@ export default function GenerateTags() {
           <div key={img.id} style={{ width: '280px', textAlign: 'center' }}>
             <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem' }} />
             <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button
+                onClick={() => toggleImageScrape(img.id)}
+                style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+              >
+                {img.scrapeEligible ? 'Accepted' : 'Excluded'}
+              </button>
+              <button
+                onClick={() => toggleImageGallery(img.id)}
+                style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+              >
+                Gallery
+              </button>
+              <button
+                onClick={() => toggleImageSample(img.id)}
+                style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+              >
+                Sample
+              </button>
+              <button
+                onClick={() => removeImage(img.id)}
+                style={imageButton('#fee2e2', '#991b1b')}
+              >
+                Remove
+              </button>
+            </div>
 
             {img.metadata?.imageTags?.length > 0 && (
               <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>

@@ -217,6 +217,8 @@ export default function ArtistDashboard({ setView }) {
           file: compressed,
           scrapeEligible: true,
           metadata: {},
+          galleryEligible: true,
+          sampleEligible: false,
         };
       })
     );
@@ -257,6 +259,19 @@ export default function ArtistDashboard({ setView }) {
     setArtistGallery(prev => prev.filter(img => img.id !== id));
     setUploadCount(prev => Math.max(0, prev - 1));
   };
+  const toggleImageSample = (id) =>
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+      )
+    );
+
+  const toggleImageGallery = (id) =>
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
     return (
       <div style={{ padding: '2rem' }}>
         <div style={{ textAlign: 'right', marginBottom: '0.5rem' }}>
@@ -429,18 +444,32 @@ export default function ArtistDashboard({ setView }) {
                 }}
               />
               <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
-              <button
-                onClick={() => toggleImageScrape(img.id)}
-                style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
-              >
-                {img.scrapeEligible ? 'Accepted' : 'Excluded'}
-              </button>
-              <button
-                onClick={() => removeImage(img.id)}
-                style={imageButton('#fef2f2', '#991b1b')}
-              >
-                Remove
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => toggleImageScrape(img.id)}
+                  style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+                >
+                  {img.scrapeEligible ? 'Accepted' : 'Excluded'}
+                </button>
+                <button
+                  onClick={() => toggleImageGallery(img.id)}
+                  style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+                >
+                  Gallery
+                </button>
+                <button
+                  onClick={() => toggleImageSample(img.id)}
+                  style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+                >
+                  Sample
+                </button>
+                <button
+                  onClick={() => removeImage(img.id)}
+                  style={imageButton('#fee2e2', '#991b1b')}
+                >
+                  Remove
+                </button>
+              </div>
               {devMode && (
                 <pre style={{ fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'left' }}>
                   {JSON.stringify(img.metadata, null, 2)}
