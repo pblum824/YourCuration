@@ -67,9 +67,20 @@ export default function CuratedGallery() {
                   objectFit: 'cover',
                 }}
               />
-              <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginTop: '0.5rem' }}>
-                Tags: {img?.metadata?.imageTags?.join(', ')}
-              </p>
+              <div style={{ fontSize: '0.85rem', textAlign: 'left', marginTop: '0.75rem', lineHeight: 1.4 }}>
+                {img?.metadata?.imageTags?.length > 0 && (
+                  <p><strong>[image]</strong> {img.metadata.imageTags.join(', ')}</p>
+                )}
+                {img?.metadata?.textTags?.length > 0 && (
+                  <p><strong>[text]</strong> {img.metadata.textTags.join(', ')}</p>
+                )}
+                {img?.metadata?.toneTags?.length > 0 && (
+                  <p><strong>[tone]</strong> {img.metadata.toneTags.join(', ')}</p>
+                )}
+                {img?.metadata?.paletteTags?.length > 0 && (
+                  <p><strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}</p>
+                )}
+              </div>
             </div>
           ))}
         </div>

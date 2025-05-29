@@ -4,6 +4,7 @@ import GenerateTags from './GenerateTags';
 import SampleRater from './SampleRater';
 import { YourCurationProvider } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
+import YourCuration from './YourCuration';
 
 export default function App() {
   const [view, setView] = useState(() => {
@@ -68,6 +69,7 @@ export default function App() {
             {view === 'artist' && <ArtistDashboard setView={setView} />}
             {view === 'generate' && <GenerateTags setView={setView} />}
             {view === 'rate' && <SampleRater />}
+            {view === 'curated' && <YourCuration />}
           </ErrorCatcher>
         )}
       </div>
