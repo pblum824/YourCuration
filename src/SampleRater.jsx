@@ -2,7 +2,8 @@ import React from 'react';
 import { useCuration } from './YourCurationContext';
 
 export default function SampleRater() {
-  const { artistSamples, ratings, setRatings } = useCuration();
+  const { artistGallery, ratings, setRatings } = useCuration();
+  const artistSamples = artistGallery.filter(img => img.sampleEligible);
 
   const handleRate = (id, value) => {
     setRatings({ ...ratings, [id]: value });
