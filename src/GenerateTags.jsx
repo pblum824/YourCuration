@@ -129,7 +129,6 @@ export default function GenerateTags() {
   return (
     <div style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
-        <label style={{ marginRight: '1rem' }}>Tagging Target:</label>
         
       </div>
 

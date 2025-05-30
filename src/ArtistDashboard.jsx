@@ -99,33 +99,41 @@ export default function ArtistDashboard({ setView }) {
             reader.readAsDataURL(blob);
           })
       );
-
+  
+  const fileToBase64 = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  };
+  
   const exportGallery = async () => {
     try {
-      const exportImage = async (img) => ({
-        name: img.name,
-        data: await imageToBase64(img.url),
-        scrapeEligible: img.scrapeEligible,
-        metadata: img.metadata,
-      });
+    const exportImage = async (img) => ({
+      name: img.name,
+      data: img.base64 || await imageToBase64(img.url),
+      scrapeEligible: img.scrapeEligible,
+      metadata: img.metadata,
+    });
 
-      const bundle = {
-        timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
-        heroImage: heroImage ? await exportImage(heroImage) : null,
-        borderSkin: borderSkin ? await exportImage(borderSkin) : null,
-        centerBackground: centerBackground ? await exportImage(centerBackground) : null,
-        images: await Promise.all(artistGallery.map(exportImage)),
-      };
-
-      const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-        type: 'application/json',
-      });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `YourCuration-Gallery-${bundle.timestamp}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const bundle = {
+      timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
+      heroImage: heroImage ? await exportImage(heroImage) : null,
+      borderSkin: borderSkin ? await exportImage(borderSkin) : null,
+      centerBackground: centerBackground ? await exportImage(centerBackground) : null,
+      images: await Promise.all(artistGallery.map(exportImage)),
+    };
+      
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+          type: 'application/json',
+        });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `YourCuration-Gallery-${bundle.timestamp}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     } catch (err) {
       console.error('Export failed:', err);
       alert('Export failed. Check the console for details.');
@@ -146,10 +154,13 @@ export default function ArtistDashboard({ setView }) {
           const ia = new Uint8Array(ab);
           for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
           const blob = new Blob([ab], { type: mime });
+          const file = new File([blob], name, { type: mime, lastModified: Date.now() });
           return {
             id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
             name,
             url: URL.createObjectURL(blob),
+            file,
+            base64: data,
             scrapeEligible: flag,
             metadata: meta,
           };
@@ -210,11 +221,13 @@ export default function ArtistDashboard({ setView }) {
     const newImages = await Promise.all(
       valid.map(async (file) => {
         const compressed = await compressImage(file);
+        const base64 = await fileToBase64(compressed);
         return {
           id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
           name: file.name,
           url: URL.createObjectURL(compressed),
           file: compressed,
+          base64, // ⬅️ store base64 snapshot
           scrapeEligible: true,
           metadata: {},
           galleryEligible: true,

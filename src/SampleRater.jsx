@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 
 export default function SampleRater() {
@@ -13,26 +13,24 @@ export default function SampleRater() {
     <div style={{ padding: '2rem' }}>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '2rem',
+          display: 'flex',
+          flexWrap: 'wrap',
           justifyContent: 'center',
-          alignItems: 'start',
+          gap: '2rem',
         }}
       >
         {artistSamples.map((img) => (
-          <div key={img.id} style={{ textAlign: 'center' }}>
+          <div key={img.id} style={{ textAlign: 'center', maxWidth: '320px' }}>
             <img
               src={img.url}
               alt={img.name}
               style={{
                 width: '100%',
-                maxWidth: '320px',
                 borderRadius: '0.5rem',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
               }}
             />
-            <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontFamily: 'Parisienne, cursive', fontSize: '1.1rem' }}>
+            <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontFamily: 'sans-serif', fontSize: '0.95rem' }}>
               {img.name}
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -44,7 +42,8 @@ export default function SampleRater() {
                   border: '1px solid #facc15',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
-                  fontFamily: 'sans-serif',
+                  fontFamily: 'Parisienne, cursive',
+                  fontSize: '1.1rem',
                 }}
               >
                 Love!
@@ -57,7 +56,8 @@ export default function SampleRater() {
                   border: '1px solid #38bdf8',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
-                  fontFamily: 'sans-serif',
+                  fontFamily: 'Parisienne, cursive',
+                  fontSize: '1.1rem',
                 }}
               >
                 Like
@@ -70,7 +70,8 @@ export default function SampleRater() {
                   border: '1px solid #f87171',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
-                  fontFamily: 'sans-serif',
+                  fontFamily: 'Parisienne, cursive',
+                  fontSize: '1.1rem',
                 }}
               >
                 Less of this
