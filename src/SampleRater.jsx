@@ -1,18 +1,7 @@
-// File: src/SampleRater.jsx
 import React, { useState } from 'react';
 import './SampleRater.css';
 
 const SAMPLE_OPTIONS = ['love', 'like', 'less'];
-const COLORS = {
-  love: '#d1fae5',
-  like: '#dbeafe',
-  less: '#fed7aa',
-};
-const ACTIVE_COLORS = {
-  love: '#34d399',
-  like: '#60a5fa',
-  less: '#f97316',
-};
 
 export default function SampleRater({ images }) {
   const [ratings, setRatings] = useState({});
@@ -20,6 +9,10 @@ export default function SampleRater({ images }) {
   const setRating = (id, value) => {
     setRatings((prev) => ({ ...prev, [id]: value }));
   };
+
+  if (!images || !Array.isArray(images) || images.length === 0) {
+    return <p style={{ textAlign: 'center', marginTop: '2rem', color: '#999' }}>No images to rate.</p>;
+  }
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem', padding: '2rem' }}>
