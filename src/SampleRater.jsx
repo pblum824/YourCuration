@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useCuration } from './YourCurationContext';
 
 export default function SampleRater() {
@@ -15,35 +15,57 @@ export default function SampleRater() {
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          justifyContent: 'center',
           gap: '2rem',
+          justifyContent: 'center',
+          alignItems: 'flex-end'
         }}
       >
         {artistSamples.map((img) => (
-          <div key={img.id} style={{ textAlign: 'center', maxWidth: '320px' }}>
+          <div
+            key={img.id}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              height: '100%',
+              textAlign: 'center',
+              maxWidth: '320px'
+            }}
+          >
             <img
               src={img.url}
               alt={img.name}
               style={{
                 width: '100%',
+                maxWidth: '300px',
+                height: 'auto',
                 borderRadius: '0.5rem',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
               }}
             />
-            <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontFamily: 'sans-serif', fontSize: '0.95rem' }}>
-              {img.name}
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <p style={{ marginTop: '0.5rem', fontFamily: 'sans-serif', fontStyle: 'italic' }}>{img.name}</p>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                marginTop: '0.75rem',
+                fontFamily: 'Parisienne, cursive'
+              }}
+            >
               <button
                 onClick={() => handleRate(img.id, 'love')}
                 style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#fde68a',
-                  border: '1px solid #facc15',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                  fontFamily: 'Parisienne, cursive',
-                  fontSize: '1.1rem',
+                  backgroundColor: '#d1fae5',
+                  color: '#065f46',
+                  minWidth: '80px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  fontSize: '1rem',
+                  cursor: 'pointer'
                 }}
               >
                 Love!
@@ -51,35 +73,38 @@ export default function SampleRater() {
               <button
                 onClick={() => handleRate(img.id, 'like')}
                 style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#e0f2fe',
-                  border: '1px solid #38bdf8',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                  fontFamily: 'Parisienne, cursive',
-                  fontSize: '1.1rem',
+                  backgroundColor: '#dbeafe',
+                  color: '#1e3a8a',
+                  minWidth: '80px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  fontSize: '1rem',
+                  cursor: 'pointer'
                 }}
               >
                 Like
               </button>
               <button
-                onClick={() => handleRate(img.id, 'down')}
+                onClick={() => handleRate(img.id, 'less')}
                 style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#fee2e2',
-                  border: '1px solid #f87171',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                  fontFamily: 'Parisienne, cursive',
-                  fontSize: '1.1rem',
+                  backgroundColor: '#fef3c7',
+                  color: '#92400e',
+                  minWidth: '80px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  fontSize: '1rem',
+                  cursor: 'pointer'
                 }}
               >
-                Less of this
+                Less
               </button>
             </div>
-            <div style={{ marginTop: '0.25rem', fontSize: '0.85rem', color: '#555' }}>
+
+            <p style={{ marginTop: '0.25rem', fontStyle: 'italic', fontSize: '0.9rem' }}>
               Selected: {ratings[img.id] || '—'}
-            </div>
+            </p>
           </div>
         ))}
       </div>

@@ -110,12 +110,14 @@ export default function ArtistDashboard({ setView }) {
   
   const exportGallery = async () => {
     try {
-    const exportImage = async (img) => ({
-      name: img.name,
-      data: img.base64 || await imageToBase64(img.url),
-      scrapeEligible: img.scrapeEligible,
-      metadata: img.metadata,
-    });
+      const exportImage = async (img) => ({
+        name: img.name,
+        data: img.base64 || await imageToBase64(img.url),
+        scrapeEligible: img.scrapeEligible,
+        galleryEligible: img.galleryEligible,
+        sampleEligible: img.sampleEligible,
+        metadata: img.metadata || {}
+      });
 
     const bundle = {
       timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
@@ -139,76 +141,81 @@ export default function ArtistDashboard({ setView }) {
       alert('Export failed. Check the console for details.');
     }
   };
-  const importGallery = (e) => {
+    const importGallery = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const bundle = JSON.parse(reader.result);
-        const toUrl = (data, name, meta, flag) => {
-          const byteString = atob(data.split(',')[1]);
-          const mime = data.split(',')[0].split(':')[1].split(';')[0];
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-          const blob = new Blob([ab], { type: mime });
-          const file = new File([blob], name, { type: mime, lastModified: Date.now() });
-          return {
-            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            name,
-            url: URL.createObjectURL(blob),
-            file,
-            base64: data,
-            scrapeEligible: flag,
-            metadata: meta,
-          };
-        };
+      reader.onload = () => {
+        (async () => {
+          try {
+            const bundle = JSON.parse(reader.result);
+            const toUrl = async (data, name, meta, scrape = true, gallery = true, sample = false) => {
+              const byteString = atob(data.split(',')[1]);
+              const mime = data.split(',')[0].split(':')[1].split(';')[0];
+              const ab = new ArrayBuffer(byteString.length);
+              const ia = new Uint8Array(ab);
+              for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+              const blob = new Blob([ab], { type: mime });
+              const file = new File([blob], name, { type: mime, lastModified: Date.now() });
 
-        if (bundle.heroImage)
-          setHeroImage(
-            toUrl(
-              bundle.heroImage.data,
-              bundle.heroImage.name,
-              bundle.heroImage.metadata,
-              bundle.heroImage.scrapeEligible
-            )
-          );
+              return {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                name,
+                url: URL.createObjectURL(blob),
+                file,
+                base64: data,
+                scrapeEligible: scrape,
+                galleryEligible: gallery,
+                sampleEligible: sample,
+                metadata: meta || {}
+              };
+            };
 
-        if (bundle.borderSkin)
-          setBorderSkin(
-            toUrl(
-              bundle.borderSkin.data,
-              bundle.borderSkin.name,
-              bundle.borderSkin.metadata,
-              bundle.borderSkin.scrapeEligible
-            )
-          );
+            if (bundle.heroImage)
+              setHeroImage(await toUrl(
+                bundle.heroImage.data,
+                bundle.heroImage.name,
+                bundle.heroImage.metadata,
+                bundle.heroImage.scrapeEligible,
+                bundle.heroImage.galleryEligible,
+                bundle.heroImage.sampleEligible
+              ));
 
-        if (bundle.centerBackground)
-          setCenterBackground(
-            toUrl(
-              bundle.centerBackground.data,
-              bundle.centerBackground.name,
-              bundle.centerBackground.metadata,
-              bundle.centerBackground.scrapeEligible
-            )
-          );
+            if (bundle.borderSkin)
+              setBorderSkin(await toUrl(
+                bundle.borderSkin.data,
+                bundle.borderSkin.name,
+                bundle.borderSkin.metadata,
+                bundle.borderSkin.scrapeEligible,
+                bundle.borderSkin.galleryEligible,
+                bundle.borderSkin.sampleEligible
+              ));
 
-        if (Array.isArray(bundle.images))
-          setArtistGallery(
-            bundle.images.map((img) =>
-              toUrl(img.data, img.name, img.metadata, img.scrapeEligible)
-            )
-          );
+            if (bundle.centerBackground)
+              setCenterBackground(await toUrl(
+                bundle.centerBackground.data,
+                bundle.centerBackground.name,
+                bundle.centerBackground.metadata,
+                bundle.centerBackground.scrapeEligible,
+                bundle.centerBackground.galleryEligible,
+                bundle.centerBackground.sampleEligible
+              ));
 
-        alert('Gallery imported successfully!');
-      } catch (err) {
-        console.error('Import failed:', err);
-        alert('Failed to import gallery. Please check your file.');
-      }
-    };
+            if (Array.isArray(bundle.images))
+              setArtistGallery(await Promise.all(
+                bundle.images.map((img) =>
+                  toUrl(img.data, img.name, img.metadata, img.scrapeEligible, img.galleryEligible, img.sampleEligible)
+                )
+              ));
+
+            alert('Gallery imported successfully!');
+          } catch (err) {
+            console.error('Import failed:', err);
+            alert('Failed to import gallery. Please check your file.');
+          }
+        })(); // end of IIFE
+      };
 
     reader.readAsText(file);
   };
@@ -457,31 +464,62 @@ export default function ArtistDashboard({ setView }) {
                 }}
               />
               <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
-              <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button
-                  onClick={() => toggleImageScrape(img.id)}
-                  style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
-                >
-                  {img.scrapeEligible ? 'Accepted' : 'Excluded'}
-                </button>
-                <button
-                  onClick={() => toggleImageGallery(img.id)}
-                  style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
-                >
-                  Gallery
-                </button>
-                <button
-                  onClick={() => toggleImageSample(img.id)}
-                  style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
-                >
-                  Sample
-                </button>
-                <button
-                  onClick={() => removeImage(img.id)}
-                  style={imageButton('#fee2e2', '#991b1b')}
-                >
-                  Remove
-                </button>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
+                {/* Vertical button stack */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  gap: '0.5rem',
+                  minWidth: '90px'
+                }}>
+                  <button
+                    onClick={() => toggleImageScrape(img.id)}
+                    style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+                  >
+                    {img.scrapeEligible ? 'Accepted' : 'Excluded'}
+                  </button>
+                  <button
+                    onClick={() => removeImage(img.id)}
+                    style={imageButton('#fee2e2', '#991b1b')}
+                  >
+                    Remove
+                  </button>
+                  <button
+                    onClick={() => toggleImageGallery(img.id)}
+                    style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+                  >
+                    Gallery
+                  </button>
+                  <button
+                    onClick={() => toggleImageSample(img.id)}
+                    style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+                  >
+                    Sample
+                  </button>
+                </div>
+
+                {/* Image and tag block */}
+                <div style={{ textAlign: 'center' }}>
+                  <img
+                    src={img.url}
+                    alt={img.name}
+                    style={{
+                      width: '100%',
+                      maxWidth: '280px',
+                      height: 'auto',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                  <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
+
+                  {devMode && (
+                    <pre style={{ fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'left' }}>
+                      {JSON.stringify(img.metadata, null, 2)}
+                    </pre>
+                  )}
+                </div>
               </div>
               {devMode && (
                 <pre style={{ fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'left' }}>
