@@ -1,0 +1,40 @@
+.rate-btn {
+  font-family: sans-serif;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  background-color: #f3f4f6;
+  color: #1e3a8a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Default states */
+.rate-btn.love {
+  background-color: #d1fae5;
+}
+.rate-btn.like {
+  background-color: #dbeafe;
+}
+.rate-btn.less {
+  background-color: #fed7aa;
+}
+
+/* Selected states */
+.rate-btn.selected.love {
+  background-color: #34d399;
+  color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.rate-btn.selected.like {
+  background-color: #60a5fa;
+  color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.rate-btn.selected.less {
+  background-color: #f97316;
+  color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}

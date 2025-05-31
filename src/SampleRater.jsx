@@ -1,113 +1,58 @@
-import React from 'react';
-import { useCuration } from './YourCurationContext';
+// File: src/SampleRater.jsx
+import React, { useState } from 'react';
+import './SampleRater.css';
 
-export default function SampleRater() {
-  const { artistGallery, ratings, setRatings } = useCuration();
-  const artistSamples = artistGallery.filter(img => img.sampleEligible);
+const SAMPLE_OPTIONS = ['love', 'like', 'less'];
+const COLORS = {
+  love: '#d1fae5',
+  like: '#dbeafe',
+  less: '#fed7aa',
+};
+const ACTIVE_COLORS = {
+  love: '#34d399',
+  like: '#60a5fa',
+  less: '#f97316',
+};
 
-  const handleRate = (id, value) => {
-    setRatings({ ...ratings, [id]: value });
+export default function SampleRater({ images }) {
+  const [ratings, setRatings] = useState({});
+
+  const setRating = (id, value) => {
+    setRatings((prev) => ({ ...prev, [id]: value }));
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '2rem',
-          justifyContent: 'center',
-          alignItems: 'flex-end'
-        }}
-      >
-        {artistSamples.map((img) => (
-          <div
-            key={img.id}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              height: '100%',
-              textAlign: 'center',
-              maxWidth: '320px'
-            }}
-          >
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem', padding: '2rem' }}>
+      {images.map((img) => {
+        const rating = ratings[img.id];
+        return (
+          <div key={img.id} style={{ width: '280px', textAlign: 'center' }}>
             <img
               src={img.url}
               alt={img.name}
               style={{
                 width: '100%',
-                maxWidth: '300px',
-                height: 'auto',
+                height: '200px',
+                objectFit: 'cover',
                 borderRadius: '0.5rem',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}
             />
-            <p style={{ marginTop: '0.5rem', fontFamily: 'sans-serif', fontStyle: 'italic' }}>{img.name}</p>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '0.75rem',
-                marginTop: '0.75rem',
-                fontFamily: 'Parisienne, cursive'
-              }}
-            >
-              <button
-                onClick={() => handleRate(img.id, 'love')}
-                style={{
-                  backgroundColor: '#d1fae5',
-                  color: '#065f46',
-                  minWidth: '80px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '1rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Love!
-              </button>
-              <button
-                onClick={() => handleRate(img.id, 'like')}
-                style={{
-                  backgroundColor: '#dbeafe',
-                  color: '#1e3a8a',
-                  minWidth: '80px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '1rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Like
-              </button>
-              <button
-                onClick={() => handleRate(img.id, 'less')}
-                style={{
-                  backgroundColor: '#fef3c7',
-                  color: '#92400e',
-                  minWidth: '80px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '1rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Less
-              </button>
+            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+              {SAMPLE_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setRating(img.id, option)}
+                  className={`rate-btn ${rating === option ? 'selected ' + option : option}`}
+                >
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </button>
+              ))}
             </div>
-
-            <p style={{ marginTop: '0.25rem', fontStyle: 'italic', fontSize: '0.9rem' }}>
-              Selected: {ratings[img.id] || '—'}
-            </p>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
