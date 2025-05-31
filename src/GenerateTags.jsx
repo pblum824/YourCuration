@@ -3,8 +3,6 @@ import { useCuration } from './YourCurationContext';
 
 export default function GenerateTags() {
   const {
-    artistSamples,
-    setArtistSamples,
     artistGallery,
     setArtistGallery
   } = useCuration();
@@ -44,85 +42,66 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      try {
-        logToScreen(`[GenerateTags] Uploading ${images.length} images`);
-
-        const formData = new FormData();
-        for (const img of images) {
-          if (!img.file) throw new Error(`Missing file reference for ${img.name}`);
-          const compressed = await compressImage(img.file, 384, 0.7);
-          formData.append('files', compressed);
-        }
-
-        const res = await fetch('https://api.yourcuration.app/batch-tag', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!res.ok) throw new Error(`Failed (${res.status})`);
-
-        const result = await res.json();
-
-        const tagged = result.results.map((r, i) => ({
-          ...images[i],
-          metadata: {
-            ...images[i].metadata,
-            ...r.metadata,
-            imageTags: r.metadata?.imageTags || images[i].metadata?.imageTags || [],
-            textTags: r.metadata?.textTags || images[i].metadata?.textTags || [],
-            toneTags: r.metadata?.toneTags || images[i].metadata?.toneTags || [],
-            moodTags: r.metadata?.moodTags || images[i].metadata?.moodTags || [],
-            paletteTags: r.metadata?.paletteTags || images[i].metadata?.paletteTags || []
-          }
-        }));
-
-        setImages(tagged);
-      } catch (err) {
-        logToScreen(`[GenerateTags] Batch error: ${err.message}`);
-        const tagged = images.map((img) => ({
-          ...img,
-          metadata: {
-            ...img.metadata,
-            imageTags: [],
-            textTags: [],
-            toneTags: [],
-            moodTags: [],
-            paletteTags: [],
-            error: err.message
-          }
-        }));
-        setImages(tagged);
+      logToScreen(`[GenerateTags] Uploading ${images.length} images`);
+      const formData = new FormData();
+      for (const img of images) {
+        if (!img.file) throw new Error(`Missing file reference for ${img.name}`);
+        const compressed = await compressImage(img.file, 384, 0.7);
+        formData.append('files', compressed);
       }
+      const res = await fetch('https://api.yourcuration.app/batch-tag', {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error(`Failed (${res.status})`);
+      const result = await res.json();
+      const tagged = result.results.map((r, i) => ({
+        ...images[i],
+        metadata: {
+          ...images[i].metadata,
+          ...r.metadata,
+          imageTags: r.metadata?.imageTags || images[i].metadata?.imageTags || [],
+          textTags: r.metadata?.textTags || images[i].metadata?.textTags || [],
+          toneTags: r.metadata?.toneTags || images[i].metadata?.toneTags || [],
+          moodTags: r.metadata?.moodTags || images[i].metadata?.moodTags || [],
+          paletteTags: r.metadata?.paletteTags || images[i].metadata?.paletteTags || []
+        }
+      }));
+      setImages(tagged);
+    } catch (err) {
+      logToScreen(`[GenerateTags] Batch error: ${err.message}`);
+      const tagged = images.map((img) => ({
+        ...img,
+        metadata: {
+          ...img.metadata,
+          imageTags: [],
+          textTags: [],
+          toneTags: [],
+          moodTags: [],
+          paletteTags: [],
+          error: err.message
+        }
+      }));
+      setImages(tagged);
     } finally {
       setLoading(false);
     }
   };
 
   const toggleImageSample = (id) =>
-    setArtistGallery(prev =>
-      prev.map(img =>
-        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-      )
-    );
+    setArtistGallery(prev => prev.map(img => img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img));
 
   const toggleImageGallery = (id) =>
-    setArtistGallery(prev =>
-      prev.map(img =>
-        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
-      )
-    );
+    setArtistGallery(prev => prev.map(img => img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img));
 
   const toggleImageScrape = (id) =>
-    setArtistGallery(prev =>
-      prev.map(img =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
-    );
+    setArtistGallery(prev => prev.map(img => img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img));
 
   const removeImage = (id) =>
     setArtistGallery(prev => prev.filter(img => img.id !== id));
 
   const imageButton = (bg, color = '#1e3a8a') => ({
+    marginTop: '0.5rem',
     padding: '0.5rem 1rem',
     fontSize: '1rem',
     borderRadius: '0.5rem',
@@ -130,7 +109,6 @@ export default function GenerateTags() {
     backgroundColor: bg,
     color: color,
     cursor: 'pointer',
-    width: '100%',
   });
 
   return (
@@ -147,44 +125,39 @@ export default function GenerateTags() {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         gap: '2rem',
         marginTop: '2rem'
       }}>
         {images.map((img) => (
-          <div key={img.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div key={img.id} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            alignItems: 'center'
+          }}>
             <img
               src={img.url}
               alt={img.name}
               style={{
-                width: '100%',
-                maxHeight: '300px',
+                maxHeight: '240px',
                 objectFit: 'contain',
-                borderRadius: '0.5rem',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                width: '100%',
+                borderRadius: '0.5rem'
               }}
             />
             <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem',
-              width: '100%',
-              marginTop: '0.5rem'
-            }}>
-              <button onClick={() => toggleImageScrape(img.id)}
-                style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+              <button onClick={() => toggleImageScrape(img.id)} style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}>
                 {img.scrapeEligible ? 'Accepted' : 'Excluded'}
               </button>
               <button onClick={() => removeImage(img.id)} style={imageButton('#fee2e2', '#991b1b')}>
                 Remove
               </button>
-              <button onClick={() => toggleImageGallery(img.id)}
-                style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}>
+              <button onClick={() => toggleImageGallery(img.id)} style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}>
                 Gallery
               </button>
-              <button onClick={() => toggleImageSample(img.id)}
-                style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}>
+              <button onClick={() => toggleImageSample(img.id)} style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}>
                 Sample
               </button>
             </div>
