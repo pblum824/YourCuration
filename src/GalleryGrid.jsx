@@ -1,16 +1,8 @@
+// File: components/GalleryGrid.jsx
 import React from 'react';
-import { useCuration } from '../YourCurationContext';
+import { imageButton } from './utils/styles';
 
-export default function GalleryGrid({
-  devMode,
-  toggleImageScrape,
-  toggleImageGallery,
-  toggleImageSample,
-  removeImage,
-  imageButton
-}) {
-  const { artistGallery } = useCuration();
-
+export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggleGallery, onToggleSample, devMode }) {
   return (
     <div
       style={{
@@ -20,10 +12,9 @@ export default function GalleryGrid({
         justifyContent: 'center',
         alignItems: 'flex-end',
         minHeight: '240px',
-        marginTop: '2rem'
       }}
     >
-      {artistGallery.map((img) => (
+      {images.map((img) => (
         <div
           key={img.id}
           style={{
@@ -31,7 +22,7 @@ export default function GalleryGrid({
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-end',
-            alignItems: 'center'
+            alignItems: 'center',
           }}
         >
           <img
@@ -42,14 +33,14 @@ export default function GalleryGrid({
               width: '100%',
               objectFit: 'contain',
               borderRadius: '0.5rem',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+              boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
             }}
           />
           <p
             style={{
-              marginTop: '0.5rem',
               fontStyle: 'italic',
-              fontFamily: 'sans-serif'
+              fontFamily: 'sans-serif',
+              marginTop: '0.5rem',
             }}
           >
             {img.name}
@@ -60,29 +51,29 @@ export default function GalleryGrid({
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '0.5rem',
-              marginTop: '0.5rem'
+              marginTop: '0.5rem',
             }}
           >
             <button
-              onClick={() => toggleImageScrape(img.id)}
+              onClick={() => onToggleScrape(img.id)}
               style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
             >
               {img.scrapeEligible ? 'Accepted' : 'Excluded'}
             </button>
             <button
-              onClick={() => removeImage(img.id)}
+              onClick={() => onRemove(img.id)}
               style={imageButton('#fee2e2', '#991b1b')}
             >
               Remove
             </button>
             <button
-              onClick={() => toggleImageGallery(img.id)}
+              onClick={() => onToggleGallery(img.id)}
               style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
             >
               Gallery
             </button>
             <button
-              onClick={() => toggleImageSample(img.id)}
+              onClick={() => onToggleSample(img.id)}
               style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
             >
               Sample
@@ -94,7 +85,9 @@ export default function GalleryGrid({
               style={{
                 fontSize: '0.75rem',
                 marginTop: '0.5rem',
-                textAlign: 'left'
+                textAlign: 'left',
+                maxWidth: '100%',
+                overflowX: 'auto',
               }}
             >
               {JSON.stringify(img.metadata, null, 2)}
