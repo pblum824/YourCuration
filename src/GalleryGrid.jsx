@@ -14,7 +14,7 @@ export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggle
         minHeight: '240px',
       }}
     >
-      {images.map((img) => (
+      {images.filter(img => img?.id && img?.url && img?.name).map((img) => (
         <div
           key={img.id}
           style={{
