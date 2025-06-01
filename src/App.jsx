@@ -10,6 +10,10 @@ import { YourCurationProvider, useCuration } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
 
+const [view, setView] = useState(() => {
+  return 'artist';
+});
+
 const validViews = [
   'landing',
   'artist',
