@@ -10,10 +10,6 @@ import { YourCurationProvider, useCuration } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
 
-const [view, setView] = useState(() => {
-  return 'artist';
-});
-
 const validViews = [
   'landing',
   'artist',
@@ -24,13 +20,6 @@ const validViews = [
   'curatedFinal',
   'curated'
 ];
-
-<div style={{ background: '#fef3c7', padding: '0.5rem', marginBottom: '1rem', border: '1px solid #facc15' }}>
-  <strong>Debug Info:</strong><br />
-  view: {view}<br />
-  gallery: {Array.isArray(artistGallery) ? artistGallery.length : 'N/A'} images<br />
-  samples: {artistGallery?.filter?.(img => img.sampleEligible).length || 0}
-</div>
 
 function InnerApp({ view, setView }) {
   const { artistGallery } = useCuration();
@@ -52,6 +41,13 @@ function InnerApp({ view, setView }) {
 
   return (
     <div className="App" style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
+      <div style={{ background: '#fef3c7', padding: '0.5rem', marginBottom: '1rem', border: '1px solid #facc15' }}>
+        <strong>Debug Info:</strong><br />
+        view: {view}<br />
+        gallery: {Array.isArray(artistGallery) ? artistGallery.length : 'N/A'} images<br />
+        samples: {artistGallery?.filter?.(img => img.sampleEligible).length || 0}
+      </div>
+
       <div style={{ background: '#def', padding: '0.5rem', marginBottom: '1rem' }}>
         <strong>App Loaded:</strong> view = {view}
       </div>
@@ -109,17 +105,17 @@ function InnerApp({ view, setView }) {
 
 export default function App() {
   const [view, setView] = useState(() => {
-  const saved = localStorage.getItem('yourcuration_view');
-  const parsed = validViews.includes(saved) ? saved : 'landing';
+    const saved = localStorage.getItem('yourcuration_view');
+    const parsed = validViews.includes(saved) ? saved : 'landing';
 
-  if (parsed === 'rate' || parsed.startsWith('curated')) {
-    const storedGallery = JSON.parse(localStorage.getItem('artistGallery') || '[]');
-    const hasSamples = storedGallery.some((img) => img.sampleEligible);
-    return hasSamples ? parsed : 'artist';
-  }
+    if (parsed === 'rate' || parsed.startsWith('curated')) {
+      const storedGallery = JSON.parse(localStorage.getItem('artistGallery') || '[]');
+      const hasSamples = storedGallery.some((img) => img.sampleEligible);
+      return hasSamples ? parsed : 'artist';
+    }
 
-  return parsed;
-});
+    return parsed;
+  });
 
   return (
     <YourCurationProvider>
