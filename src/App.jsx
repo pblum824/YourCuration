@@ -21,6 +21,13 @@ const validViews = [
   'curated'
 ];
 
+<div style={{ background: '#fef3c7', padding: '0.5rem', marginBottom: '1rem', border: '1px solid #facc15' }}>
+  <strong>Debug Info:</strong><br />
+  view: {view}<br />
+  gallery: {Array.isArray(artistGallery) ? artistGallery.length : 'N/A'} images<br />
+  samples: {artistGallery?.filter?.(img => img.sampleEligible).length || 0}
+</div>
+
 function InnerApp({ view, setView }) {
   const { artistGallery } = useCuration();
   const [error, setError] = useState(null);
