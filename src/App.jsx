@@ -61,7 +61,14 @@ function InnerApp({ view, setView }) {
       <div style={{ background: '#def', padding: '0.5rem', marginBottom: '1rem' }}>
         <strong>App Loaded:</strong> view = {view}
       </div>
-
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        <button onClick={() => setView('artist')} style={navBtnStyle}>🎨 Artist Dashboard</button>
+        <button onClick={() => setView('generate')} style={navBtnStyle}>🛠️ Generate Tags</button>
+        <button onClick={() => setView('rate')} style={navBtnStyle}>🧪 Sample Rater</button>
+        <button onClick={() => setView('curated1')} style={navBtnStyle}>🖼️ Gallery 1</button>
+        <button onClick={() => setView('curated2')} style={navBtnStyle}>🔍 Gallery 2</button>
+        <button onClick={() => setView('curatedFinal')} style={navBtnStyle}>🏁 Final Gallery</button>
+      </div>
       {error ? (
         <div style={{ color: 'red', background: '#fee', padding: '1rem', borderRadius: '0.5rem' }}>
           <strong>Runtime Error:</strong>
@@ -97,14 +104,7 @@ export default function App() {
 
     return parsed;
   });
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-    <button onClick={() => setView('artist')} style={navBtnStyle}>🎨 Artist Dashboard</button>
-    <button onClick={() => setView('generate')} style={navBtnStyle}>🛠️ Generate Tags</button>
-    <button onClick={() => setView('rate')} style={navBtnStyle}>🧪 Sample Rater</button>
-    <button onClick={() => setView('curated1')} style={navBtnStyle}>🖼️ Gallery 1</button>
-    <button onClick={() => setView('curated2')} style={navBtnStyle}>🔍 Gallery 2</button>
-    <button onClick={() => setView('curatedFinal')} style={navBtnStyle}>🏁 Final Gallery</button>
-  </div>
+  
   return (
     <YourCurationProvider>
       <InnerApp view={view} setView={setView} />
