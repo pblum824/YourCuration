@@ -1,27 +1,34 @@
+
+// File: src/ArtistDashboard.jsx
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
-
-import {
-  heading,
-  section,
-  uploadButtonStyle,
-  ACCEPTED_FORMATS,
-} from './utils/styles';
-
-import {
-  compressImage,
-  fileToBase64,
-} from './utils/imageHelpers';
-
-import {
-  exportGalleryData,
-  importGalleryData,
-} from './utils/galleryIO';
-
+import { compressImage, fileToBase64 } from './utils/imageHelpers';
+import GalleryControls from './GalleryControls';
 import ImageUploadSlot from './ImageUploadSlot';
 import GalleryGrid from './GalleryGrid';
-import GalleryControls from './GalleryControls';
 import DevToggle from './DevToggle';
+
+const heading = {
+  fontSize: '2.25rem',
+  fontWeight: 600,
+  textAlign: 'center',
+  marginBottom: '2rem',
+  color: '#1e3a8a',
+  fontFamily: 'Parisienne, cursive',
+};
+
+const uploadButtonStyle = {
+  padding: '0.75rem 1.25rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  cursor: 'pointer',
+  fontFamily: 'sans-serif',
+  color: '#1e3a8a',
+  backgroundColor: '#f9f9f9',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+};
+
+const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -34,43 +41,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
 
-  const exportGallery = async () => {
-    try {
-      const blob = await exportGalleryData({
-        heroImage,
-        borderSkin,
-        centerBackground,
-        artistGallery,
-      });
-
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Export failed:', err);
-      alert('Export failed. Check the console for details.');
-    }
-  };
-
-  const importGallery = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      const result = await importGalleryData(file);
-      if (result.heroImage) setHeroImage(result.heroImage);
-      if (result.borderSkin) setBorderSkin(result.borderSkin);
-      if (result.centerBackground) setCenterBackground(result.centerBackground);
-      if (result.images) setArtistGallery(result.images);
-      alert('Gallery imported successfully!');
-    } catch (err) {
-      console.error('Import failed:', err);
-      alert('Failed to import gallery. Please check your file.');
-    }
-  };
+  const isValidImage = (img) => img?.id && img?.url && img?.name;
 
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
@@ -114,18 +85,6 @@ export default function ArtistDashboard({ setView }) {
     });
   };
 
-  const toggleImageScrape = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
-    );
-
-  const removeImage = (id) => {
-    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
-    setUploadCount((prev) => Math.max(0, prev - 1));
-  };
-
   const toggleImageSample = (id) =>
     setArtistGallery((prev) =>
       prev.map((img) =>
@@ -140,14 +99,26 @@ export default function ArtistDashboard({ setView }) {
       )
     );
 
+  const toggleImageScrape = (id) =>
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
+
+  const removeImage = (id) => {
+    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
+    setUploadCount((prev) => Math.max(0, prev - 1));
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
       <DevToggle devMode={devMode} setDevMode={setDevMode} />
       <h2 style={heading}>Artist Dashboard</h2>
 
       <GalleryControls
-        onExport={exportGallery}
-        onImport={importGallery}
+        onExport={() => setView('generate')}
+        onImport={() => {}} // implement if needed
         onGenerate={() => setView('generate')}
         onReset={() => {
           if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
@@ -160,9 +131,27 @@ export default function ArtistDashboard({ setView }) {
         }}
       />
 
-      <ImageUploadSlot label="Hero Image" state={heroImage} setter={setHeroImage} inputId="hero-upload" onUpload={handleSingleUpload} />
-      <ImageUploadSlot label="Border Skin" state={borderSkin} setter={setBorderSkin} inputId="border-upload" onUpload={handleSingleUpload} />
-      <ImageUploadSlot label="Center Background" state={centerBackground} setter={setCenterBackground} inputId="center-upload" onUpload={handleSingleUpload} />
+      <ImageUploadSlot
+        label="Hero Image"
+        state={heroImage}
+        setter={setHeroImage}
+        inputId="hero-upload"
+        onUpload={handleSingleUpload}
+      />
+      <ImageUploadSlot
+        label="Border Skin"
+        state={borderSkin}
+        setter={setBorderSkin}
+        inputId="border-upload"
+        onUpload={handleSingleUpload}
+      />
+      <ImageUploadSlot
+        label="Center Background"
+        state={centerBackground}
+        setter={setCenterBackground}
+        inputId="center-upload"
+        onUpload={handleSingleUpload}
+      />
 
       {uploadWarnings.length > 0 && (
         <div style={{ color: '#b91c1c', textAlign: 'center', marginBottom: '1rem' }}>
@@ -221,12 +210,14 @@ export default function ArtistDashboard({ setView }) {
           />
         </label>
         <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-          {uploadCount === 0 ? 'No files selected' : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
+          {uploadCount === 0
+            ? 'No files selected'
+            : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
         </span>
       </div>
 
       <GalleryGrid
-        images={artistGallery}
+        images={artistGallery.filter(isValidImage)}
         onToggleScrape={toggleImageScrape}
         onRemove={removeImage}
         onToggleGallery={toggleImageGallery}
