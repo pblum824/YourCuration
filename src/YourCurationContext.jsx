@@ -1,44 +1,51 @@
+// File: src/YourCurationContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import storage from './utils/storageService';
 
-const CurationContext = createContext();
+const YourCurationContext = createContext();
 
 export function YourCurationProvider({ children }) {
-  const [artistSamples, setArtistSamples] = useState(storage.getArtistSamples());
-  const [artistGallery, setArtistGallery] = useState(storage.getArtistGallery());
-  const [ratings, setRatings] = useState(storage.getRatings());
-  const [curatedResults, setCuratedResults] = useState([]);
+  const [artistGallery, setArtistGallery] = useState(() => {
+    const saved = localStorage.getItem('artistGallery');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [ratings, setRatings] = useState(() => {
+    const saved = localStorage.getItem('ratings');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   useEffect(() => {
-    storage.setArtistSamples(artistSamples);
-  }, [artistSamples]);
-
-  useEffect(() => {
-    storage.setArtistGallery(artistGallery);
+    localStorage.setItem('artistGallery', JSON.stringify(artistGallery));
   }, [artistGallery]);
 
   useEffect(() => {
-    storage.setRatings(ratings);
+    localStorage.setItem('ratings', JSON.stringify(ratings));
   }, [ratings]);
 
+  // ✅ Add this helper to update image metadata persistently
+  const updateImageMetadata = (imageId, metadataUpdate) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? { ...img, metadata: { ...img.metadata, ...metadataUpdate } }
+          : img
+      )
+    );
+  };
+
   return (
-    <CurationContext.Provider
+    <YourCurationContext.Provider
       value={{
-        artistSamples,
-        setArtistSamples,
         artistGallery,
         setArtistGallery,
         ratings,
         setRatings,
-        curatedResults,
-        setCuratedResults,
+        updateImageMetadata,
       }}
     >
       {children}
-    </CurationContext.Provider>
+    </YourCurationContext.Provider>
   );
 }
 
-export function useCuration() {
-  return useContext(CurationContext);
-}
+export const useCuration = () => useContext(YourCurationContext);

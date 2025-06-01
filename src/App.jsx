@@ -1,7 +1,11 @@
+// File: src/App.jsx
 import React, { useState } from 'react';
 import ArtistDashboard from './ArtistDashboard';
 import GenerateTags from './GenerateTags';
 import SampleRater from './SampleRater';
+import CuratedGallery1 from './CuratedGallery1';
+import CuratedGallery2 from './CuratedGallery2';
+import CuratedGalleryFinal from './CuratedGalleryFinal';
 import { YourCurationProvider, useCuration } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
@@ -15,6 +19,9 @@ function InnerApp({ view, setView }) {
     if (view === 'landing') next = 'artist';
     else if (view === 'artist') next = 'generate';
     else if (view === 'generate') next = 'rate';
+    else if (view === 'rate') next = 'curated1';
+    else if (view === 'curated1') next = 'curated2';
+    else if (view === 'curated2') next = 'curatedFinal';
     else next = 'landing';
 
     setView(next);
@@ -32,6 +39,9 @@ function InnerApp({ view, setView }) {
           {view === 'landing' ? 'Enter Artist Dashboard' :
            view === 'artist' ? 'Go to Generate Tags' :
            view === 'generate' ? 'Rate Samples' :
+           view === 'rate' ? 'Curated Gallery 1' :
+           view === 'curated1' ? 'Explore More (Gallery 2)' :
+           view === 'curated2' ? 'Finalize Selection' :
            'Back to Welcome'}
         </button>
         <button
@@ -64,9 +74,10 @@ function InnerApp({ view, setView }) {
           {view === 'landing' && <ArtClientLanding setView={setView} />}
           {view === 'artist' && <ArtistDashboard setView={setView} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
-          {view === 'rate' && (
-            <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} />
-          )}
+          {view === 'rate' && <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} />}
+          {view === 'curated1' && <CuratedGallery1 />}
+          {view === 'curated2' && <CuratedGallery2 />}
+          {view === 'curatedFinal' && <CuratedGalleryFinal />}
           {view === 'curated' && <YourCuration />}
         </ErrorCatcher>
       )}

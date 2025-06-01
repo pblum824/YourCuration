@@ -1,10 +1,13 @@
+// File: src/GenerateTags.jsx
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
+import EditableTagSection from './EditableTagSection';
 
 export default function GenerateTags() {
   const {
     artistGallery,
-    setArtistGallery
+    setArtistGallery,
+    updateImageMetadata,
   } = useCuration();
 
   const [logs, setLogs] = useState([]);
@@ -51,7 +54,7 @@ export default function GenerateTags() {
       }
       const res = await fetch('https://api.yourcuration.app/batch-tag', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
       if (!res.ok) throw new Error(`Failed (${res.status})`);
       const result = await res.json();
@@ -60,12 +63,7 @@ export default function GenerateTags() {
         metadata: {
           ...images[i].metadata,
           ...r.metadata,
-          imageTags: r.metadata?.imageTags || images[i].metadata?.imageTags || [],
-          textTags: r.metadata?.textTags || images[i].metadata?.textTags || [],
-          toneTags: r.metadata?.toneTags || images[i].metadata?.toneTags || [],
-          moodTags: r.metadata?.moodTags || images[i].metadata?.moodTags || [],
-          paletteTags: r.metadata?.paletteTags || images[i].metadata?.paletteTags || []
-        }
+        },
       }));
       setImages(tagged);
     } catch (err) {
@@ -79,8 +77,8 @@ export default function GenerateTags() {
           toneTags: [],
           moodTags: [],
           paletteTags: [],
-          error: err.message
-        }
+          error: err.message,
+        },
       }));
       setImages(tagged);
     } finally {
@@ -89,13 +87,25 @@ export default function GenerateTags() {
   };
 
   const toggleImageSample = (id) =>
-    setArtistGallery(prev => prev.map(img => img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img));
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+      )
+    );
 
   const toggleImageGallery = (id) =>
-    setArtistGallery(prev => prev.map(img => img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img));
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
 
   const toggleImageScrape = (id) =>
-    setArtistGallery(prev => prev.map(img => img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img));
+    setArtistGallery(prev =>
+      prev.map(img =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
 
   const removeImage = (id) =>
     setArtistGallery(prev => prev.filter(img => img.id !== id));
@@ -123,42 +133,29 @@ export default function GenerateTags() {
         ))}
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '2rem',
-        marginTop: '2rem'
-      }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center', marginTop: '2rem' }}>
         {images.map((img) => (
-          <div key={img.id} style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            alignItems: 'center'
-          }}>
-            <img
-              src={img.url}
-              alt={img.name}
-              style={{
-                maxHeight: '240px',
-                objectFit: 'contain',
-                width: '100%',
-                borderRadius: '0.5rem'
-              }}
+          <div key={img.id} style={{ width: '280px', textAlign: 'center' }}>
+            <img src={img.url} alt={img.name} style={{ width: '100%', borderRadius: '0.5rem' }} />
+            <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{img.name}</p>
+
+            <EditableTagSection
+              imageId={img.id}
+              initialTags={img.metadata.imageTags || []}
             />
-            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+
+            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button onClick={() => toggleImageScrape(img.id)} style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}>
                 {img.scrapeEligible ? 'Accepted' : 'Excluded'}
-              </button>
-              <button onClick={() => removeImage(img.id)} style={imageButton('#fee2e2', '#991b1b')}>
-                Remove
               </button>
               <button onClick={() => toggleImageGallery(img.id)} style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}>
                 Gallery
               </button>
               <button onClick={() => toggleImageSample(img.id)} style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}>
                 Sample
+              </button>
+              <button onClick={() => removeImage(img.id)} style={imageButton('#fee2e2', '#991b1b')}>
+                Remove
               </button>
             </div>
 
