@@ -7,9 +7,9 @@ import SampleRater from './SampleRater';
 //import CuratedGallery1 from './CuratedGallery1';
 import CuratedGallery2 from './CuratedGallery2';
 import CuratedGalleryFinal from './CuratedGalleryFinal';
-// import { YourCurationProvider, useCuration } from './YourCurationContext';
-// import ArtClientLanding from './ArtClientLanding';
-// import YourCuration from './YourCuration';
+import { YourCurationProvider, useCuration } from './YourCurationContext';
+import ArtClientLanding from './ArtClientLanding';
+import YourCuration from './YourCuration';
 
 export default function App() {
   return (
