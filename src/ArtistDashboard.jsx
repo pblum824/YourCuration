@@ -1,155 +1,189 @@
-// File: src/ArtistDashboard.jsx
-import React, { useState } from 'react';
-import { useCuration } from './YourCurationContext';
-import { compressImage, fileToBase64 } from './utils/imageHelpers';
-import GalleryControls from './GalleryControls';
-import HeroSection from './HeroSection';
-import GalleryGrid from './GalleryGrid';
-import DevToggle from './DevToggle';
-import MultiFilePicker from './MultiFilePicker';
-import UploadWarnings from './UploadWarnings';
-import DragDropUpload from './DragDropUpload';
+  // File: src/ArtistDashboard.jsx
+  import React, { useState } from 'react';
+  import { useCuration } from './YourCurationContext';
+  import GalleryControls from './GalleryControls';
+  import HeroSection from './HeroSection';
+  import GalleryGrid from './GalleryGrid';
+  import DevToggle from './DevToggle';
+  import MultiFilePicker from './MultiFilePicker';
+  import UploadWarnings from './UploadWarnings';
+  import DragDropUpload from './DragDropUpload';
 
-const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
+  const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
-export default function ArtistDashboard({ setView }) {
-  const { artistGallery, setArtistGallery } = useCuration();
+  export default function ArtistDashboard({ setView }) {
+    const { artistGallery, setArtistGallery } = useCuration();
 
-  const [heroImage, setHeroImage] = useState(null);
-  const [borderSkin, setBorderSkin] = useState(null);
-  const [centerBackground, setCenterBackground] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [uploadCount, setUploadCount] = useState(0);
-  const [uploadWarnings, setUploadWarnings] = useState([]);
-  const [devMode, setDevMode] = useState(false);
+    const [heroImage, setHeroImage] = useState(null);
+    const [borderSkin, setBorderSkin] = useState(null);
+    const [centerBackground, setCenterBackground] = useState(null);
+    const [dragging, setDragging] = useState(false);
+    const [uploadCount, setUploadCount] = useState(0);
+    const [uploadWarnings, setUploadWarnings] = useState([]);
+    const [devMode, setDevMode] = useState(false);
 
-  const isValidImage = (img) => img?.id && img?.url && img?.name;
+    const isValidImage = (img) => img?.id && img?.url && img?.name;
 
-  const handleFiles = async (fileList) => {
-    const files = Array.from(fileList);
-    const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
-    setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
-    setUploadCount((prev) => prev + valid.length);
-
-    const newImages = await Promise.all(
-      valid.map(async (file) => {
-        const compressed = await compressImage(file);
-        const base64 = await fileToBase64(compressed);
-        return {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          name: file.name,
-          url: URL.createObjectURL(compressed),
-          file: compressed,
-          base64,
-          scrapeEligible: true,
-          metadata: {},
-          galleryEligible: true,
-          sampleEligible: false,
+    const compressImage = async (file, maxWidth = 1600) =>
+      new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, maxWidth / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(
+              (blob) =>
+                resolve(
+                  new File([blob], file.name, {
+                    type: file.type,
+                    lastModified: Date.now(),
+                  })
+                ),
+              file.type,
+              0.75
+            );
+          };
+          img.src = event.target.result;
         };
-      })
+        reader.readAsDataURL(file);
+      });
+
+    const fileToBase64 = async (file) =>
+      new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+
+    const handleFiles = async (fileList) => {
+      const files = Array.from(fileList);
+      const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
+      setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
+      setUploadCount((prev) => prev + valid.length);
+
+      const newImages = await Promise.all(
+        valid.map(async (file) => {
+          const compressed = await compressImage(file);
+          const base64 = await fileToBase64(compressed);
+          return {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name: file.name,
+            url: URL.createObjectURL(compressed),
+            file: compressed,
+            base64,
+            scrapeEligible: true,
+            metadata: {},
+            galleryEligible: true,
+            sampleEligible: false,
+          };
+        })
+      );
+
+      setArtistGallery((prev) => [...prev, ...newImages]);
+    };
+
+    const handleSingleUpload = async (e, setter) => {
+      const file = e.target.files[0];
+      if (!file || !file.type || !ACCEPTED_FORMATS.includes(file.type)) return;
+      const compressed = await compressImage(file);
+      const url = URL.createObjectURL(compressed);
+      setter({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        url,
+        file: compressed,
+        scrapeEligible: true,
+        metadata: {},
+      });
+    };
+
+    const toggleImageSample = (id) =>
+      setArtistGallery((prev) =>
+        prev.map((img) =>
+          img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+        )
+      );
+
+    const toggleImageGallery = (id) =>
+      setArtistGallery((prev) =>
+        prev.map((img) =>
+          img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+        )
+      );
+
+    const toggleImageScrape = (id) =>
+      setArtistGallery((prev) =>
+        prev.map((img) =>
+          img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+        )
+      );
+
+    const removeImage = (id) => {
+      setArtistGallery((prev) => prev.filter((img) => img.id !== id));
+      setUploadCount((prev) => Math.max(0, prev - 1));
+    };
+
+    return (
+      <div style={{ padding: '2rem' }}>
+        <DevToggle devMode={devMode} setDevMode={setDevMode} />
+        <h2 style={{ fontSize: '2.25rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a', textAlign: 'center', marginBottom: '2rem' }}>
+          Artist Dashboard
+        </h2>
+
+        <GalleryControls
+          onExport={() => setView('generate')}
+          onImport={() => {}}
+          onGenerate={() => setView('generate')}
+          onReset={() => {
+            if (!window.confirm('Are you sure you want to reset your entire dashboard?')) return;
+            setHeroImage(null);
+            setBorderSkin(null);
+            setCenterBackground(null);
+            setArtistGallery([]);
+            setUploadCount(0);
+            setUploadWarnings([]);
+          }}
+        />
+
+        <HeroSection
+          label="Hero Image"
+          imageState={heroImage}
+          setImageState={setHeroImage}
+          handleSingleUpload={handleSingleUpload}
+        />
+        <HeroSection
+          label="Border Skin"
+          imageState={borderSkin}
+          setImageState={setBorderSkin}
+          handleSingleUpload={handleSingleUpload}
+        />
+        <HeroSection
+          label="Center Background"
+          imageState={centerBackground}
+          setImageState={setCenterBackground}
+          handleSingleUpload={handleSingleUpload}
+        />
+
+        <UploadWarnings warnings={uploadWarnings} />
+        <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
+        <MultiFilePicker
+          onChange={(files) => handleFiles(files)}
+          uploadCount={uploadCount}
+          acceptedFormats={ACCEPTED_FORMATS}
+        />
+
+        <GalleryGrid
+          images={artistGallery.filter(isValidImage)}
+          onToggleScrape={toggleImageScrape}
+          onRemove={removeImage}
+          onToggleGallery={toggleImageGallery}
+          onToggleSample={toggleImageSample}
+          devMode={devMode}
+        />
+      </div>
     );
-
-    setArtistGallery((prev) => [...prev, ...newImages]);
-  };
-
-  const handleSingleUpload = async (e, setter) => {
-    const file = e.target.files[0];
-    if (!file || !file.type || !ACCEPTED_FORMATS.includes(file.type)) return;
-    const compressed = await compressImage(file);
-    const url = URL.createObjectURL(compressed);
-    setter({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      name: file.name,
-      url,
-      file: compressed,
-      scrapeEligible: true,
-      metadata: {},
-    });
-  };
-
-  const toggleImageSample = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-      )
-    );
-
-  const toggleImageGallery = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
-      )
-    );
-
-  const toggleImageScrape = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
-    );
-
-  const removeImage = (id) => {
-    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
-    setUploadCount((prev) => Math.max(0, prev - 1));
-  };
-
-  return (
-    <div style={{ padding: '2rem' }}>
-      <DevToggle devMode={devMode} setDevMode={setDevMode} />
-      <h2 style={{ fontSize: '2.25rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a', textAlign: 'center', marginBottom: '2rem' }}>
-        Artist Dashboard
-      </h2>
-
-      <GalleryControls
-        onExport={() => setView('generate')}
-        onImport={() => {}}
-        onGenerate={() => setView('generate')}
-        onReset={() => {
-          if (!window.confirm('Are you sure you want to reset your entire dashboard?')) return;
-          setHeroImage(null);
-          setBorderSkin(null);
-          setCenterBackground(null);
-          setArtistGallery([]);
-          setUploadCount(0);
-          setUploadWarnings([]);
-        }}
-      />
-
-      <HeroSection
-        label="Hero Image"
-        imageState={heroImage}
-        setImageState={setHeroImage}
-        handleSingleUpload={handleSingleUpload}
-      />
-      <HeroSection
-        label="Border Skin"
-        imageState={borderSkin}
-        setImageState={setBorderSkin}
-        handleSingleUpload={handleSingleUpload}
-      />
-      <HeroSection
-        label="Center Background"
-        imageState={centerBackground}
-        setImageState={setCenterBackground}
-        handleSingleUpload={handleSingleUpload}
-      />
-
-      <UploadWarnings warnings={uploadWarnings} />
-      <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
-      <MultiFilePicker
-        onChange={(files) => handleFiles(files)}
-        uploadCount={uploadCount}
-        acceptedFormats={ACCEPTED_FORMATS}
-      />
-
-      <GalleryGrid
-        images={artistGallery.filter(isValidImage)}
-        onToggleScrape={toggleImageScrape}
-        onRemove={removeImage}
-        onToggleGallery={toggleImageGallery}
-        onToggleSample={toggleImageSample}
-        devMode={devMode}
-      />
-    </div>
-  );
-}
+  }
