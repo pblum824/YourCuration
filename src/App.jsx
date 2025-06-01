@@ -4,7 +4,7 @@ import React from 'react';
 import ArtistDashboard from './ArtistDashboard';
 import GenerateTags from './GenerateTags';
 import SampleRater from './SampleRater';
-//import CuratedGallery1 from './CuratedGallery1';
+import CuratedGallery1 from './CuratedGallery1';
 import CuratedGallery2 from './CuratedGallery2';
 import CuratedGalleryFinal from './CuratedGalleryFinal';
 import { YourCurationProvider, useCuration } from './YourCurationContext';
