@@ -1,7 +1,7 @@
 // File: src/App.jsx
 import React from 'react';
 
-// import ArtistDashboard from './ArtistDashboard';
+import ArtistDashboard from './ArtistDashboard';
 // import GenerateTags from './GenerateTags';
 // import SampleRater from './SampleRater';
 // import CuratedGallery1 from './CuratedGallery1';
