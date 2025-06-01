@@ -6,9 +6,19 @@ import { curateGallery1 } from './utils/curateGallery1';
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
 
 export default function CuratedGallery1() {
-  const { artistGallery, ratings } = useCuration();
+  const { artistGallery = [], ratings = {} } = useCuration();
   const [selections, setSelections] = useState({});
-  const { strong, medium, weak } = curateGallery1({ artistGallery, ratings });
+
+  let strong = [], medium = [], weak = [];
+  try {
+    const result = curateGallery1({ artistGallery, ratings });
+    strong = result.strong || [];
+    medium = result.medium || [];
+    weak = result.weak || [];
+  } catch (err) {
+    return <p style={{ color: 'red' }}>Error generating curated gallery: {err.message}</p>;
+  }
+
   const all = [...strong, ...medium, ...weak];
 
   const handleToggle = (id) => {
@@ -70,4 +80,4 @@ export default function CuratedGallery1() {
       </div>
     </div>
   );
-}CuratedGallery2
+}
