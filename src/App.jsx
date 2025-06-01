@@ -10,6 +10,17 @@ import { YourCurationProvider, useCuration } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
 
+const validViews = [
+  'landing',
+  'artist',
+  'generate',
+  'rate',
+  'curated1',
+  'curated2',
+  'curatedFinal',
+  'curated'
+];
+
 function InnerApp({ view, setView }) {
   const { artistGallery } = useCuration();
   const [error, setError] = useState(null);
@@ -87,8 +98,17 @@ function InnerApp({ view, setView }) {
 
 export default function App() {
   const [view, setView] = useState(() => {
-    return localStorage.getItem('yourcuration_view') || 'landing';
-  });
+  const saved = localStorage.getItem('yourcuration_view');
+  const parsed = validViews.includes(saved) ? saved : 'landing';
+
+  if (parsed === 'rate' || parsed.startsWith('curated')) {
+    const storedGallery = JSON.parse(localStorage.getItem('artistGallery') || '[]');
+    const hasSamples = storedGallery.some((img) => img.sampleEligible);
+    return hasSamples ? parsed : 'artist';
+  }
+
+  return parsed;
+});
 
   return (
     <YourCurationProvider>
