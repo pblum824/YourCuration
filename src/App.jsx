@@ -38,7 +38,17 @@ function InnerApp({ view, setView }) {
     setView(next);
     localStorage.setItem('yourcuration_view', next);
   };
-
+  const navBtnStyle = {
+    padding: '0.5rem 1rem',
+    fontSize: '0.9rem',
+    borderRadius: '0.5rem',
+    border: '1px solid #ccc',
+    backgroundColor: '#f3f4f6',
+    color: '#1e3a8a',
+    cursor: 'pointer',
+    flex: '1 1 auto',
+    minWidth: '150px'
+  };
   return (
     <div className="App" style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
       <div style={{ background: '#fef3c7', padding: '0.5rem', marginBottom: '1rem', border: '1px solid #facc15' }}>
@@ -87,7 +97,14 @@ export default function App() {
 
     return parsed;
   });
-
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+    <button onClick={() => setView('artist')} style={navBtnStyle}>🎨 Artist Dashboard</button>
+    <button onClick={() => setView('generate')} style={navBtnStyle}>🛠️ Generate Tags</button>
+    <button onClick={() => setView('rate')} style={navBtnStyle}>🧪 Sample Rater</button>
+    <button onClick={() => setView('curated1')} style={navBtnStyle}>🖼️ Gallery 1</button>
+    <button onClick={() => setView('curated2')} style={navBtnStyle}>🔍 Gallery 2</button>
+    <button onClick={() => setView('curatedFinal')} style={navBtnStyle}>🏁 Final Gallery</button>
+  </div>
   return (
     <YourCurationProvider>
       <InnerApp view={view} setView={setView} />
