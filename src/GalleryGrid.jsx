@@ -90,7 +90,7 @@ export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggle
                 overflowX: 'auto',
               }}
             >
-            //  {JSON.stringify(img.metadata, null, 2)}
+            {JSON.stringify(img.metadata, null, 2)}
             </pre>
           )}
         </div>

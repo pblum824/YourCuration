@@ -22,7 +22,9 @@ export default function ArtistDashboard({ setView }) {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
-
+  React.useEffect(() => {
+    console.log('🎯 artistGallery changed. New length:', artistGallery.length);
+  }, [artistGallery]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
   const handleFiles = async (fileList) => {
