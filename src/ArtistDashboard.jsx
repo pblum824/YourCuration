@@ -88,14 +88,7 @@ export default function ArtistDashboard({ setView }) {
     );
 
   const removeImage = (id) => {
-    setArtistGallery((prev) =>
-      prev.filter((img) => {
-        if (img.id === id && img.url?.startsWith('blob:')) {
-          URL.revokeObjectURL(img.url);
-        }
-        return img.id !== id;
-      })
-    );
+    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
     setUploadCount((prev) => Math.max(0, prev - 1));
   };
 
@@ -111,11 +104,7 @@ export default function ArtistDashboard({ setView }) {
         onImport={() => {}}
         onGenerate={() => setView('generate')}
         onReset={() => {
-          artistGallery.forEach((img) => {
-            if (img.url?.startsWith('blob:')) {
-              URL.revokeObjectURL(img.url);
-            }
-          });
+          if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
           setHeroImage(null);
           setBorderSkin(null);
           setCenterBackground(null);
@@ -152,8 +141,8 @@ export default function ArtistDashboard({ setView }) {
         acceptedFormats={ACCEPTED_FORMATS}
       />
 
-      <GalleryGrid
-        images={artistGallery.filter(isValidImage)}
+        <GalleryGrid
+          images={artistGallery.filter(isValidImage).slice(0, 6)}
         onToggleScrape={toggleImageScrape}
         onRemove={removeImage}
         onToggleGallery={toggleImageGallery}
