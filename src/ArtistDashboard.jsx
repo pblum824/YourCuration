@@ -54,6 +54,8 @@ export default function ArtistDashboard({ setView }) {
     }
 
     console.log('🧪 About to set artistGallery with', newImages.length, 'images');
+    const totalSize = JSON.stringify(newImages).length;
+    alert(`🧠 Uploading ${newImages.length} images\nTotal JSON size: ${totalSize} chars`);
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
 
