@@ -22,12 +22,15 @@ export default function ArtistDashboard({ setView }) {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
+
   React.useEffect(() => {
     console.log('✅ artistGallery length after update:', artistGallery.length);
   }, [artistGallery]);
+
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
   const handleFiles = async (fileList) => {
+  console.log('📂 handleFiles triggered');
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
     setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
@@ -49,6 +52,7 @@ export default function ArtistDashboard({ setView }) {
         sampleEligible: false,
       });
     }
+
     console.log('🧪 About to set artistGallery with', newImages.length, 'images');
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
@@ -143,8 +147,12 @@ export default function ArtistDashboard({ setView }) {
         acceptedFormats={ACCEPTED_FORMATS}
       />
 
-        <GalleryGrid
-          images={artistGallery.filter(isValidImage).slice(0, 6)}
+      <p style={{ color: '#999', fontStyle: 'italic', fontSize: '0.85rem' }}>
+        Debug: artistGallery length = {artistGallery.length}
+      </p>
+
+      <GalleryGrid
+        images={artistGallery.filter(isValidImage)}
         onToggleScrape={toggleImageScrape}
         onRemove={removeImage}
         onToggleGallery={toggleImageGallery}
