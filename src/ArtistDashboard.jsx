@@ -48,6 +48,8 @@ export default function ArtistDashboard({ setView }) {
       });
     }
 
+    const totalSize = JSON.stringify(newImages).length;
+    alert(`🧠 Uploading ${newImages.length} images\nTotal JSON size: ${totalSize} chars`);
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
 
