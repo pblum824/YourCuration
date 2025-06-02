@@ -23,7 +23,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
   React.useEffect(() => {
-    console.log('🎯 artistGallery changed. New length:', artistGallery.length);
+    console.log('✅ artistGallery length after update:', artistGallery.length);
   }, [artistGallery]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
@@ -49,7 +49,7 @@ export default function ArtistDashboard({ setView }) {
         sampleEligible: false,
       });
     }
-
+    console.log('🧪 About to set artistGallery with', newImages.length, 'images');
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
 
