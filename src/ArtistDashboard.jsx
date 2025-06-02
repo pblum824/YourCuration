@@ -31,23 +31,22 @@ export default function ArtistDashboard({ setView }) {
     setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
     setUploadCount((prev) => prev + valid.length);
 
-    const newImages = await Promise.all(
-      valid.map(async (file) => {
-        const compressed = await compressImage(file);
-        const base64 = await fileToBase64(compressed);
-        return {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          name: file.name,
-          url: URL.createObjectURL(compressed),
-          file: compressed,
-          base64,
-          scrapeEligible: true,
-          metadata: {},
-          galleryEligible: true,
-          sampleEligible: false,
-        };
-      })
-    );
+    const newImages = [];
+    for (const file of valid) {
+      const compressed = await compressImage(file);
+      const base64 = await fileToBase64(compressed);
+      newImages.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        url: URL.createObjectURL(compressed),
+        file: compressed,
+        base64,
+        scrapeEligible: true,
+        metadata: {},
+        galleryEligible: true,
+        sampleEligible: false,
+      });
+    }
 
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
