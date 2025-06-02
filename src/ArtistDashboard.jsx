@@ -1,7 +1,8 @@
 // File: src/ArtistDashboard.jsx
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { compressImage, fileToBase64 } from './utils/imageHelpers';
+import { compressImage } from './utils/imageHelpers';
+import { storeImage } from './utils/imageCache';
 import GalleryControls from './GalleryControls';
 import HeroSection from './HeroSection';
 import GalleryGrid from './GalleryGrid';
@@ -32,24 +33,26 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => prev + valid.length);
 
     const newImages = [];
+
     for (const file of valid) {
       const compressed = await compressImage(file);
-      const base64 = await fileToBase64(compressed);
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const url = URL.createObjectURL(compressed);
+
+      await storeImage(id, compressed);
+
       newImages.push({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        id,
         name: file.name,
-        url: URL.createObjectURL(compressed),
-        file: compressed,
-        base64,
+        url,
         scrapeEligible: true,
         metadata: {},
         galleryEligible: true,
         sampleEligible: false,
+        localRefId: id,
       });
     }
 
-    const totalSize = JSON.stringify(newImages).length;
-    alert(`🧠 Uploading ${newImages.length} images\nTotal JSON size: ${totalSize} chars`);
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
 
@@ -62,7 +65,6 @@ export default function ArtistDashboard({ setView }) {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       name: file.name,
       url,
-      file: compressed,
       scrapeEligible: true,
       metadata: {},
     });
