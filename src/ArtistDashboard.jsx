@@ -23,14 +23,9 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
 
-  React.useEffect(() => {
-    console.log('✅ artistGallery length after update:', artistGallery.length);
-  }, [artistGallery]);
-
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
   const handleFiles = async (fileList) => {
-  console.log('📂 handleFiles triggered');
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
     setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
@@ -53,9 +48,6 @@ export default function ArtistDashboard({ setView }) {
       });
     }
 
-    console.log('🧪 About to set artistGallery with', newImages.length, 'images');
-    const totalSize = JSON.stringify(newImages).length;
-    alert(`🧠 Uploading ${newImages.length} images\nTotal JSON size: ${totalSize} chars`);
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
 
@@ -99,6 +91,18 @@ export default function ArtistDashboard({ setView }) {
     setArtistGallery((prev) => prev.filter((img) => img.id !== id));
     setUploadCount((prev) => Math.max(0, prev - 1));
   };
+
+  const viewGallery = artistGallery.map((img) => {
+    return {
+      id: img.id,
+      name: img.name,
+      url: img.url,
+      sampleEligible: img.sampleEligible,
+      galleryEligible: img.galleryEligible,
+      scrapeEligible: img.scrapeEligible,
+      metadata: img.metadata,
+    };
+  });
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -154,7 +158,7 @@ export default function ArtistDashboard({ setView }) {
       </p>
 
       <GalleryGrid
-        images={artistGallery.filter(isValidImage)}
+        images={viewGallery.filter(isValidImage)}
         onToggleScrape={toggleImageScrape}
         onRemove={removeImage}
         onToggleGallery={toggleImageGallery}
