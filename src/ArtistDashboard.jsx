@@ -96,7 +96,8 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => Math.max(0, prev - 1));
   };
 
-  const viewGallery = artistGallery.map((img) => {
+    // View-only subset for use inside ArtistDashboard only
+    const viewGallery = artistGallery.map((img) => {
     return {
       id: img.id,
       name: img.name,

@@ -109,6 +109,14 @@ Bundles are JSON-based and persistable offline or via external cloud sync later.
 
 ---
 
+### Hydration Policy
+
+Image blobs are stored in `localStorage` and referenced via `localRefId`.
+
+Only display-safe fields are stored in `artistGallery`. Rehydration is performed just-in-time in modules that require actual image blobs.
+
+This is essential to prevent excessive memory usage and React reconciliation issues. Hydrated data must never enter React context.
+
 ## 🧠 Future Ready
 
 - ML fine-tuning based on corrections

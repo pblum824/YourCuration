@@ -26,6 +26,37 @@ export function loadImageBlob(id) {
 }
 
 /**
+ * Rehydrate a gallery from localStorage based on stored blobs
+ * Returns an array of display-ready image objects
+ */
+export async function rehydrateGallery() {
+  const images = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith('img:')) continue;
+
+    const id = key.slice(4);
+    const base64 = localStorage.getItem(key);
+    if (!base64) continue;
+
+    const blob = base64ToBlob(base64);
+    const url = URL.createObjectURL(blob);
+
+    images.push({
+      id,
+      name: `Restored-${id}`,
+      url,
+      localRefId: id,
+      metadata: {},
+      scrapeEligible: true,
+      galleryEligible: true,
+      sampleEligible: false,
+    });
+  }
+  return images;
+}
+
+/**
  * Convert a Blob to base64 string
  */
 function blobToBase64(blob) {
