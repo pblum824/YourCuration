@@ -23,7 +23,17 @@ export default function ArtistDashboard({ setView }) {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
-
+  React.useEffect(() => {
+    async function restoreIfEmpty() {
+      if (artistGallery.length === 0) {
+        const { rehydrateGallery } = await import('./utils/imageCache');
+        const restored = await rehydrateGallery();
+        setArtistGallery(restored);
+      }
+    }
+    restoreIfEmpty();
+  }, []);
+  
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
   const handleFiles = async (fileList) => {
