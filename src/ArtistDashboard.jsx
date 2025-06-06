@@ -11,6 +11,8 @@ import MultiFilePicker from './MultiFilePicker';
 import UploadWarnings from './UploadWarnings';
 import DragDropUpload from './DragDropUpload';
 
+const [logs, setLogs] = useState([]);
+const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
@@ -50,7 +52,7 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await storeImage(id, compressed);
-      console.log('🧠 stored image', id, localStorage.getItem(`img:${id}`));
+      logToScreen(`🧠 Stored image: ${id}`);
       
       newImages.push({
         id,
@@ -172,7 +174,11 @@ export default function ArtistDashboard({ setView }) {
       <p style={{ color: '#999', fontStyle: 'italic', fontSize: '0.85rem' }}>
         Debug: artistGallery length = {artistGallery.length}
       </p>
-
+      <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
+        {logs.map((log, i) => (
+          <div key={i}>📦 {log}</div>
+        ))}
+      </div>
       <GalleryGrid
         images={viewGallery.filter(isValidImage)}
         onToggleScrape={toggleImageScrape}
@@ -182,5 +188,6 @@ export default function ArtistDashboard({ setView }) {
         devMode={devMode}
       />
     </div>
+    
   );
 }
