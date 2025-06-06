@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { rehydrateGallery, getImageBlob } from './utils/imageCache';
+import { getImageBlob } from './utils/imageCache';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -14,37 +14,26 @@ export default function GenerateTags() {
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
-    async function loadGalleryFromStorage() {
-      const restored = await rehydrateGallery();
-      setArtistGallery(restored);
-    }
-    loadGalleryFromStorage();
-  }, []);
-
-  useEffect(() => {
-    async function rehydrateImages(images) {
-      const hydrated = await Promise.all(images.map(async (img) => {
-        if (!img.localRefId) return img;
-        try {
-          const blob = await getImageBlob(img.localRefId);
-          const file = new File([blob], img.name || 'image.jpg', {
-            type: blob.type || 'image/jpeg'
-          });
-          const url = URL.createObjectURL(blob);
-          return { ...img, file, url };
-        } catch (err) {
-          return {
-            ...img,
-            metadata: {
-              ...img.metadata,
-              error: 'Rehydration failed: ' + err.message
-            }
-          };
-        }
-      }));
+    async function hydrateImages() {
+      const hydrated = await Promise.all(
+        artistGallery.map(async (img) => {
+          if (!img.localRefId) return img;
+          try {
+            const blob = await getImageBlob(img.localRefId);
+            const file = new File([blob], img.name || 'image.jpg', {
+              type: blob.type || 'image/jpeg'
+            });
+            const url = img.url || URL.createObjectURL(blob);
+            return { ...img, file, url };
+          } catch (err) {
+            return { ...img, url: img.url, metadata: { ...img.metadata, error: 'Failed to hydrate image file' } };
+          }
+        })
+      );
       setLocalGallery(hydrated);
     }
-    rehydrateImages(artistGallery);
+
+    hydrateImages();
   }, [artistGallery]);
 
   const images = localGallery.filter((img) => img.sampleEligible);
@@ -53,7 +42,9 @@ export default function GenerateTags() {
     return new Promise((resolve) => {
       const img = new Image();
       const reader = new FileReader();
-      reader.onload = (e) => { img.src = e.target.result; };
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
       img.onload = () => {
         const scale = maxDim / Math.max(img.width, img.height);
         const canvas = document.createElement('canvas');
@@ -100,26 +91,11 @@ export default function GenerateTags() {
         }
       }));
 
-      setArtistGallery(prev =>
-        prev.map(img => tagged.find(t => t.id === img.id) || img)
+      setArtistGallery((prev) =>
+        prev.map((img) => tagged.find((t) => t.id === img.id) || img)
       );
     } catch (err) {
       logToScreen(`[GenerateTags] Batch error: ${err.message}`);
-      const tagged = images.map((img) => ({
-        ...img,
-        metadata: {
-          ...img.metadata,
-          imageTags: [],
-          textTags: [],
-          toneTags: [],
-          moodTags: [],
-          paletteTags: [],
-          error: err.message
-        }
-      }));
-      setArtistGallery(prev =>
-        prev.map(img => tagged.find(t => t.id === img.id) || img)
-      );
     } finally {
       setLoading(false);
     }
