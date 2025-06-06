@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
-import { storeImage } from './utils/imageCache';
+import { saveBlob } from './utils/dbCache';
 import GalleryControls from './GalleryControls';
 import HeroSection from './HeroSection';
 import GalleryGrid from './GalleryGrid';
@@ -50,7 +50,7 @@ export default function ArtistDashboard({ setView }) {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
 
-      await storeImage(id, compressed);
+      await saveBlob(id, compressed);
       logToScreen(`🧠 Stored image: ${id}`);
       
       newImages.push({

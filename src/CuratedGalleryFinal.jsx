@@ -1,7 +1,7 @@
 // File: src/CuratedGalleryFinal.jsx
 import React from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadImageBlob } from './utils/imageCache';
+import { saveBlob } from './utils/dbCache';
 
 export default function CuratedGalleryFinal() {
   const { artistGallery } = useCuration();

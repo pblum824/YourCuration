@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { getImageBlob } from './utils/imageCache';
+import { saveBlob } from './utils/dbCache';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -22,7 +22,7 @@ export default function GenerateTags() {
           if (!img.localRefId) return img;
           console.log('🧪 looking for img:' + img.localRefId, localStorage.getItem('img:' + img.localRefId));
           try {
-            const blob = await getImageBlob(img.localRefId);
+            const blob = await loadBlob(img.localRefId);
             const file = new File([blob], img.name || 'image.jpg', {
               type: blob.type || 'image/jpeg'
             });
