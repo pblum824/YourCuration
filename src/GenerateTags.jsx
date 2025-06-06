@@ -11,11 +11,15 @@ export default function GenerateTags() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Rehydrate only locally, not globally
   useEffect(() => {
     async function rehydrateImages(images) {
+      console.log('📦 Stored keys in localStorage:', Object.keys(localStorage));
       const hydrated = await Promise.all(images.map(async (img) => {
-        if (!img.localRefId) return img;
+        console.log('💡 Attempting rehydration for:', img.name, '| localRefId:', img.localRefId);
+        if (!img.localRefId) {
+          console.warn('⚠️ Missing localRefId for', img.name);
+          return img;
+        }
         try {
           const blob = await getImageBlob(img.localRefId);
           const file = new File([blob], img.name || 'image.jpg', {
@@ -24,11 +28,12 @@ export default function GenerateTags() {
           const url = URL.createObjectURL(blob);
           return { ...img, file, url };
         } catch (err) {
+          console.error('❌ Rehydration failed for', img.name, err);
           return {
             ...img,
             metadata: {
               ...img.metadata,
-              error: 'Rehydration failed'
+              error: 'Rehydration failed: ' + err.message
             }
           };
         }
