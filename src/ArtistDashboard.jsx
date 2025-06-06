@@ -1,4 +1,5 @@
 // File: src/ArtistDashboard.jsx
+
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
@@ -15,8 +16,7 @@ const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
-  const [logs, setLogs] = useState([]);
-  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
+
   const [heroImage, setHeroImage] = useState(null);
   const [borderSkin, setBorderSkin] = useState(null);
   const [centerBackground, setCenterBackground] = useState(null);
@@ -24,17 +24,9 @@ export default function ArtistDashboard({ setView }) {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
-  React.useEffect(() => {
-    async function restoreIfEmpty() {
-      if (artistGallery.length === 0) {
-        const { rehydrateGallery } = await import('./utils/imageCache');
-        const restored = await rehydrateGallery();
-        setArtistGallery(restored);
-      }
-    }
-    restoreIfEmpty();
-  }, []);
-  
+  const [logs, setLogs] = useState([]);
+  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
+
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
   const handleFiles = async (fileList) => {
@@ -51,8 +43,8 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🧠 Stored image: ${id}`);
-      
+      logToScreen(`🧠 Saved to IndexedDB: ${id}`);
+
       newImages.push({
         id,
         name: file.name,
@@ -108,23 +100,28 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => Math.max(0, prev - 1));
   };
 
-    // View-only subset for use inside ArtistDashboard only
-    const viewGallery = artistGallery.map((img) => {
-    return {
-      id: img.id,
-      name: img.name,
-      url: img.url,
-      sampleEligible: img.sampleEligible,
-      galleryEligible: img.galleryEligible,
-      scrapeEligible: img.scrapeEligible,
-      metadata: img.metadata,
-    };
-  });
+  const viewGallery = artistGallery.map((img) => ({
+    id: img.id,
+    name: img.name,
+    url: img.url,
+    sampleEligible: img.sampleEligible,
+    galleryEligible: img.galleryEligible,
+    scrapeEligible: img.scrapeEligible,
+    metadata: img.metadata,
+  }));
 
   return (
     <div style={{ padding: '2rem' }}>
       <DevToggle devMode={devMode} setDevMode={setDevMode} />
-      <h2 style={{ fontSize: '2.25rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a', textAlign: 'center', marginBottom: '2rem' }}>
+      <h2
+        style={{
+          fontSize: '2.25rem',
+          fontFamily: 'Parisienne, cursive',
+          color: '#1e3a8a',
+          textAlign: 'center',
+          marginBottom: '2rem',
+        }}
+      >
         Artist Dashboard
       </h2>
 
@@ -143,32 +140,13 @@ export default function ArtistDashboard({ setView }) {
         }}
       />
 
-      <HeroSection
-        label="Hero Image"
-        imageState={heroImage}
-        setImageState={setHeroImage}
-        handleSingleUpload={handleSingleUpload}
-      />
-      <HeroSection
-        label="Border Skin"
-        imageState={borderSkin}
-        setImageState={setBorderSkin}
-        handleSingleUpload={handleSingleUpload}
-      />
-      <HeroSection
-        label="Center Background"
-        imageState={centerBackground}
-        setImageState={setCenterBackground}
-        handleSingleUpload={handleSingleUpload}
-      />
+      <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
+      <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
+      <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
 
       <UploadWarnings warnings={uploadWarnings} />
       <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
-      <MultiFilePicker
-        onChange={(files) => handleFiles(files)}
-        uploadCount={uploadCount}
-        acceptedFormats={ACCEPTED_FORMATS}
-      />
+      <MultiFilePicker onChange={(files) => handleFiles(files)} uploadCount={uploadCount} acceptedFormats={ACCEPTED_FORMATS} />
 
       <p style={{ color: '#999', fontStyle: 'italic', fontSize: '0.85rem' }}>
         Debug: artistGallery length = {artistGallery.length}
@@ -178,6 +156,7 @@ export default function ArtistDashboard({ setView }) {
           <div key={i}>📦 {log}</div>
         ))}
       </div>
+
       <GalleryGrid
         images={viewGallery.filter(isValidImage)}
         onToggleScrape={toggleImageScrape}
@@ -187,6 +166,5 @@ export default function ArtistDashboard({ setView }) {
         devMode={devMode}
       />
     </div>
-    
   );
 }
