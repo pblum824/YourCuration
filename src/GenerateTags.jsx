@@ -36,7 +36,7 @@ export default function GenerateTags() {
     hydrateImages();
   }, [artistGallery]);
 
-  const images = localGallery.filter((img) => img.sampleEligible);
+  const images = localGallery;
 
   async function compressImage(file, maxDim = 384, quality = 0.7) {
     return new Promise((resolve) => {
@@ -65,11 +65,17 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      logToScreen(`[GenerateTags] Uploading ${images.length} images`);
+      const uploadable = images.filter(img => img.sampleEligible && img.file);
+
+      if (uploadable.length === 0) {
+        logToScreen('[GenerateTags] No sample images selected. Nothing to tag.');
+        return;
+      }
+
+      logToScreen(`[GenerateTags] Uploading ${uploadable.length} images`);
 
       const formData = new FormData();
-      for (const img of images) {
-        if (!img.file) throw new Error(`Missing file reference for ${img.name}`);
+      for (const img of uploadable) {
         const compressed = await compressImage(img.file, 384, 0.7);
         formData.append('files', compressed);
       }
@@ -84,9 +90,9 @@ export default function GenerateTags() {
       const result = await res.json();
 
       const tagged = result.results.map((r, i) => ({
-        ...images[i],
+        ...uploadable[i],
         metadata: {
-          ...images[i].metadata,
+          ...uploadable[i].metadata,
           ...r.metadata
         }
       }));
