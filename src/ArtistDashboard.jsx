@@ -11,13 +11,12 @@ import MultiFilePicker from './MultiFilePicker';
 import UploadWarnings from './UploadWarnings';
 import DragDropUpload from './DragDropUpload';
 
-const [logs, setLogs] = useState([]);
-const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
-
+  const [logs, setLogs] = useState([]);
+  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
   const [heroImage, setHeroImage] = useState(null);
   const [borderSkin, setBorderSkin] = useState(null);
   const [centerBackground, setCenterBackground] = useState(null);
