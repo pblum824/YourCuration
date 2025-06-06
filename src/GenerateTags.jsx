@@ -1,19 +1,45 @@
 // File: src/GenerateTags.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCuration } from './YourCurationContext';
+import { getImageBlob } from './utils/imageCache';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
 
-  const [target, setTarget] = useState('samples');
+  const [localGallery, setLocalGallery] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const images =
-    target === 'samples'
-      ? artistGallery.filter((img) => img.sampleEligible)
-      : artistGallery;
+  // ✅ Rehydrate only locally, not globally
+  useEffect(() => {
+    async function rehydrateImages(images) {
+      const hydrated = await Promise.all(images.map(async (img) => {
+        if (!img.localRefId) return img;
+        try {
+          const blob = await getImageBlob(img.localRefId);
+          const file = new File([blob], img.name || 'image.jpg', {
+            type: blob.type || 'image/jpeg'
+          });
+          const url = URL.createObjectURL(blob);
+          return { ...img, file, url };
+        } catch (err) {
+          return {
+            ...img,
+            metadata: {
+              ...img.metadata,
+              error: 'Rehydration failed'
+            }
+          };
+        }
+      }));
+      setLocalGallery(hydrated);
+    }
+
+    rehydrateImages(artistGallery);
+  }, [artistGallery]);
+
+  const images = localGallery;
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
@@ -43,59 +69,63 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      try {
-        logToScreen(`[GenerateTags] Uploading ${images.length} images`);
+      const uploadable = images.filter(img => img.file);
 
-        const formData = new FormData();
-        for (const img of images) {
-          if (!img.file) throw new Error(`Missing file reference for ${img.name}`);
-          const compressed = await compressImage(img.file);
-          formData.append('files', compressed);
-        }
-
-        const res = await fetch('https://api.yourcuration.app/batch-tag', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!res.ok) throw new Error(`Failed (${res.status})`);
-
-        const result = await res.json();
-
-        const tagged = result.results.map((r, i) => ({
-          ...images[i],
-          metadata: {
-            ...images[i].metadata,
-            ...r.metadata,
-            imageTags: r.metadata?.imageTags || [],
-            textTags: r.metadata?.textTags || [],
-            toneTags: r.metadata?.toneTags || [],
-            moodTags: r.metadata?.moodTags || [],
-            paletteTags: r.metadata?.paletteTags || [],
-          },
-        }));
-
-        setArtistGallery((prev) =>
-          prev.map((img) => tagged.find((t) => t.id === img.id) || img)
-        );
-      } catch (err) {
-        logToScreen(`[GenerateTags] Batch error: ${err.message}`);
-        const tagged = images.map((img) => ({
-          ...img,
-          metadata: {
-            ...img.metadata,
-            imageTags: [],
-            textTags: [],
-            toneTags: [],
-            moodTags: [],
-            paletteTags: [],
-            error: err.message,
-          },
-        }));
-        setArtistGallery((prev) =>
-          prev.map((img) => tagged.find((t) => t.id === img.id) || img)
-        );
+      if (uploadable.length === 0) {
+        logToScreen('[GenerateTags] No uploadable images with file references.');
+        return;
       }
+
+      logToScreen(`[GenerateTags] Uploading ${uploadable.length} images`);
+
+      const formData = new FormData();
+      for (const img of uploadable) {
+        const compressed = await compressImage(img.file);
+        formData.append('files', compressed);
+      }
+
+      const res = await fetch('https://api.yourcuration.app/batch-tag', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error(`Failed (${res.status})`);
+
+      const result = await res.json();
+
+      const tagged = result.results.map((r, i) => ({
+        ...uploadable[i],
+        metadata: {
+          ...uploadable[i].metadata,
+          ...r.metadata,
+          imageTags: r.metadata?.imageTags || [],
+          textTags: r.metadata?.textTags || [],
+          toneTags: r.metadata?.toneTags || [],
+          moodTags: r.metadata?.moodTags || [],
+          paletteTags: r.metadata?.paletteTags || []
+        }
+      }));
+
+      setArtistGallery(prev =>
+        prev.map(img => tagged.find(t => t.id === img.id) || img)
+      );
+    } catch (err) {
+      logToScreen(`[GenerateTags] Batch error: ${err.message}`);
+      const errored = images.map((img) => ({
+        ...img,
+        metadata: {
+          ...img.metadata,
+          imageTags: [],
+          textTags: [],
+          toneTags: [],
+          moodTags: [],
+          paletteTags: [],
+          error: err.message
+        }
+      }));
+      setArtistGallery(prev =>
+        prev.map(img => errored.find(t => t.id === img.id) || img)
+      );
     } finally {
       setLoading(false);
     }
@@ -115,12 +145,6 @@ export default function GenerateTags() {
   return (
     <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-        <button onClick={() => setTarget('samples')} style={imageButton(target === 'samples' ? '#dbeafe' : '#f3f4f6')}>
-          Use Samples ({artistGallery.filter(i => i.sampleEligible).length})
-        </button>
-        <button onClick={() => setTarget('gallery')} style={imageButton(target === 'gallery' ? '#dbeafe' : '#f3f4f6')}>
-          Use Gallery ({artistGallery.length})
-        </button>
         <button onClick={handleGenerate} disabled={loading} style={{ padding: '0.75rem 1.25rem' }}>
           {loading ? 'Generating Tags...' : 'Generate MetaTags'}
         </button>

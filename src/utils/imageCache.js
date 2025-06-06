@@ -81,3 +81,4 @@ function base64ToBlob(base64) {
   }
   return new Blob([array], { type: mime });
 }
+export const getImageBlob = loadImageBlob;
