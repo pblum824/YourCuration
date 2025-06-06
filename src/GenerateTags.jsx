@@ -14,10 +14,13 @@ export default function GenerateTags() {
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
+    console.log('🧪 localStorage keys in GT:', Object.keys(localStorage));
+
     async function hydrateImages() {
       const hydrated = await Promise.all(
         artistGallery.map(async (img) => {
           if (!img.localRefId) return img;
+          console.log('🧪 looking for img:' + img.localRefId, localStorage.getItem('img:' + img.localRefId));
           try {
             const blob = await getImageBlob(img.localRefId);
             const file = new File([blob], img.name || 'image.jpg', {
@@ -65,9 +68,7 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const uploadable = images.filter(img =>
-        (img.sampleEligible || img.galleryEligible) && img.file
-      );
+      const uploadable = images.filter(img => (img.sampleEligible || img.galleryEligible) && img.file);
 
       if (uploadable.length === 0) {
         logToScreen('[GenerateTags] No images selected. Nothing to tag.');
