@@ -65,10 +65,12 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const uploadable = images.filter(img => img.sampleEligible && img.file);
+      const uploadable = images.filter(img =>
+        (img.sampleEligible || img.galleryEligible) && img.file
+      );
 
       if (uploadable.length === 0) {
-        logToScreen('[GenerateTags] No sample images selected. Nothing to tag.');
+        logToScreen('[GenerateTags] No images selected. Nothing to tag.');
         return;
       }
 
