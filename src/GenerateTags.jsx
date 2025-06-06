@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCuration } from './YourCurationContext';
 import { getImageBlob } from './utils/imageCache';
+import { rehydrateGallery } from './utils/imageCache';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -11,6 +12,17 @@ export default function GenerateTags() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ✅ FIRST: restore artistGallery from localStorage
+  useEffect(() => {
+    async function loadGalleryFromStorage() {
+      console.log('🔁 Hydrating artistGallery from localStorage');
+      const restored = await rehydrateGallery();
+      setArtistGallery(restored);
+    }
+    loadGalleryFromStorage();
+  }, []);
+
+  // ✅ THEN: rehydrate local .file + .url for GT
   useEffect(() => {
     async function rehydrateImages(images) {
       console.log('📦 Stored keys in localStorage:', Object.keys(localStorage));
