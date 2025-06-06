@@ -26,6 +26,16 @@ export function loadImageBlob(id) {
 }
 
 /**
+ * Used ONLY in GenerateTags.jsx to rehydrate a File
+ * Reconstructs from base64 into Blob, wrapped in File
+ */
+export async function getImageBlob(id) {
+  const base64 = localStorage.getItem(`img:${id}`);
+  if (!base64) throw new Error('Missing base64 for: ' + id);
+  return base64ToBlob(base64);
+}
+
+/**
  * Rehydrate a gallery from localStorage based on stored blobs
  * Returns an array of display-ready image objects
  */
@@ -81,4 +91,3 @@ function base64ToBlob(base64) {
   }
   return new Blob([array], { type: mime });
 }
-export const getImageBlob = loadImageBlob;
