@@ -50,7 +50,8 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await storeImage(id, compressed);
-
+      console.log('🧠 stored image', id, localStorage.getItem(`img:${id}`));
+      
       newImages.push({
         id,
         name: file.name,
