@@ -1,4 +1,3 @@
-// File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
@@ -15,23 +14,20 @@ export default function CuratedGallery1() {
   } = useCuration();
 
   const [hydrated, setHydrated] = useState([]);
+  const [strong, setStrong] = useState([]);
+  const [medium, setMedium] = useState([]);
+  const [weak, setWeak] = useState([]);
 
   useEffect(() => {
     const result = curateGallery1({ artistGallery, ratings });
-    <div style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: '#999', marginBottom: '1rem' }}>
-      Debug: showing {hydrated.length} hydrated images
-    </div>
-    const allIds = [
-      ...(result.strong || []),
-      ...(result.medium || []),
-      ...(result.weak || [])
-    ].map((img) => img.id);
-
-    const imagesToHydrate = artistGallery.filter((img) => allIds.includes(img.id));
+    const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
+    setStrong(result.strong || []);
+    setMedium(result.medium || []);
+    setWeak(result.weak || []);
 
     async function hydrate() {
       const hydrated = await Promise.all(
-        imagesToHydrate.map(async (img) => {
+        all.map(async (img) => {
           try {
             const blob = await loadBlob(img.localRefId);
             const url = URL.createObjectURL(blob);
@@ -67,6 +63,11 @@ export default function CuratedGallery1() {
       >
         Curated Gallery Preview
       </h2>
+
+      {/* Debug display */}
+      <div style={{ fontFamily: 'monospace', color: '#888', marginBottom: '1rem' }}>
+        Debug: strong={strong.length} | medium={medium.length} | weak={weak.length} | hydrated={hydrated.length}
+      </div>
 
       <div
         style={{
