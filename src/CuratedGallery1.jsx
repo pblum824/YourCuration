@@ -99,11 +99,12 @@ export default function CuratedGallery1({ setView }) {
                     borderRadius: '0.5rem',
                     border: '1px solid #ccc',
                     backgroundColor: approved ? '#d1fae5' : '#f9fafb',
+                    boxShadow: approved ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
                     color: '#1e3a8a',
                     cursor: 'pointer',
                   }}
                 >
-                  {approved ? '✅ Selected' : 'More Like This'}
+                  More Like This
                 </button>
               </div>
             );
