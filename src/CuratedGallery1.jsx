@@ -3,15 +3,8 @@ import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
 
-const LABELS = ['Less', 'Maybe', 'Yes!!'];
-
 export default function CuratedGallery1({ setView }) {
-  const {
-    artistGallery = [],
-    ratings = {},
-    galleryRatings,
-    setGalleryRatings
-  } = useCuration();
+  const { artistGallery = [], ratings = {} } = useCuration();
 
   const [groups, setGroups] = useState({ strong: [], medium: [], weak: [] });
   const [hydrated, setHydrated] = useState([]);
@@ -20,13 +13,13 @@ export default function CuratedGallery1({ setView }) {
   useEffect(() => {
     try {
       const result = curateGallery1({ artistGallery, ratings });
-      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
-
       setGroups({
         strong: result.strong || [],
         medium: result.medium || [],
-        weak: result.weak || []
+        weak: result.weak || [],
       });
+
+      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
 
       async function hydrate() {
         const hydrated = await Promise.all(
@@ -34,14 +27,9 @@ export default function CuratedGallery1({ setView }) {
             try {
               const blob = await loadBlob(img.localRefId);
               const url = URL.createObjectURL(blob);
-              return {
-                id: img.id,
-                name: img.name,
-                url,
-                matchScore: img.matchScore
-              };
+              return { id: img.id, name: img.name, url };
             } catch {
-              return { id: img.id, name: img.name, url: '', matchScore: img.matchScore };
+              return { id: img.id, name: img.name, url: '' };
             }
           })
         );
@@ -54,16 +42,11 @@ export default function CuratedGallery1({ setView }) {
     }
   }, [artistGallery, ratings]);
 
-  const handleToggle = (id) => {
-    setGalleryRatings((prev) => {
-      const current = prev[id] ?? 1;
-      const next = (current + 1) % 3;
-      return { ...prev, [id]: next };
-    });
-  };
+  const renderGroup = (label, group) => {
+    const tierImages = hydrated.filter((img) =>
+      group.find((g) => g.id === img.id)
+    );
 
-  const renderTier = (label, tierArray) => {
-    const tierImages = hydrated.filter((img) => tierArray.some((t) => t.id === img.id));
     if (tierImages.length === 0) return null;
 
     return (
@@ -86,31 +69,10 @@ export default function CuratedGallery1({ setView }) {
                   height: '200px',
                   objectFit: 'cover',
                   borderRadius: '0.5rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                 }}
               />
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-              <p style={{ fontSize: '0.85rem', color: '#555' }}>score: {img.matchScore?.toFixed(2)}</p>
-              <button
-                onClick={() => handleToggle(img.id)}
-                style={{
-                  marginTop: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  fontFamily: 'Parisienne, cursive',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #ccc',
-                  backgroundColor:
-                    galleryRatings[img.id] === 2
-                      ? '#d1fae5'
-                      : galleryRatings[img.id] === 1
-                      ? '#fef9c3'
-                      : '#fee2e2',
-                  color: '#1e3a8a',
-                  cursor: 'pointer'
-                }}
-              >
-                {LABELS[galleryRatings[img.id] ?? 1]}
-              </button>
             </div>
           ))}
         </div>
@@ -132,13 +94,9 @@ export default function CuratedGallery1({ setView }) {
         Curated Gallery Preview
       </h2>
 
-      <div style={{ fontFamily: 'monospace', color: '#888', marginBottom: '1rem' }}>
-        Showing {hydrated.length} hydrated images across {Object.keys(groups).length} tiers.
-      </div>
-
-      {renderTier('✅ Strong Matches', groups.strong)}
-      {renderTier('🤔 Medium Matches', groups.medium)}
-      {renderTier('🧠 Weak Matches', groups.weak)}
+      {renderGroup('✅ Strong Matches', groups.strong)}
+      {renderGroup('🤔 Medium Matches', groups.medium)}
+      {renderGroup('🧠 Weak Matches', groups.weak)}
 
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
