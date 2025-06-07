@@ -21,14 +21,7 @@ export default function ImageCard({
   });
 
   return (
-    <div style={{
-      width: '280px',
-      textAlign: 'center',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      paddingBottom: '1rem'
-    }}>
+    <div style={{ width: '280px', textAlign: 'center' }}>
       <img
         src={image.url}
         alt={image.name}
@@ -42,7 +35,6 @@ export default function ImageCard({
           gridTemplateColumns: '1fr 1fr',
           gap: '0.5rem',
           marginTop: '0.5rem',
-          width: '100%',
         }}
       >
         <button
