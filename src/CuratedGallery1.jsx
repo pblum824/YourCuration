@@ -72,43 +72,38 @@ export default function CuratedGallery1({ setView }) {
             gap: '2rem',
           }}
         >
-          {tierImages.map((img) => {
-            const approved = galleryRatings?.[img.id] === 2;
-
-            return (
-              <div key={img.id} style={{ textAlign: 'center' }}>
-                <img
-                  src={img.url}
-                  alt={img.name}
-                  style={{
-                    width: '100%',
-                    height: '200px',
-                    objectFit: 'cover',
-                    borderRadius: '0.5rem',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                  }}
-                />
-                <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-                <button
-                  onClick={() => approveImage(img.id)}
-                  style={{
-                    marginTop: '0.75rem',
-                    padding: '0.5rem 1.25rem',
-                    fontFamily: 'Parisienne, cursive',
-                    fontSize: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #ccc',
-                    backgroundColor: approved ? '#86efac' : '#d1fae5',
-                    boxShadow: approved ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                    color: '#065f46',
-                    cursor: 'pointer',
-                  }}
-                >
-                  More Like This
-                </button>
-              </div>
-            );
-          })}
+          {tierImages.map((img) => (
+            <div key={img.id} style={{ textAlign: 'center' }}>
+              <img
+                src={img.url}
+                alt={img.name}
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                }}
+              />
+              <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+              <button
+                onClick={() => approveImage(img.id)}
+                style={{
+                  marginTop: '0.75rem',
+                  padding: '0.5rem 1.25rem',
+                  fontFamily: 'Parisienne, cursive',
+                  fontSize: '1rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #ccc',
+                  backgroundColor: '#d1fae5',
+                  color: '#065f46',
+                  cursor: 'pointer',
+                }}
+              >
+                More Like This ({galleryRatings?.[img.id] ?? '-'})
+              </button>
+            </div>
+          ))}
         </div>
       </>
     );
