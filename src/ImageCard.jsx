@@ -25,7 +25,21 @@ export default function ImageCard({
   });
 
   return (
-    <div style={{ width: '280px', textAlign: 'center' }}>
+    <div
+      style={{
+        width: '280px',
+        minHeight: '480px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '1rem',
+        border: '1px solid #ddd',
+        borderRadius: '1rem',
+        backgroundColor: '#fff',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        textAlign: 'center',
+      }}
+    >
       <img
         src={image.url}
         alt={image.name}
