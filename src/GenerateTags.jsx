@@ -239,13 +239,30 @@ export default function GenerateTags() {
             </div>
 
             <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
-              <strong>Tags (editable)</strong>
+              <strong>Tags (backend)</strong>
+            </div>
+
+            {['imageTags', 'textTags', 'toneTags', 'moodTags', 'paletteTags'].map(
+              (key) =>
+                img.metadata?.[key]?.length > 0 && (
+                  <div
+                    key={key}
+                    style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}
+                  >
+                    <strong>[{key.replace('Tags', '')}]</strong>{' '}
+                    {img.metadata[key].join(', ')}
+                  </div>
+                )
+            )}
+
+            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
+              <strong>Tag (user)</strong>
             </div>
 
             <EditableTagList
-              tags={img.metadata?.imageTags || []}
-              label={'image'}
-              onChange={(values) => updateTagField(img.id, 'imageTags', values)}
+              tags={img.metadata?.userTags || []}
+              label={'user'}
+              onChange={(values) => updateTagField(img.id, 'userTags', values)}
             />
 
             {img.metadata?.error && (
