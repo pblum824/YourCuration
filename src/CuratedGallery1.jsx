@@ -1,29 +1,47 @@
-// File: src/CuratedGallery1.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
+import { loadBlob } from './utils/dbCache';
 
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
 
 export default function CuratedGallery1() {
-  const { artistGallery = [], ratings = {} } = useCuration();
-  const [selections, setSelections] = useState({});
+  const {
+    artistGallery = [],
+    ratings = {},
+    galleryRatings,
+    setGalleryRatings
+  } = useCuration();
 
-  let strong = [], medium = [], weak = [];
-  try {
-    const result = curateGallery1({ artistGallery, ratings });
-    strong = result.strong || [];
-    medium = result.medium || [];
-    weak = result.weak || [];
-  } catch (err) {
-    return <p style={{ color: 'red' }}>Error generating curated gallery: {err.message}</p>;
-  }
+  const [hydratedImages, setHydratedImages] = useState([]);
 
-  const all = [...strong, ...medium, ...weak];
+  useEffect(() => {
+    async function hydrate() {
+      const result = curateGallery1({ artistGallery, ratings });
+      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
+
+      const hydrated = await Promise.all(
+        all.map(async (img) => {
+          if (!img.localRefId) return img;
+          try {
+            const blob = await loadBlob(img.localRefId);
+            if (!blob) throw new Error('no blob');
+            const file = new File([blob], img.name, { type: blob.type });
+            const url = img.url || URL.createObjectURL(blob);
+            return { ...img, file, url };
+          } catch {
+            return img;
+          }
+        })
+      );
+      setHydratedImages(hydrated);
+    }
+    hydrate();
+  }, [artistGallery, ratings]);
 
   const handleToggle = (id) => {
-    setSelections((prev) => {
-      const current = prev[id] || 1; // default to Maybe
+    setGalleryRatings((prev) => {
+      const current = prev[id] ?? 1; // default to Maybe
       const next = (current + 1) % 3;
       return { ...prev, [id]: next };
     });
@@ -31,17 +49,25 @@ export default function CuratedGallery1() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2 style={{ fontFamily: 'Parisienne, cursive', fontSize: '2rem', marginBottom: '1rem', color: '#1e3a8a' }}>
+      <h2
+        style={{
+          fontFamily: 'Parisienne, cursive',
+          fontSize: '2rem',
+          marginBottom: '1rem',
+          color: '#1e3a8a'
+        }}
+      >
         Curated Gallery Preview
       </h2>
+
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '2rem',
+          gap: '2rem'
         }}
       >
-        {all.map((img) => (
+        {hydratedImages.map((img) => (
           <div key={img.id} style={{ textAlign: 'center' }}>
             <img
               src={img.url}
@@ -64,16 +90,16 @@ export default function CuratedGallery1() {
                 borderRadius: '0.5rem',
                 border: '1px solid #ccc',
                 backgroundColor:
-                  selections[img.id] === 2
+                  galleryRatings[img.id] === 2
                     ? '#d1fae5'
-                    : selections[img.id] === 1
+                    : galleryRatings[img.id] === 1
                     ? '#fef9c3'
                     : '#fee2e2',
                 color: '#1e3a8a',
-                cursor: 'pointer',
+                cursor: 'pointer'
               }}
             >
-              {LABELS[selections[img.id] || 1]}
+              {LABELS[galleryRatings[img.id] ?? 1]}
             </button>
           </div>
         ))}

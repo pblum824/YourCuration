@@ -1,37 +1,66 @@
-// File: src/CuratedGallery2.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { aggregateSampleTags, scoreImage, extractAllTags } from './utils/scoreImage';
+import { loadBlob } from './utils/dbCache';
 
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
 
 export default function CuratedGallery2() {
-  const { artistGallery, ratings } = useCuration();
-  const [selections, setSelections] = useState({});
+  const {
+    artistGallery,
+    ratings,
+    galleryRatings,
+    setGalleryRatings
+  } = useCuration();
 
-  const samples = artistGallery.filter((img) => ratings[img.id]);
-  const candidates = artistGallery.filter(
-    (img) => img.galleryEligible && !ratings[img.id]
-  );
+  const [hydratedImages, setHydratedImages] = useState([]);
 
-  const tagPools = aggregateSampleTags(samples, ratings);
+  useEffect(() => {
+    async function hydrate() {
+      const samples = artistGallery.filter((img) => ratings[img.id]);
+      const candidates = artistGallery.filter(
+        (img) => img.galleryEligible && !ratings[img.id]
+      );
 
-  const exploratory = candidates
-    .filter((img) => {
-      const tags = extractAllTags(img.metadata);
-      return tags.every(tag => !tagPools.less.has(tag)); // exclude all "less" matches
-    })
-    .map((img) => ({
-      ...img,
-      matchScore: scoreImage(img, tagPools),
-    }))
-    .filter((img) => img.matchScore >= 2 && img.matchScore <= 6)
-    .sort(() => Math.random() - 0.5) // add light randomness
-    .slice(0, 15);
+      const tagPools = aggregateSampleTags(samples, ratings);
+
+      const filtered = candidates
+        .filter((img) => {
+          const tags = extractAllTags(img.metadata);
+          return tags.every((tag) => !tagPools.less.has(tag));
+        })
+        .map((img) => ({
+          ...img,
+          matchScore: scoreImage(img, tagPools)
+        }))
+        .filter((img) => img.matchScore >= 2 && img.matchScore <= 6)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 15);
+
+      const hydrated = await Promise.all(
+        filtered.map(async (img) => {
+          if (!img.localRefId) return img;
+          try {
+            const blob = await loadBlob(img.localRefId);
+            if (!blob) throw new Error('no blob');
+            const file = new File([blob], img.name, { type: blob.type });
+            const url = img.url || URL.createObjectURL(blob);
+            return { ...img, file, url };
+          } catch {
+            return img;
+          }
+        })
+      );
+
+      setHydratedImages(hydrated);
+    }
+
+    hydrate();
+  }, [artistGallery, ratings]);
 
   const handleToggle = (id) => {
-    setSelections((prev) => {
-      const current = prev[id] || 1;
+    setGalleryRatings((prev) => {
+      const current = prev[id] ?? 1;
       const next = (current + 1) % 3;
       return { ...prev, [id]: next };
     });
@@ -39,17 +68,24 @@ export default function CuratedGallery2() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2 style={{ fontFamily: 'Parisienne, cursive', fontSize: '2rem', marginBottom: '1rem', color: '#1e3a8a' }}>
+      <h2
+        style={{
+          fontFamily: 'Parisienne, cursive',
+          fontSize: '2rem',
+          marginBottom: '1rem',
+          color: '#1e3a8a'
+        }}
+      >
         Still You — But More
       </h2>
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '2rem',
+          gap: '2rem'
         }}
       >
-        {exploratory.map((img) => (
+        {hydratedImages.map((img) => (
           <div key={img.id} style={{ textAlign: 'center' }}>
             <img
               src={img.url}
@@ -72,16 +108,16 @@ export default function CuratedGallery2() {
                 borderRadius: '0.5rem',
                 border: '1px solid #ccc',
                 backgroundColor:
-                  selections[img.id] === 2
+                  galleryRatings[img.id] === 2
                     ? '#d1fae5'
-                    : selections[img.id] === 1
+                    : galleryRatings[img.id] === 1
                     ? '#fef9c3'
                     : '#fee2e2',
                 color: '#1e3a8a',
-                cursor: 'pointer',
+                cursor: 'pointer'
               }}
             >
-              {LABELS[selections[img.id] || 1]}
+              {LABELS[galleryRatings[img.id] ?? 1]}
             </button>
           </div>
         ))}

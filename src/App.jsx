@@ -66,8 +66,8 @@ function InnerApp({ view, setView }) {
             onClick={() => setView(key)}
             style={{
               ...navBtnStyle,
-              backgroundColor: view === key ? '#1e3a8a' : '#f3f4f6',
-              color: view === key ? '#fff' : '#1e3a8a',
+              backgroundColor: view === key ? '#ede9fe' : '#f3f4f6',
+              color: view === key ? '#5b21b6' : '#1e3a8a',
               border: '1px solid #1e3a8a',
               fontWeight: view === key ? 'bold' : 'normal',
             }}
