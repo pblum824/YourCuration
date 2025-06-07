@@ -6,11 +6,11 @@ import { compressImage } from './utils/imageHelpers';
 import { saveBlob } from './utils/dbCache';
 import GalleryControls from './GalleryControls';
 import HeroSection from './HeroSection';
-import GalleryGrid from './GalleryGrid';
-import DevToggle from './DevToggle';
-import MultiFilePicker from './MultiFilePicker';
 import UploadWarnings from './UploadWarnings';
 import DragDropUpload from './DragDropUpload';
+import MultiFilePicker from './MultiFilePicker';
+import DevToggle from './DevToggle';
+import ImageCard from './ImageCard';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -100,16 +100,6 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => Math.max(0, prev - 1));
   };
 
-  const viewGallery = artistGallery.map((img) => ({
-    id: img.id,
-    name: img.name,
-    url: img.url,
-    sampleEligible: img.sampleEligible,
-    galleryEligible: img.galleryEligible,
-    scrapeEligible: img.scrapeEligible,
-    metadata: img.metadata,
-  }));
-
   return (
     <div style={{ padding: '2rem' }}>
       <DevToggle devMode={devMode} setDevMode={setDevMode} />
@@ -157,14 +147,27 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <GalleryGrid
-        images={viewGallery.filter(isValidImage)}
-        onToggleScrape={toggleImageScrape}
-        onRemove={removeImage}
-        onToggleGallery={toggleImageGallery}
-        onToggleSample={toggleImageSample}
-        devMode={devMode}
-      />
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '2rem',
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          marginTop: '2rem',
+        }}
+      >
+        {artistGallery.filter(isValidImage).map((img) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            onToggleSample={toggleImageSample}
+            onToggleGallery={toggleImageGallery}
+            onToggleScrape={toggleImageScrape}
+            onRemove={removeImage}
+          />
+        ))}
+      </div>
     </div>
   );
 }

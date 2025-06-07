@@ -1,7 +1,6 @@
-// File: components/ImageCard.jsx
+// File: src/ImageCard.jsx
 
 import React from 'react';
-import EditableTagList from './EditableTagList';
 
 export default function ImageCard({
   image,
@@ -9,9 +8,6 @@ export default function ImageCard({
   onToggleGallery,
   onToggleScrape,
   onRemove,
-  onUpdateTag,
-  showMetadata = true,
-  editableUserTag = true,
 }) {
   const imageButton = (bg, color = '#1e3a8a') => ({
     padding: '0.5rem 1rem',
@@ -25,21 +21,7 @@ export default function ImageCard({
   });
 
   return (
-    <div
-      style={{
-        width: '280px',
-        minHeight: '480px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1rem',
-        border: '1px solid #ddd',
-        borderRadius: '1rem',
-        backgroundColor: '#fff',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-        textAlign: 'center',
-      }}
-    >
+    <div style={{ width: '280px', textAlign: 'center' }}>
       <img
         src={image.url}
         alt={image.name}
@@ -57,25 +39,19 @@ export default function ImageCard({
       >
         <button
           onClick={() => onToggleScrape(image.id)}
-          style={imageButton(
-            image.scrapeEligible ? '#d1fae5' : '#fee2e2'
-          )}
+          style={imageButton(image.scrapeEligible ? '#d1fae5' : '#fee2e2')}
         >
           {image.scrapeEligible ? 'Accepted' : 'Excluded'}
         </button>
         <button
           onClick={() => onToggleGallery(image.id)}
-          style={imageButton(
-            image.galleryEligible ? '#dbeafe' : '#f3f4f6'
-          )}
+          style={imageButton(image.galleryEligible ? '#dbeafe' : '#f3f4f6')}
         >
           Gallery
         </button>
         <button
           onClick={() => onToggleSample(image.id)}
-          style={imageButton(
-            image.sampleEligible ? '#fef9c3' : '#f3f4f6'
-          )}
+          style={imageButton(image.sampleEligible ? '#fef9c3' : '#f3f4f6')}
         >
           Sample
         </button>
@@ -86,65 +62,6 @@ export default function ImageCard({
           Remove
         </button>
       </div>
-
-      {showMetadata && (
-        <>
-          <div
-            style={{
-              marginTop: '0.5rem',
-              fontSize: '0.85rem',
-              color: '#555',
-            }}
-          >
-            <strong>Tags (backend)</strong>
-          </div>
-
-          {['imageTags', 'textTags', 'toneTags', 'moodTags', 'paletteTags'].map(
-            (key) => {
-              const values = image.metadata?.[key];
-              return values?.length > 0 ? (
-                <div
-                  key={key}
-                  style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}
-                >
-                  <strong>[{key.replace('Tags', '')}]</strong> {values.join(', ')}
-                </div>
-              ) : null;
-            }
-          )}
-        </>
-      )}
-
-      {editableUserTag && (
-        <>
-          <div
-            style={{
-              marginTop: '0.5rem',
-              fontSize: '0.85rem',
-              color: '#555',
-            }}
-          >
-            <strong>Tag (user)</strong>
-          </div>
-          <EditableTagList
-            tags={image.metadata?.userTags || []}
-            label={'user'}
-            onChange={(values) => onUpdateTag(image.id, 'userTags', values)}
-          />
-        </>
-      )}
-
-      {image.metadata?.error && (
-        <div
-          style={{
-            color: 'red',
-            fontSize: '0.8rem',
-            marginTop: '0.25rem',
-          }}
-        >
-          <strong>Error:</strong> {image.metadata.error}
-        </div>
-      )}
     </div>
   );
 }
