@@ -1,4 +1,3 @@
-// File: src/App.jsx
 import React, { useState } from 'react';
 import ArtistDashboard from './ArtistDashboard';
 import GenerateTags from './GenerateTags';
@@ -38,6 +37,7 @@ function InnerApp({ view, setView }) {
     setView(next);
     localStorage.setItem('yourcuration_view', next);
   };
+
   const navBtnStyle = {
     padding: '0.5rem 1rem',
     fontSize: '0.9rem',
@@ -47,28 +47,36 @@ function InnerApp({ view, setView }) {
     color: '#1e3a8a',
     cursor: 'pointer',
     flex: '1 1 auto',
-    minWidth: '150px'
+    minWidth: '150px',
   };
+
   return (
     <div className="App" style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
-      <div style={{ background: '#fef3c7', padding: '0.5rem', marginBottom: '1rem', border: '1px solid #facc15' }}>
-        <strong>Debug Info:</strong><br />
-        view: {view}<br />
-        gallery: {Array.isArray(artistGallery) ? artistGallery.length : 'N/A'} images<br />
-        samples: {artistGallery?.filter?.(img => img.sampleEligible).length || 0}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        {[
+          { key: 'artist', label: '🎨 Artist Dashboard' },
+          { key: 'generate', label: '🛠️ Generate Tags' },
+          { key: 'rate', label: '🧪 Sample Rater' },
+          { key: 'curated1', label: '🖼️ Gallery 1' },
+          { key: 'curated2', label: '🔍 Gallery 2' },
+          { key: 'curatedFinal', label: '🏁 Final Gallery' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            style={{
+              ...navBtnStyle,
+              backgroundColor: view === key ? '#1e3a8a' : '#f3f4f6',
+              color: view === key ? '#fff' : '#1e3a8a',
+              border: '1px solid #1e3a8a',
+              fontWeight: view === key ? 'bold' : 'normal',
+            }}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      <div style={{ background: '#def', padding: '0.5rem', marginBottom: '1rem' }}>
-        <strong>App Loaded:</strong> view = {view}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-        <button onClick={() => setView('artist')} style={navBtnStyle}>🎨 Artist Dashboard</button>
-        <button onClick={() => setView('generate')} style={navBtnStyle}>🛠️ Generate Tags</button>
-        <button onClick={() => setView('rate')} style={navBtnStyle}>🧪 Sample Rater</button>
-        <button onClick={() => setView('curated1')} style={navBtnStyle}>🖼️ Gallery 1</button>
-        <button onClick={() => setView('curated2')} style={navBtnStyle}>🔍 Gallery 2</button>
-        <button onClick={() => setView('curatedFinal')} style={navBtnStyle}>🏁 Final Gallery</button>
-      </div>
       {error ? (
         <div style={{ color: 'red', background: '#fee', padding: '1rem', borderRadius: '0.5rem' }}>
           <strong>Runtime Error:</strong>
@@ -76,7 +84,6 @@ function InnerApp({ view, setView }) {
         </div>
       ) : (
         <ErrorCatcher onError={setError}>
-          {/* Uncomment views as needed */}
           {view === 'landing' && <ArtClientLanding setView={setView} />}
           {view === 'artist' && <ArtistDashboard setView={setView} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
@@ -104,7 +111,7 @@ export default function App() {
 
     return parsed;
   });
-  
+
   return (
     <YourCurationProvider>
       <InnerApp view={view} setView={setView} />
