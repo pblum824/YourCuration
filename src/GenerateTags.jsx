@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import EditableTagList from './EditableTagList';
+import ImageCard from './ImageCard';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -13,17 +14,6 @@ export default function GenerateTags() {
   const [loading, setLoading] = useState(false);
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
-
-  const imageButton = (bg, color = '#1e3a8a') => ({
-    padding: '0.5rem 1rem',
-    fontSize: '1rem',
-    borderRadius: '0.5rem',
-    border: '1px solid #ccc',
-    backgroundColor: bg,
-    color,
-    cursor: 'pointer',
-    minWidth: '96px'
-  });
 
   useEffect(() => {
     async function hydrateImages() {
@@ -201,95 +191,15 @@ export default function GenerateTags() {
         }}
       >
         {images.map((img) => (
-          <div key={img.id} style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-            <img
-              src={img.url}
-              alt={img.name}
-              style={{ width: '100%', borderRadius: '0.5rem' }}
-            />
-            <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>
-              {img.name}
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <button
-                onClick={() => toggleScrape(img.id)}
-                style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
-              >
-                {img.scrapeEligible ? 'Accepted' : 'Excluded'}
-              </button>
-              <button
-                onClick={() => toggleGallery(img.id)}
-                style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
-              >
-                Gallery
-              </button>
-              <button
-                onClick={() => toggleSample(img.id)}
-                style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
-              >
-                Sample
-              </button>
-              <button
-                onClick={() => removeImage(img.id)}
-                style={imageButton('#fee2e2', '#991b1b')}
-              >
-                Remove
-              </button>
-            </div>
-            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
-              <strong>Tags (backend)</strong>
-            </div>
-
-            {img.metadata?.imageTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.textTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[text]</strong> {img.metadata.textTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.toneTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.moodTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.paletteTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
-              </div>
-            )}
-            
-
-            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
-              <strong>Tag (user)</strong>
-            </div>
-
-            <EditableTagList
-              tags={img.metadata?.userTags || []}
-              label={'user'}
-              onChange={(values) => updateTagField(img.id, 'userTags', values)}
-            />
-
-            {img.metadata?.error && (
-              <div
-                style={{
-                  color: 'red',
-                  fontSize: '0.8rem',
-                  marginTop: '0.25rem',
-                }}
-              >
-                <strong>Error:</strong> {img.metadata.error}
-              </div>
-            )}
-          </div>
+          <ImageCard
+            key={img.id}
+            image={img}
+            onToggleSample={toggleSample}
+            onToggleGallery={toggleGallery}
+            onToggleScrape={toggleScrape}
+            onRemove={removeImage}
+            onUpdateTag={updateTagField}
+          />
         ))}
       </div>
     </div>
