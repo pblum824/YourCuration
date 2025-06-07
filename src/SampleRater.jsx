@@ -1,4 +1,3 @@
-// File: src/SampleRater.jsx
 import React, { useEffect, useState } from 'react';
 import './SampleRater.css';
 import { useCuration } from './YourCurationContext';
@@ -6,7 +5,7 @@ import { loadBlob } from './utils/dbCache';
 
 const SAMPLE_OPTIONS = ['love', 'like', 'less'];
 
-export default function SampleRater({ images }) {
+export default function SampleRater({ images, setView }) {
   const { ratings, setRatings } = useCuration();
   const [hydratedImages, setHydratedImages] = useState([]);
 
@@ -17,12 +16,10 @@ export default function SampleRater({ images }) {
           if (!img.localRefId) return img;
           try {
             const blob = await loadBlob(img.localRefId);
-            if (!blob) throw new Error('No blob');
-            const file = new File([blob], img.name, { type: blob.type });
-            const url = img.url || URL.createObjectURL(blob);
-            return { ...img, file, url };
+            const url = URL.createObjectURL(blob);
+            return { id: img.id, name: img.name, url };
           } catch {
-            return img;
+            return { id: img.id, name: img.name, url: '' };
           }
         })
       );
@@ -40,37 +37,74 @@ export default function SampleRater({ images }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem', padding: '2rem' }}>
-      {hydratedImages.map((img) => {
-        const rating = ratings[img.id];
-        return (
-          <div key={img.id} style={{ width: '280px', textAlign: 'center' }}>
-            <img
-              src={img.url}
-              alt={img.name}
-              style={{
-                width: '100%',
-                height: '200px',
-                objectFit: 'cover',
-                borderRadius: '0.5rem',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-            />
-            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-              {SAMPLE_OPTIONS.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setRating(img.id, option)}
-                  className={`rate-btn ${rating === option ? 'selected ' + option : option}`}
-                >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </button>
-              ))}
+    <div style={{ padding: '2rem' }}>
+      <h2
+        style={{
+          fontFamily: 'Parisienne, cursive',
+          fontSize: '2rem',
+          marginBottom: '1rem',
+          color: '#1e3a8a'
+        }}
+      >
+        Rate Your Sample Images
+      </h2>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '2rem'
+        }}
+      >
+        {hydratedImages.map((img) => {
+          const rating = ratings[img.id];
+          return (
+            <div key={img.id} style={{ textAlign: 'center' }}>
+              <img
+                src={img.url}
+                alt={img.name}
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              />
+              <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {SAMPLE_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setRating(img.id, option)}
+                    className={`rate-btn ${rating === option ? 'selected ' + option : option}`}
+                  >
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      {/* Forward button */}
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <button
+          onClick={() => setView('curated1')}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          ➡️ Generate Gallery Preview
+        </button>
+      </div>
     </div>
   );
 }

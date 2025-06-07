@@ -5,7 +5,7 @@ import { loadBlob } from './utils/dbCache';
 
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
 
-export default function CuratedGallery1() {
+export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
     ratings = {},
@@ -21,6 +21,7 @@ export default function CuratedGallery1() {
   useEffect(() => {
     const result = curateGallery1({ artistGallery, ratings });
     const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
+
     setStrong(result.strong || []);
     setMedium(result.medium || []);
     setWeak(result.weak || []);
@@ -64,7 +65,6 @@ export default function CuratedGallery1() {
         Curated Gallery Preview
       </h2>
 
-      {/* Debug display */}
       <div style={{ fontFamily: 'monospace', color: '#888', marginBottom: '1rem' }}>
         Debug: strong={strong.length} | medium={medium.length} | weak={weak.length} | hydrated={hydrated.length}
       </div>
@@ -112,6 +112,23 @@ export default function CuratedGallery1() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <button
+          onClick={() => setView('curated2')}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          ➕ Show Me More Like These
+        </button>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { loadBlob } from './utils/dbCache';
 
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
 
-export default function CuratedGallery2() {
+export default function CuratedGallery2({ setView }) {
   const {
     artistGallery,
     ratings,
@@ -14,6 +14,7 @@ export default function CuratedGallery2() {
   } = useCuration();
 
   const [hydrated, setHydrated] = useState([]);
+  const [exploratoryIds, setExploratoryIds] = useState([]);
 
   useEffect(() => {
     const samples = artistGallery.filter((img) => ratings[img.id]);
@@ -23,7 +24,7 @@ export default function CuratedGallery2() {
 
     const tagPools = aggregateSampleTags(samples, ratings);
 
-    const exploratoryIds = candidates
+    const filtered = candidates
       .filter((img) => {
         const tags = extractAllTags(img.metadata);
         return tags.every((tag) => !tagPools.less.has(tag));
@@ -34,14 +35,13 @@ export default function CuratedGallery2() {
       }))
       .filter((img) => img.matchScore >= 2 && img.matchScore <= 6)
       .sort(() => Math.random() - 0.5)
-      .slice(0, 15)
-      .map((img) => img.id);
+      .slice(0, 15);
 
-    const toHydrate = artistGallery.filter((img) => exploratoryIds.includes(img.id));
+    setExploratoryIds(filtered.map((img) => img.id));
 
     async function hydrate() {
       const hydrated = await Promise.all(
-        toHydrate.map(async (img) => {
+        filtered.map(async (img) => {
           try {
             const blob = await loadBlob(img.localRefId);
             const url = URL.createObjectURL(blob);
@@ -77,6 +77,10 @@ export default function CuratedGallery2() {
       >
         Still You — But More
       </h2>
+
+      <div style={{ fontFamily: 'monospace', color: '#888', marginBottom: '1rem' }}>
+        Debug: showing {hydrated.length} of {exploratoryIds.length} candidates
+      </div>
 
       <div
         style={{
@@ -121,6 +125,23 @@ export default function CuratedGallery2() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <button
+          onClick={() => setView('curatedFinal')}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          ✅ Finalize My Gallery
+        </button>
       </div>
     </div>
   );
