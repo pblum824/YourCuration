@@ -3,8 +3,6 @@ import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
 
-const LABELS = ['Less', 'Maybe', 'Yes!!'];
-
 export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
@@ -38,10 +36,9 @@ export default function CuratedGallery1({ setView }) {
                 id: img.id,
                 name: img.name,
                 url,
-                matchScore: img.matchScore,
               };
             } catch {
-              return { id: img.id, name: img.name, url: '', matchScore: img.matchScore };
+              return { id: img.id, name: img.name, url: '' };
             }
           })
         );
@@ -54,12 +51,8 @@ export default function CuratedGallery1({ setView }) {
     }
   }, [artistGallery, ratings]);
 
-  const handleToggle = (id) => {
-    setGalleryRatings((prev) => {
-      const current = prev[id] ?? 1;
-      const next = (current + 1) % 3;
-      return { ...prev, [id]: next };
-    });
+  const approveImage = (id) => {
+    setGalleryRatings((prev) => ({ ...prev, [id]: 2 }));
   };
 
   const renderGroup = (label, group) => {
@@ -93,9 +86,22 @@ export default function CuratedGallery1({ setView }) {
                 }}
               />
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-              <p style={{ fontSize: '0.85rem', color: '#555' }}>
-                score: {typeof img.matchScore} = {String(img.matchScore)}
-              </p>
+              <button
+                onClick={() => approveImage(img.id)}
+                style={{
+                  marginTop: '0.75rem',
+                  padding: '0.5rem 1rem',
+                  fontFamily: 'sans-serif',
+                  fontSize: '0.9rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #ccc',
+                  backgroundColor: galleryRatings[img.id] === 2 ? '#d1fae5' : '#f9fafb',
+                  color: '#1e3a8a',
+                  cursor: 'pointer',
+                }}
+              >
+                {galleryRatings[img.id] === 2 ? '✅ Selected' : 'More Like This'}
+              </button>
             </div>
           ))}
         </div>
