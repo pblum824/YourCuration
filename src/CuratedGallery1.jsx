@@ -27,9 +27,14 @@ export default function CuratedGallery1({ setView }) {
             try {
               const blob = await loadBlob(img.localRefId);
               const url = URL.createObjectURL(blob);
-              return { id: img.id, name: img.name, url };
+              return {
+                id: img.id,
+                name: img.name,
+                url,
+                matchScore: img.matchScore,
+              };
             } catch {
-              return { id: img.id, name: img.name, url: '' };
+              return { id: img.id, name: img.name, url: '', matchScore: img.matchScore };
             }
           })
         );
@@ -73,6 +78,9 @@ export default function CuratedGallery1({ setView }) {
                 }}
               />
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+              <p style={{ fontSize: '0.85rem', color: '#555' }}>
+                score: {typeof img.matchScore === 'number' ? img.matchScore.toFixed(2) : '—'}
+              </p>
             </div>
           ))}
         </div>
