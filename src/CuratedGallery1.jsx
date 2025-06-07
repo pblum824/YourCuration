@@ -38,10 +38,10 @@ export default function CuratedGallery1({ setView }) {
                 id: img.id,
                 name: img.name,
                 url,
-                matchScore: typeof img.matchScore === 'number' ? img.matchScore : null,
+                matchScore: img.matchScore,
               };
             } catch {
-              return { id: img.id, name: img.name, url: '', matchScore: null };
+              return { id: img.id, name: img.name, url: '', matchScore: img.matchScore };
             }
           })
         );
@@ -94,28 +94,8 @@ export default function CuratedGallery1({ setView }) {
               />
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
               <p style={{ fontSize: '0.85rem', color: '#555' }}>
-                score: {typeof img.matchScore === 'number' ? img.matchScore.toFixed(2) : '—'}
+                score: {typeof img.matchScore} = {String(img.matchScore)}
               </p>
-              <button
-                onClick={() => handleToggle(img.id)}
-                style={{
-                  marginTop: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  fontFamily: 'Parisienne, cursive',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #ccc',
-                  backgroundColor:
-                    galleryRatings[img.id] === 2
-                      ? '#d1fae5'
-                      : galleryRatings[img.id] === 1
-                      ? '#fef9c3'
-                      : '#fee2e2',
-                  color: '#1e3a8a',
-                  cursor: 'pointer',
-                }}
-              >
-                {LABELS[galleryRatings[img.id] ?? 1]}
-              </button>
             </div>
           ))}
         </div>
