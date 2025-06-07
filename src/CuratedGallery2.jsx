@@ -9,6 +9,7 @@ export default function CuratedGallery2({ setView }) {
   const [candidates, setCandidates] = useState([]);
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
+  const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -31,10 +32,22 @@ export default function CuratedGallery2({ setView }) {
           ...img,
           matchScore: scoreImage(img, tagPools),
         }))
-        .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
-        .slice(0, 40);
+        .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
 
-      setCandidates(scored);
+      setCandidates(scored.slice(0, 40)); // Grab more candidates for testing
+
+      // Compute debug stats
+      const scores = scored.map((i) => i.matchScore).filter(Number.isFinite);
+      const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+      setStats({
+        totalCandidates: rawCandidates.length,
+        safeCandidates: safe.length,
+        scored: scored.length,
+        hydrated: 0, // update later
+        avgScore: avg.toFixed(2),
+        maxScore: Math.max(...scores),
+        minScore: Math.min(...scores),
+      });
     } catch (err) {
       setError(err.message || 'CG2 scoring failed.');
     }
@@ -66,6 +79,7 @@ export default function CuratedGallery2({ setView }) {
         })
       );
       setHydrated(hydrated);
+      setStats((s) => ({ ...s, hydrated: hydrated.length }));
     }
 
     if (candidates.length > 0) {
@@ -86,6 +100,25 @@ export default function CuratedGallery2({ setView }) {
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
         Still You — But More
       </h2>
+
+      {stats && (
+        <pre style={{
+          background: '#f9f9f9',
+          border: '1px solid #ddd',
+          padding: '1rem',
+          fontSize: '0.85rem',
+          marginBottom: '2rem',
+          fontFamily: 'monospace',
+        }}>
+{`🔍 CG2 Debug Stats:
+Total Gallery Candidates:   ${stats.totalCandidates}
+Safe (non-less):            ${stats.safeCandidates}
+Scored Images:              ${stats.scored}
+Hydrated Images:            ${stats.hydrated}
+Score Range:                ${stats.minScore} → ${stats.maxScore}
+Average Score:              ${stats.avgScore}`}
+        </pre>
+      )}
 
       <div
         style={{
@@ -132,9 +165,6 @@ export default function CuratedGallery2({ setView }) {
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
               <p style={{ fontSize: '0.85rem', color: '#555' }}>
                 score: {typeof img.matchScore === 'number' ? img.matchScore : '—'}
-              </p>
-              <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
-                id: {img.id} | ref: {img.localRefId ?? '—'}
               </p>
               <button
                 onClick={() => approveImage(img.id)}
