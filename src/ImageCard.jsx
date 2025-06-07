@@ -1,4 +1,3 @@
-// File: src/ImageCard.jsx
 import React from 'react';
 import { imageButton } from './utils/styles';
 
@@ -20,6 +19,7 @@ export default function ImageCard({
         flexDirection: 'column',
         justifyContent: 'flex-end',
         alignItems: 'center',
+        textAlign: 'center',
       }}
     >
       <img
@@ -33,15 +33,47 @@ export default function ImageCard({
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         }}
       />
+
       <p
         style={{
+          marginTop: '0.5rem',
           fontStyle: 'italic',
           fontFamily: 'sans-serif',
-          marginTop: '0.5rem',
         }}
       >
         {image.name}
       </p>
+
+      {image.metadata?.imageTags?.length > 0 && (
+        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+          <strong>[image]</strong> {image.metadata.imageTags.join(', ')}
+        </div>
+      )}
+      {image.metadata?.textTags?.length > 0 && (
+        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+          <strong>[text]</strong> {image.metadata.textTags.join(', ')}
+        </div>
+      )}
+      {image.metadata?.toneTags?.length > 0 && (
+        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+          <strong>[tone]</strong> {image.metadata.toneTags.join(', ')}
+        </div>
+      )}
+      {image.metadata?.moodTags?.length > 0 && (
+        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+          <strong>[mood]</strong> {image.metadata.moodTags.join(', ')}
+        </div>
+      )}
+      {image.metadata?.paletteTags?.length > 0 && (
+        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+          <strong>[palette]</strong> {image.metadata.paletteTags.join(', ')}
+        </div>
+      )}
+      {image.metadata?.error && (
+        <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+          <strong>Error:</strong> {image.metadata.error}
+        </div>
+      )}
 
       <div
         style={{
