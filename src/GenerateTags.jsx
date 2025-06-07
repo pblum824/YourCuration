@@ -237,7 +237,35 @@ export default function GenerateTags() {
                 Remove
               </button>
             </div>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
+              <strong>Tags (backend)</strong>
+            </div>
 
+            {img.metadata?.imageTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.textTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[text]</strong> {img.metadata.textTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.toneTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.moodTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
+              </div>
+            )}
+            {img.metadata?.paletteTags?.length > 0 && (
+              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
+              </div>
+            )}
             <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
               <strong>Tags (backend)</strong>
             </div>
