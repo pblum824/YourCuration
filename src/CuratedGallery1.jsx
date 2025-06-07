@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { curateGallery1 } from './utils/curateGallery1';
+import { aggregateSampleTags, scoreImage, extractAllTags } from './utils/scoreImage';
 import { loadBlob } from './utils/dbCache';
 
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
@@ -13,18 +13,46 @@ export default function CuratedGallery1({ setView }) {
     setGalleryRatings
   } = useCuration();
 
-  const [hydrated, setHydrated] = useState([]);
+  const [samples, setSamples] = useState([]);
+  const [tagPools, setTagPools] = useState({});
+  const [scored, setScored] = useState([]);
   const [strong, setStrong] = useState([]);
   const [medium, setMedium] = useState([]);
   const [weak, setWeak] = useState([]);
+  const [hydrated, setHydrated] = useState([]);
 
   useEffect(() => {
-    const result = curateGallery1({ artistGallery, ratings });
-    const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
+    const RATING_WEIGHTS = { love: 2, like: 1, less: 0 };
+    const numericRatings = Object.fromEntries(
+      Object.entries(ratings).map(([id, val]) => [id, RATING_WEIGHTS[val]])
+    );
 
-    setStrong(result.strong || []);
-    setMedium(result.medium || []);
-    setWeak(result.weak || []);
+    const sampleImgs = artistGallery.filter((img) => ratings[img.id]);
+    setSamples(sampleImgs);
+
+    const candidates = artistGallery.filter(
+      (img) => img.galleryEligible && !ratings[img.id]
+    );
+
+    const tags = aggregateSampleTags(sampleImgs, numericRatings);
+    setTagPools(tags);
+
+    const scoredImgs = candidates.map((img) => ({
+      ...img,
+      matchScore: scoreImage(img, tags),
+    }));
+
+    setScored(scoredImgs);
+
+    const strong = scoredImgs.filter((img) => img.matchScore >= 6).slice(0, 8);
+    const medium = scoredImgs.filter((img) => img.matchScore >= 2 && img.matchScore < 6).slice(0, 8);
+    const weak = scoredImgs.filter((img) => img.matchScore < 2).slice(0, 4);
+
+    setStrong(strong);
+    setMedium(medium);
+    setWeak(weak);
+
+    const all = [...strong, ...medium, ...weak];
 
     async function hydrate() {
       const hydrated = await Promise.all(
@@ -54,19 +82,22 @@ export default function CuratedGallery1({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2
-        style={{
-          fontFamily: 'Parisienne, cursive',
-          fontSize: '2rem',
-          marginBottom: '1rem',
-          color: '#1e3a8a'
-        }}
-      >
+      <h2 style={{ fontFamily: 'Parisienne, cursive', fontSize: '2rem', color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
 
-      <div style={{ fontFamily: 'monospace', color: '#888', marginBottom: '1rem' }}>
-        Debug: strong={strong.length} | medium={medium.length} | weak={weak.length} | hydrated={hydrated.length}
+      <div style={{ fontFamily: 'monospace', background: '#f9f9f9', padding: '1rem', border: '1px solid #ddd', marginBottom: '2rem' }}>
+        <div><strong>Sample Images:</strong> {samples.map(s => s.name).join(', ') || 'None'}</div>
+        <div><strong>Tag Pools:</strong> image={tagPools.image?.size || 0}, text={tagPools.text?.size || 0}, tone={tagPools.tone?.size || 0}</div>
+        <div><strong>Scored Images:</strong></div>
+        {scored.map((img) => {
+          const tier = img.matchScore >= 6 ? 'strong' : img.matchScore >= 2 ? 'medium' : 'weak';
+          return (
+            <div key={img.id}>
+              {img.name} → score: {img.matchScore.toFixed(2)} → {tier}
+            </div>
+          );
+        })}
       </div>
 
       <div
