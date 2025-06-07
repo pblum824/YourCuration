@@ -82,6 +82,7 @@ export default function CuratedGallery1({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <p style={{ color: 'red', fontWeight: 'bold' }}>✅ Hello from CG1</p>
       <h2 style={{ fontFamily: 'Parisienne, cursive', fontSize: '2rem', color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
