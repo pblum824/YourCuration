@@ -93,14 +93,14 @@ export default function CuratedGallery1({ setView }) {
                   onClick={() => approveImage(img.id)}
                   style={{
                     marginTop: '0.75rem',
-                    padding: '0.5rem 1rem',
-                    fontFamily: 'sans-serif',
-                    fontSize: '0.9rem',
+                    padding: '0.5rem 1.25rem',
+                    fontFamily: 'Parisienne, cursive',
+                    fontSize: '1rem',
                     borderRadius: '0.5rem',
                     border: '1px solid #ccc',
-                    backgroundColor: approved ? '#d1fae5' : '#f9fafb',
+                    backgroundColor: approved ? '#86efac' : '#d1fae5',
                     boxShadow: approved ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                    color: '#1e3a8a',
+                    color: '#065f46',
                     cursor: 'pointer',
                   }}
                 >
