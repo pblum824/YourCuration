@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
+import EditableTagList from './EditableTagList';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -45,6 +46,50 @@ export default function GenerateTags() {
   }, [artistGallery]);
 
   const images = localGallery;
+
+  const toggleSample = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+      )
+    );
+  };
+
+  const toggleGallery = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
+  };
+
+  const toggleScrape = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
+  };
+
+  const removeImage = (id) => {
+    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const updateTagField = (id, key, values) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id
+          ? {
+              ...img,
+              metadata: {
+                ...img.metadata,
+                [key]: values,
+              },
+            }
+          : img
+      )
+    );
+  };
 
   async function compressImage(file, maxDim = 384, quality = 0.7) {
     return new Promise((resolve) => {
@@ -154,32 +199,26 @@ export default function GenerateTags() {
               {img.name}
             </p>
 
-            {img.metadata?.imageTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.textTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[text]</strong> {img.metadata.textTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.toneTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.moodTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
-              </div>
-            )}
-            {img.metadata?.paletteTags?.length > 0 && (
-              <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                <strong>[palette]</strong>{' '}
-                {img.metadata.paletteTags.join(', ')}
-              </div>
-            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button onClick={() => toggleScrape(img.id)}>Scrape</button>
+              <button onClick={() => toggleGallery(img.id)}>Gallery</button>
+              <button onClick={() => toggleSample(img.id)}>Sample</button>
+              <button onClick={() => removeImage(img.id)}>Remove</button>
+            </div>
+
+            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
+              <strong>Tags (editable)</strong>
+            </div>
+
+            {['imageTags', 'textTags', 'toneTags', 'moodTags', 'paletteTags'].map((key) => (
+              <EditableTagList
+                key={key}
+                tags={img.metadata?.[key] || []}
+                label={key.replace('Tags', '')}
+                onChange={(values) => updateTagField(img.id, key, values)}
+              />
+            ))}
+
             {img.metadata?.error && (
               <div
                 style={{
