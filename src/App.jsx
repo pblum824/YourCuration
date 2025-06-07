@@ -24,20 +24,6 @@ function InnerApp({ view, setView }) {
   const { artistGallery } = useCuration();
   const [error, setError] = useState(null);
 
-  const toggleView = () => {
-    let next;
-    if (view === 'landing') next = 'artist';
-    else if (view === 'artist') next = 'generate';
-    else if (view === 'generate') next = 'rate';
-    else if (view === 'rate') next = 'curated1';
-    else if (view === 'curated1') next = 'curated2';
-    else if (view === 'curated2') next = 'curatedFinal';
-    else next = 'landing';
-
-    setView(next);
-    localStorage.setItem('yourcuration_view', next);
-  };
-
   const navBtnStyle = {
     padding: '0.5rem 1rem',
     fontSize: '0.9rem',
@@ -87,9 +73,9 @@ function InnerApp({ view, setView }) {
           {view === 'landing' && <ArtClientLanding setView={setView} />}
           {view === 'artist' && <ArtistDashboard setView={setView} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
-          {view === 'rate' && <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} />}
-          {view === 'curated1' && <CuratedGallery1 />}
-          {view === 'curated2' && <CuratedGallery2 />}
+          {view === 'rate' && <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} setView={setView} />}
+          {view === 'curated1' && <CuratedGallery1 setView={setView} />}
+          {view === 'curated2' && <CuratedGallery2 setView={setView} />}
           {view === 'curatedFinal' && <CuratedGalleryFinal />}
           {view === 'curated' && <YourCuration />}
         </ErrorCatcher>
