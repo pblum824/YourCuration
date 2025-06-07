@@ -8,39 +8,43 @@ export default function CuratedGalleryFinal() {
   const exportGallery = async () => {
     const loves = artistGallery.filter((img) => galleryRatings[img.id] === 2);
     const likes = artistGallery.filter((img) => galleryRatings[img.id] === 1);
-    const finalGallery = [...loves, ...likes].slice(0, 20);
+    const final = [...loves, ...likes].slice(0, 20);
 
-    const images = await Promise.all(
-      finalGallery.map(async (img) => {
+    const hydrated = await Promise.all(
+      final.map(async (img) => {
         try {
           const blob = await loadBlob(img.localRefId);
           const base64 = await blobToBase64(blob);
           return {
+            id: img.id,
             name: img.name,
             data: base64,
             scrapeEligible: img.scrapeEligible,
             galleryEligible: img.galleryEligible,
             sampleEligible: img.sampleEligible,
-            metadata: img.metadata || {},
+            metadata: img.metadata || {}
           };
-        } catch (err) {
+        } catch {
           return null;
         }
       })
     );
 
+    const images = hydrated.filter(Boolean);
+
     const bundle = {
-      timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
-      images: images.filter(Boolean),
+      createdAt: new Date().toISOString(),
+      count: images.length,
+      images
     };
 
     const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-      type: 'application/json',
+      type: 'application/json'
     });
 
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `YourCuration-Gallery-${bundle.timestamp}.json`;
+    link.download = `YourCuration-Gallery-${bundle.createdAt.replace(/[:.]/g, '-')}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

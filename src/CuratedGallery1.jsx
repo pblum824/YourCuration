@@ -1,3 +1,4 @@
+// File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
@@ -13,35 +14,39 @@ export default function CuratedGallery1() {
     setGalleryRatings
   } = useCuration();
 
-  const [hydratedImages, setHydratedImages] = useState([]);
+  const [hydrated, setHydrated] = useState([]);
 
   useEffect(() => {
-    async function hydrate() {
-      const result = curateGallery1({ artistGallery, ratings });
-      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])];
+    const result = curateGallery1({ artistGallery, ratings });
+    const allIds = [
+      ...(result.strong || []),
+      ...(result.medium || []),
+      ...(result.weak || [])
+    ].map((img) => img.id);
 
+    const imagesToHydrate = artistGallery.filter((img) => allIds.includes(img.id));
+
+    async function hydrate() {
       const hydrated = await Promise.all(
-        all.map(async (img) => {
-          if (!img.localRefId) return img;
+        imagesToHydrate.map(async (img) => {
           try {
             const blob = await loadBlob(img.localRefId);
-            if (!blob) throw new Error('no blob');
-            const file = new File([blob], img.name, { type: blob.type });
-            const url = img.url || URL.createObjectURL(blob);
-            return { ...img, file, url };
+            const url = URL.createObjectURL(blob);
+            return { id: img.id, name: img.name, url };
           } catch {
-            return img;
+            return { id: img.id, name: img.name, url: '' };
           }
         })
       );
-      setHydratedImages(hydrated);
+      setHydrated(hydrated);
     }
+
     hydrate();
   }, [artistGallery, ratings]);
 
   const handleToggle = (id) => {
     setGalleryRatings((prev) => {
-      const current = prev[id] ?? 1; // default to Maybe
+      const current = prev[id] ?? 1;
       const next = (current + 1) % 3;
       return { ...prev, [id]: next };
     });
@@ -67,7 +72,7 @@ export default function CuratedGallery1() {
           gap: '2rem'
         }}
       >
-        {hydratedImages.map((img) => (
+        {hydrated.map((img) => (
           <div key={img.id} style={{ textAlign: 'center' }}>
             <img
               src={img.url}

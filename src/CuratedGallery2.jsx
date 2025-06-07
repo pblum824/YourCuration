@@ -13,46 +13,45 @@ export default function CuratedGallery2() {
     setGalleryRatings
   } = useCuration();
 
-  const [hydratedImages, setHydratedImages] = useState([]);
+  const [hydrated, setHydrated] = useState([]);
 
   useEffect(() => {
+    const samples = artistGallery.filter((img) => ratings[img.id]);
+    const candidates = artistGallery.filter(
+      (img) => img.galleryEligible && !ratings[img.id]
+    );
+
+    const tagPools = aggregateSampleTags(samples, ratings);
+
+    const exploratoryIds = candidates
+      .filter((img) => {
+        const tags = extractAllTags(img.metadata);
+        return tags.every((tag) => !tagPools.less.has(tag));
+      })
+      .map((img) => ({
+        ...img,
+        matchScore: scoreImage(img, tagPools)
+      }))
+      .filter((img) => img.matchScore >= 2 && img.matchScore <= 6)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 15)
+      .map((img) => img.id);
+
+    const toHydrate = artistGallery.filter((img) => exploratoryIds.includes(img.id));
+
     async function hydrate() {
-      const samples = artistGallery.filter((img) => ratings[img.id]);
-      const candidates = artistGallery.filter(
-        (img) => img.galleryEligible && !ratings[img.id]
-      );
-
-      const tagPools = aggregateSampleTags(samples, ratings);
-
-      const filtered = candidates
-        .filter((img) => {
-          const tags = extractAllTags(img.metadata);
-          return tags.every((tag) => !tagPools.less.has(tag));
-        })
-        .map((img) => ({
-          ...img,
-          matchScore: scoreImage(img, tagPools)
-        }))
-        .filter((img) => img.matchScore >= 2 && img.matchScore <= 6)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 15);
-
       const hydrated = await Promise.all(
-        filtered.map(async (img) => {
-          if (!img.localRefId) return img;
+        toHydrate.map(async (img) => {
           try {
             const blob = await loadBlob(img.localRefId);
-            if (!blob) throw new Error('no blob');
-            const file = new File([blob], img.name, { type: blob.type });
-            const url = img.url || URL.createObjectURL(blob);
-            return { ...img, file, url };
+            const url = URL.createObjectURL(blob);
+            return { id: img.id, name: img.name, url };
           } catch {
-            return img;
+            return { id: img.id, name: img.name, url: '' };
           }
         })
       );
-
-      setHydratedImages(hydrated);
+      setHydrated(hydrated);
     }
 
     hydrate();
@@ -78,6 +77,7 @@ export default function CuratedGallery2() {
       >
         Still You — But More
       </h2>
+
       <div
         style={{
           display: 'grid',
@@ -85,7 +85,7 @@ export default function CuratedGallery2() {
           gap: '2rem'
         }}
       >
-        {hydratedImages.map((img) => (
+        {hydrated.map((img) => (
           <div key={img.id} style={{ textAlign: 'center' }}>
             <img
               src={img.url}
