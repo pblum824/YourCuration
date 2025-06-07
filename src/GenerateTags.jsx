@@ -196,11 +196,12 @@ export default function GenerateTags() {
           flexWrap: 'wrap',
           gap: '2rem',
           justifyContent: 'center',
+          alignItems: 'flex-end',
           marginTop: '2rem',
         }}
       >
         {images.map((img) => (
-          <div key={img.id} style={{ width: '280px', textAlign: 'center' }}>
+          <div key={img.id} style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
             <img
               src={img.url}
               alt={img.name}
@@ -241,14 +242,11 @@ export default function GenerateTags() {
               <strong>Tags (editable)</strong>
             </div>
 
-            {['imageTags', 'textTags', 'toneTags', 'moodTags', 'paletteTags'].map((key) => (
-              <EditableTagList
-                key={key}
-                tags={img.metadata?.[key] || []}
-                label={key.replace('Tags', '')}
-                onChange={(values) => updateTagField(img.id, key, values)}
-              />
-            ))}
+            <EditableTagList
+              tags={img.metadata?.imageTags || []}
+              label={'image'}
+              onChange={(values) => updateTagField(img.id, 'imageTags', values)}
+            />
 
             {img.metadata?.error && (
               <div
