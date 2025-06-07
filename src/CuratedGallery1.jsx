@@ -20,56 +20,61 @@ export default function CuratedGallery1({ setView }) {
   const [medium, setMedium] = useState([]);
   const [weak, setWeak] = useState([]);
   const [hydrated, setHydrated] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const RATING_WEIGHTS = { love: 2, like: 1, less: 0 };
-    const numericRatings = Object.fromEntries(
-      Object.entries(ratings).map(([id, val]) => [id, RATING_WEIGHTS[val]])
-    );
-
-    const sampleImgs = artistGallery.filter((img) => ratings[img.id]);
-    setSamples(sampleImgs);
-
-    const candidates = artistGallery.filter(
-      (img) => img.galleryEligible && !ratings[img.id]
-    );
-
-    const tags = aggregateSampleTags(sampleImgs, numericRatings);
-    setTagPools(tags);
-
-    const scoredImgs = candidates.map((img) => ({
-      ...img,
-      matchScore: scoreImage(img, tags),
-    }));
-
-    setScored(scoredImgs);
-
-    const strong = scoredImgs.filter((img) => img.matchScore >= 6).slice(0, 8);
-    const medium = scoredImgs.filter((img) => img.matchScore >= 2 && img.matchScore < 6).slice(0, 8);
-    const weak = scoredImgs.filter((img) => img.matchScore < 2).slice(0, 4);
-
-    setStrong(strong);
-    setMedium(medium);
-    setWeak(weak);
-
-    const all = [...strong, ...medium, ...weak];
-
-    async function hydrate() {
-      const hydrated = await Promise.all(
-        all.map(async (img) => {
-          try {
-            const blob = await loadBlob(img.localRefId);
-            const url = URL.createObjectURL(blob);
-            return { id: img.id, name: img.name, url };
-          } catch {
-            return { id: img.id, name: img.name, url: '' };
-          }
-        })
+    try {
+      const RATING_WEIGHTS = { love: 2, like: 1, less: 0 };
+      const numericRatings = Object.fromEntries(
+        Object.entries(ratings).map(([id, val]) => [id, RATING_WEIGHTS[val]])
       );
-      setHydrated(hydrated);
-    }
 
-    hydrate();
+      const sampleImgs = artistGallery.filter((img) => ratings[img.id]);
+      setSamples(sampleImgs);
+
+      const candidates = artistGallery.filter(
+        (img) => img.galleryEligible && !ratings[img.id]
+      );
+
+      const tags = aggregateSampleTags(sampleImgs, numericRatings);
+      setTagPools(tags);
+
+      const scoredImgs = candidates.map((img) => ({
+        ...img,
+        matchScore: scoreImage(img, tags),
+      }));
+
+      setScored(scoredImgs);
+
+      const strong = scoredImgs.filter((img) => img.matchScore >= 6).slice(0, 8);
+      const medium = scoredImgs.filter((img) => img.matchScore >= 2 && img.matchScore < 6).slice(0, 8);
+      const weak = scoredImgs.filter((img) => img.matchScore < 2).slice(0, 4);
+
+      setStrong(strong);
+      setMedium(medium);
+      setWeak(weak);
+
+      const all = [...strong, ...medium, ...weak];
+
+      async function hydrate() {
+        const hydrated = await Promise.all(
+          all.map(async (img) => {
+            try {
+              const blob = await loadBlob(img.localRefId);
+              const url = URL.createObjectURL(blob);
+              return { id: img.id, name: img.name, url };
+            } catch {
+              return { id: img.id, name: img.name, url: '' };
+            }
+          })
+        );
+        setHydrated(hydrated);
+      }
+
+      hydrate();
+    } catch (err) {
+      setError(err.message || 'Unknown error in CG1');
+    }
   }, [artistGallery, ratings]);
 
   const handleToggle = (id) => {
@@ -80,9 +85,16 @@ export default function CuratedGallery1({ setView }) {
     });
   };
 
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', color: 'red', fontFamily: 'monospace' }}>
+        ❌ CG1 Error: {error}
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '2rem' }}>
-      <p style={{ color: 'red', fontWeight: 'bold' }}>✅ Hello from CG1</p>
       <h2 style={{ fontFamily: 'Parisienne, cursive', fontSize: '2rem', color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
@@ -90,15 +102,7 @@ export default function CuratedGallery1({ setView }) {
       <div style={{ fontFamily: 'monospace', background: '#f9f9f9', padding: '1rem', border: '1px solid #ddd', marginBottom: '2rem' }}>
         <div><strong>Sample Images:</strong> {samples.map(s => s.name).join(', ') || 'None'}</div>
         <div><strong>Tag Pools:</strong> image={tagPools.image?.size || 0}, text={tagPools.text?.size || 0}, tone={tagPools.tone?.size || 0}</div>
-        <div><strong>Scored Images:</strong></div>
-        {scored.map((img) => {
-          const tier = img.matchScore >= 6 ? 'strong' : img.matchScore >= 2 ? 'medium' : 'weak';
-          return (
-            <div key={img.id}>
-              {img.name} → score: {img.matchScore.toFixed(2)} → {tier}
-            </div>
-          );
-        })}
+        <div><strong>Scored:</strong> {scored.length} candidates</div>
       </div>
 
       <div
