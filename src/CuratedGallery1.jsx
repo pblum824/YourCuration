@@ -7,7 +7,7 @@ export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
     ratings = {},
-    galleryRatings,
+    galleryRatings = {},
     setGalleryRatings
   } = useCuration();
 
@@ -72,38 +72,42 @@ export default function CuratedGallery1({ setView }) {
             gap: '2rem',
           }}
         >
-          {tierImages.map((img) => (
-            <div key={img.id} style={{ textAlign: 'center' }}>
-              <img
-                src={img.url}
-                alt={img.name}
-                style={{
-                  width: '100%',
-                  height: '200px',
-                  objectFit: 'cover',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                }}
-              />
-              <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-              <button
-                onClick={() => approveImage(img.id)}
-                style={{
-                  marginTop: '0.75rem',
-                  padding: '0.5rem 1rem',
-                  fontFamily: 'sans-serif',
-                  fontSize: '0.9rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #ccc',
-                  backgroundColor: galleryRatings[img.id] === 2 ? '#d1fae5' : '#f9fafb',
-                  color: '#1e3a8a',
-                  cursor: 'pointer',
-                }}
-              >
-                {galleryRatings[img.id] === 2 ? '✅ Selected' : 'More Like This'}
-              </button>
-            </div>
-          ))}
+          {tierImages.map((img) => {
+            const approved = galleryRatings?.[img.id] === 2;
+
+            return (
+              <div key={img.id} style={{ textAlign: 'center' }}>
+                <img
+                  src={img.url}
+                  alt={img.name}
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'cover',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  }}
+                />
+                <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+                <button
+                  onClick={() => approveImage(img.id)}
+                  style={{
+                    marginTop: '0.75rem',
+                    padding: '0.5rem 1rem',
+                    fontFamily: 'sans-serif',
+                    fontSize: '0.9rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #ccc',
+                    backgroundColor: approved ? '#d1fae5' : '#f9fafb',
+                    color: '#1e3a8a',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {approved ? '✅ Selected' : 'More Like This'}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </>
     );
