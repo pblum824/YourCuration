@@ -50,11 +50,18 @@ export default function CuratedGallery2({ setView }) {
             return {
               id: img.id,
               name: img.name,
+              localRefId: img.localRefId,
               url,
               matchScore: img.matchScore,
             };
           } catch {
-            return { id: img.id, name: img.name, url: '', matchScore: img.matchScore };
+            return {
+              id: img.id,
+              name: img.name,
+              localRefId: img.localRefId,
+              url: '',
+              matchScore: img.matchScore,
+            };
           }
         })
       );
@@ -92,20 +99,42 @@ export default function CuratedGallery2({ setView }) {
 
           return (
             <div key={img.id} style={{ textAlign: 'center' }}>
-              <img
-                src={img.url}
-                alt={img.name}
-                style={{
-                  width: '100%',
-                  height: '200px',
-                  objectFit: 'cover',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                }}
-              />
+              {img.url ? (
+                <img
+                  src={img.url}
+                  alt={img.name}
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'cover',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#f3f4f6',
+                    borderRadius: '0.5rem',
+                    color: '#999',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  image not loaded
+                </div>
+              )}
+
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
               <p style={{ fontSize: '0.85rem', color: '#555' }}>
                 score: {typeof img.matchScore === 'number' ? img.matchScore : '—'}
+              </p>
+              <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                id: {img.id} | ref: {img.localRefId ?? '—'}
               </p>
               <button
                 onClick={() => approveImage(img.id)}
