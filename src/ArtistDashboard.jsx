@@ -1,12 +1,10 @@
-// File: src/ArtistDashboard.jsx
-
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
 import { saveBlob } from './utils/dbCache';
 import GalleryControls from './GalleryControls';
 import HeroSection from './HeroSection';
-import GalleryGrid from './GalleryGrid';
+import ImageCard from './ImageCard';
 import DevToggle from './DevToggle';
 import MultiFilePicker from './MultiFilePicker';
 import UploadWarnings from './UploadWarnings';
@@ -25,6 +23,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
   const [logs, setLogs] = useState([]);
+
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   const isValidImage = (img) => img?.id && img?.url && img?.name;
@@ -76,23 +75,17 @@ export default function ArtistDashboard({ setView }) {
 
   const toggleImageSample = (id) =>
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img))
     );
 
   const toggleImageGallery = (id) =>
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img))
     );
 
   const toggleImageScrape = (id) =>
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img))
     );
 
   const removeImage = (id) => {
@@ -157,14 +150,19 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <GalleryGrid
-        images={viewGallery.filter(isValidImage)}
-        onToggleScrape={toggleImageScrape}
-        onRemove={removeImage}
-        onToggleGallery={toggleImageGallery}
-        onToggleSample={toggleImageSample}
-        devMode={devMode}
-      />
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+        {viewGallery.filter(isValidImage).map((img) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            onToggleSample={toggleImageSample}
+            onToggleGallery={toggleImageGallery}
+            onToggleScrape={toggleImageScrape}
+            onRemove={removeImage}
+            devMode={devMode}
+          />
+        ))}
+      </div>
     </div>
   );
 }

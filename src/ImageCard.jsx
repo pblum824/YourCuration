@@ -1,5 +1,4 @@
-// File: src/ImageCard.jsx
-
+// File: src/components/ImageCard.jsx
 import React from 'react';
 
 export default function ImageCard({
@@ -8,56 +7,59 @@ export default function ImageCard({
   onToggleGallery,
   onToggleScrape,
   onRemove,
+  devMode = false,
 }) {
-  const imageButton = (bg, color = '#1e3a8a') => ({
-    padding: '0.5rem 1rem',
-    fontSize: '1rem',
-    borderRadius: '0.5rem',
-    border: '1px solid #ccc',
-    backgroundColor: bg,
-    color,
-    cursor: 'pointer',
-    minWidth: '96px',
-  });
+  if (!image) return null;
 
   return (
-    <div style={{ width: '280px', textAlign: 'center' }}>
+    <div
+      style={{
+        padding: '1rem',
+        borderRadius: '1rem',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        margin: '1rem',
+        width: '240px',
+        textAlign: 'center',
+        backgroundColor: '#fff',
+      }}
+    >
+      {devMode && (
+        <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem' }}>
+          🔍 rendering: {image.name}
+        </div>
+      )}
       <img
         src={image.url}
         alt={image.name}
-        style={{ width: '100%', borderRadius: '0.5rem' }}
+        style={{ width: '100%', height: 'auto', borderRadius: '0.5rem' }}
       />
-      <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{image.name}</p>
+      <p style={{ marginTop: '0.5rem', fontWeight: 500 }}>{image.name}</p>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '0.5rem',
-          marginTop: '0.5rem',
-        }}
-      >
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem' }}>
         <button
-          onClick={() => onToggleScrape(image.id)}
-          style={imageButton(image.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+          onClick={() => onToggleScrape?.(image.id)}
+          style={{ background: '#d1fae5', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
         >
-          {image.scrapeEligible ? 'Accepted' : 'Excluded'}
+          Accepted
         </button>
+
         <button
-          onClick={() => onToggleGallery(image.id)}
-          style={imageButton(image.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+          onClick={() => onToggleGallery?.(image.id)}
+          style={{ background: '#e0e7ff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
         >
           Gallery
         </button>
+
         <button
-          onClick={() => onToggleSample(image.id)}
-          style={imageButton(image.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+          onClick={() => onToggleSample?.(image.id)}
+          style={{ background: '#ede9fe', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
         >
           Sample
         </button>
+
         <button
-          onClick={() => onRemove(image.id)}
-          style={imageButton('#fee2e2', '#991b1b')}
+          onClick={() => onRemove?.(image.id)}
+          style={{ background: '#fcdcdc', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
         >
           Remove
         </button>
