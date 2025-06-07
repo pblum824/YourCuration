@@ -266,22 +266,7 @@ export default function GenerateTags() {
                 <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
               </div>
             )}
-            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
-              <strong>Tags (backend)</strong>
-            </div>
-
-            {['imageTags', 'textTags', 'toneTags', 'moodTags', 'paletteTags'].map(
-              (key) =>
-                img.metadata?.[key]?.length > 0 && (
-                  <div
-                    key={key}
-                    style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}
-                  >
-                    <strong>[{key.replace('Tags', '')}]</strong>{' '}
-                    {img.metadata[key].join(', ')}
-                  </div>
-                )
-            )}
+            
 
             <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
               <strong>Tag (user)</strong>
