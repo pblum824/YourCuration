@@ -3,8 +3,15 @@ import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
 
+const LABELS = ['Less', 'Maybe', 'Yes!!'];
+
 export default function CuratedGallery1({ setView }) {
-  const { artistGallery = [], ratings = {} } = useCuration();
+  const {
+    artistGallery = [],
+    ratings = {},
+    galleryRatings,
+    setGalleryRatings
+  } = useCuration();
 
   const [groups, setGroups] = useState({ strong: [], medium: [], weak: [] });
   const [hydrated, setHydrated] = useState([]);
@@ -47,6 +54,14 @@ export default function CuratedGallery1({ setView }) {
     }
   }, [artistGallery, ratings]);
 
+  const handleToggle = (id) => {
+    setGalleryRatings((prev) => {
+      const current = prev[id] ?? 1;
+      const next = (current + 1) % 3;
+      return { ...prev, [id]: next };
+    });
+  };
+
   const renderGroup = (label, group) => {
     const tierImages = hydrated.filter((img) =>
       group.find((g) => g.id === img.id)
@@ -81,6 +96,26 @@ export default function CuratedGallery1({ setView }) {
               <p style={{ fontSize: '0.85rem', color: '#555' }}>
                 score: {typeof img.matchScore === 'number' ? img.matchScore.toFixed(2) : '—'}
               </p>
+              <button
+                onClick={() => handleToggle(img.id)}
+                style={{
+                  marginTop: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  fontFamily: 'Parisienne, cursive',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #ccc',
+                  backgroundColor:
+                    galleryRatings[img.id] === 2
+                      ? '#d1fae5'
+                      : galleryRatings[img.id] === 1
+                      ? '#fef9c3'
+                      : '#fee2e2',
+                  color: '#1e3a8a',
+                  cursor: 'pointer',
+                }}
+              >
+                {LABELS[galleryRatings[img.id] ?? 1]}
+              </button>
             </div>
           ))}
         </div>
