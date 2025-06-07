@@ -38,10 +38,10 @@ export default function CuratedGallery1({ setView }) {
                 id: img.id,
                 name: img.name,
                 url,
-                matchScore: img.matchScore,
+                matchScore: typeof img.matchScore === 'number' ? img.matchScore : null,
               };
             } catch {
-              return { id: img.id, name: img.name, url: '', matchScore: img.matchScore };
+              return { id: img.id, name: img.name, url: '', matchScore: null };
             }
           })
         );
