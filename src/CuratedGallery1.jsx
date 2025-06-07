@@ -18,6 +18,9 @@ export default function CuratedGallery1() {
 
   useEffect(() => {
     const result = curateGallery1({ artistGallery, ratings });
+    <div style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: '#999', marginBottom: '1rem' }}>
+      Debug: showing {hydrated.length} hydrated images
+    </div>
     const allIds = [
       ...(result.strong || []),
       ...(result.medium || []),
