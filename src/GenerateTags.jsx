@@ -14,6 +14,17 @@ export default function GenerateTags() {
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
+  const imageButton = (bg, color = '#1e3a8a') => ({
+    padding: '0.5rem 1rem',
+    fontSize: '1rem',
+    borderRadius: '0.5rem',
+    border: '1px solid #ccc',
+    backgroundColor: bg,
+    color,
+    cursor: 'pointer',
+    minWidth: '96px'
+  });
+
   useEffect(() => {
     async function hydrateImages() {
       const hydrated = await Promise.all(
@@ -200,10 +211,30 @@ export default function GenerateTags() {
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <button onClick={() => toggleScrape(img.id)}>Scrape</button>
-              <button onClick={() => toggleGallery(img.id)}>Gallery</button>
-              <button onClick={() => toggleSample(img.id)}>Sample</button>
-              <button onClick={() => removeImage(img.id)}>Remove</button>
+              <button
+                onClick={() => toggleScrape(img.id)}
+                style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+              >
+                {img.scrapeEligible ? 'Accepted' : 'Excluded'}
+              </button>
+              <button
+                onClick={() => toggleGallery(img.id)}
+                style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+              >
+                Gallery
+              </button>
+              <button
+                onClick={() => toggleSample(img.id)}
+                style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+              >
+                Sample
+              </button>
+              <button
+                onClick={() => removeImage(img.id)}
+                style={imageButton('#fee2e2', '#991b1b')}
+              >
+                Remove
+              </button>
             </div>
 
             <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#555' }}>
