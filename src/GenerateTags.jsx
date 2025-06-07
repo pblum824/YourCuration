@@ -1,19 +1,13 @@
-// File: src/GenerateTags.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
-import EditableTagList from './EditableTagList';
-import ImageCard from './ImageCard';
+import GalleryGrid from './GalleryGrid';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
 
   const [localGallery, setLocalGallery] = useState([]);
-  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
     async function hydrateImages() {
@@ -48,49 +42,29 @@ export default function GenerateTags() {
 
   const images = localGallery;
 
-  const toggleSample = (id) => {
+  const toggleSample = (id) =>
     setArtistGallery((prev) =>
       prev.map((img) =>
         img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
       )
     );
-  };
 
-  const toggleGallery = (id) => {
+  const toggleGallery = (id) =>
     setArtistGallery((prev) =>
       prev.map((img) =>
         img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
       )
     );
-  };
 
-  const toggleScrape = (id) => {
+  const toggleScrape = (id) =>
     setArtistGallery((prev) =>
       prev.map((img) =>
         img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
       )
     );
-  };
 
-  const removeImage = (id) => {
+  const removeImage = (id) =>
     setArtistGallery((prev) => prev.filter((img) => img.id !== id));
-  };
-
-  const updateTagField = (id, key, values) => {
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id
-          ? {
-              ...img,
-              metadata: {
-                ...img.metadata,
-                [key]: values,
-              },
-            }
-          : img
-      )
-    );
-  };
 
   async function compressImage(file, maxDim = 384, quality = 0.7) {
     return new Promise((resolve) => {
@@ -124,12 +98,7 @@ export default function GenerateTags() {
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
 
-      if (uploadable.length === 0) {
-        logToScreen('[GenerateTags] No images selected. Nothing to tag.');
-        return;
-      }
-
-      logToScreen(`[GenerateTags] Uploading ${uploadable.length} images`);
+      if (uploadable.length === 0) return;
 
       const formData = new FormData();
       for (const img of uploadable) {
@@ -158,7 +127,19 @@ export default function GenerateTags() {
         prev.map((img) => tagged.find((t) => t.id === img.id) || img)
       );
     } catch (err) {
-      logToScreen(`[GenerateTags] Batch error: ${err.message}`);
+      const fallback = images.map((img) => ({
+        ...img,
+        metadata: {
+          ...img.metadata,
+          imageTags: [],
+          textTags: [],
+          toneTags: [],
+          moodTags: [],
+          paletteTags: [],
+          error: err.message,
+        },
+      }));
+      setArtistGallery(fallback);
     } finally {
       setLoading(false);
     }
@@ -166,46 +147,33 @@ export default function GenerateTags() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        style={{ padding: '0.75rem 1.25rem' }}
-      >
-        {loading ? 'Generating Tags...' : 'Generate MetaTags'}
-      </button>
-
-      <div style={{ marginTop: '1rem', fontFamily: 'monospace' }}>
-        {logs.map((log, i) => (
-          <div key={i}>📝 {log}</div>
-        ))}
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.25rem',
+            borderRadius: '0.5rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? 'Generating Tags...' : 'Generate MetaTags'}
+        </button>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '2rem',
-          justifyContent: 'center',
-          alignItems: 'flex-end',
-          marginTop: '2rem',
-        }}
-      >
-        {images.map((img, i) => (
-          <div key={img.id}>
-            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#888' }}>
-              🔍 rendering: {img.name}
-            </div>
-            <ImageCard
-              image={img}
-              onToggleSample={toggleSample}
-              onToggleGallery={toggleGallery}
-              onToggleScrape={toggleScrape}
-              onRemove={removeImage}
-              onUpdateTag={updateTagField}
-            />
-          </div>
-        ))}
-      </div>
+      <GalleryGrid
+        images={images}
+        onToggleSample={toggleSample}
+        onToggleGallery={toggleGallery}
+        onToggleScrape={toggleScrape}
+        onRemove={removeImage}
+        devMode={false}
+      />
     </div>
   );
 }
