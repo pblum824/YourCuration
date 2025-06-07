@@ -32,7 +32,7 @@ export default function CuratedGallery2({ setView }) {
           matchScore: scoreImage(img, tagPools),
         }))
         .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
-        .slice(0, 15);
+        .slice(0, 40);
 
       setCandidates(scored);
     } catch (err) {
