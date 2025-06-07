@@ -11,16 +11,16 @@ export default function GalleryGrid({
   devMode,
 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '2rem',
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-        minHeight: '240px',
-      }}
-    >
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          alignItems: 'stretch', // ensures card bottoms align
+          gap: '2rem',
+          padding: '1rem',
+        }}
+      >
       {images.map((img) => (
         <ImageCard
           key={img.id}

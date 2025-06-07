@@ -15,9 +15,10 @@ export default function ImageCard({
     <div
       style={{
         width: '280px',
+        minHeight: '460px',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
         alignItems: 'center',
         textAlign: 'center',
       }}
@@ -43,37 +44,6 @@ export default function ImageCard({
       >
         {image.name}
       </p>
-
-      {image.metadata?.imageTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[image]</strong> {image.metadata.imageTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.textTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[text]</strong> {image.metadata.textTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.toneTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[tone]</strong> {image.metadata.toneTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.moodTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[mood]</strong> {image.metadata.moodTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.paletteTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[palette]</strong> {image.metadata.paletteTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.error && (
-        <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-          <strong>Error:</strong> {image.metadata.error}
-        </div>
-      )}
 
       <div
         style={{
@@ -107,6 +77,40 @@ export default function ImageCard({
         >
           Sample
         </button>
+      </div>
+
+      {/* tag blocks go below the buttons for stable height */}
+      <div style={{ fontSize: '0.85rem', marginTop: '0.5rem', maxWidth: '100%' }}>
+        {image.metadata?.imageTags?.length > 0 && (
+          <div>
+            <strong>[image]</strong> {image.metadata.imageTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.textTags?.length > 0 && (
+          <div>
+            <strong>[text]</strong> {image.metadata.textTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.toneTags?.length > 0 && (
+          <div>
+            <strong>[tone]</strong> {image.metadata.toneTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.moodTags?.length > 0 && (
+          <div>
+            <strong>[mood]</strong> {image.metadata.moodTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.paletteTags?.length > 0 && (
+          <div>
+            <strong>[palette]</strong> {image.metadata.paletteTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.error && (
+          <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            <strong>Error:</strong> {image.metadata.error}
+          </div>
+        )}
       </div>
 
       {devMode && (
