@@ -1,12 +1,13 @@
-// File: src/components/ImageCard.jsx
+// File: src/ImageCard.jsx
 import React from 'react';
+import { imageButton } from './utils/styles';
 
 export default function ImageCard({
   image,
-  onToggleSample,
-  onToggleGallery,
   onToggleScrape,
   onRemove,
+  onToggleGallery,
+  onToggleSample,
   devMode = false,
 }) {
   if (!image) return null;
@@ -14,56 +15,81 @@ export default function ImageCard({
   return (
     <div
       style={{
-        padding: '1rem',
-        borderRadius: '1rem',
-        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-        margin: '1rem',
-        width: '240px',
-        textAlign: 'center',
-        backgroundColor: '#fff',
+        width: '280px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
       }}
     >
-      {devMode && (
-        <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem' }}>
-          🔍 rendering: {image.name}
-        </div>
-      )}
       <img
         src={image.url}
         alt={image.name}
-        style={{ width: '100%', height: 'auto', borderRadius: '0.5rem' }}
+        style={{
+          height: '200px',
+          width: '100%',
+          objectFit: 'contain',
+          borderRadius: '0.5rem',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        }}
       />
-      <p style={{ marginTop: '0.5rem', fontWeight: 500 }}>{image.name}</p>
+      <p
+        style={{
+          fontStyle: 'italic',
+          fontFamily: 'sans-serif',
+          marginTop: '0.5rem',
+        }}
+      >
+        {image.name}
+      </p>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '0.5rem',
+          marginTop: '0.5rem',
+        }}
+      >
         <button
           onClick={() => onToggleScrape?.(image.id)}
-          style={{ background: '#d1fae5', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+          style={imageButton(image.scrapeEligible ? '#d1fae5' : '#fee2e2')}
         >
-          Accepted
+          {image.scrapeEligible ? 'Accepted' : 'Excluded'}
         </button>
-
-        <button
-          onClick={() => onToggleGallery?.(image.id)}
-          style={{ background: '#e0e7ff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
-        >
-          Gallery
-        </button>
-
-        <button
-          onClick={() => onToggleSample?.(image.id)}
-          style={{ background: '#ede9fe', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
-        >
-          Sample
-        </button>
-
         <button
           onClick={() => onRemove?.(image.id)}
-          style={{ background: '#fcdcdc', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+          style={imageButton('#fee2e2', '#991b1b')}
         >
           Remove
         </button>
+        <button
+          onClick={() => onToggleGallery?.(image.id)}
+          style={imageButton(image.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+        >
+          Gallery
+        </button>
+        <button
+          onClick={() => onToggleSample?.(image.id)}
+          style={imageButton(image.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+        >
+          Sample
+        </button>
       </div>
+
+      {devMode && (
+        <pre
+          style={{
+            fontSize: '0.75rem',
+            marginTop: '0.5rem',
+            textAlign: 'left',
+            maxWidth: '100%',
+            overflowX: 'auto',
+          }}
+        >
+          {JSON.stringify(image.metadata, null, 2)}
+        </pre>
+      )}
     </div>
   );
 }
