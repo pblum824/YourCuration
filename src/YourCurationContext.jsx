@@ -1,51 +1,34 @@
-// File: src/YourCurationContext.jsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-const YourCurationContext = createContext();
+const CurationContext = createContext();
 
 export function YourCurationProvider({ children }) {
-  const [artistGallery, setArtistGallery] = useState(() => {
-    const saved = localStorage.getItem('artistGallery');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [ratings, setRatings] = useState(() => {
-    const saved = localStorage.getItem('ratings');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  useEffect(() => {
-    localStorage.setItem('artistGallery', JSON.stringify(artistGallery));
-  }, [artistGallery]);
-
-  useEffect(() => {
-    localStorage.setItem('ratings', JSON.stringify(ratings));
-  }, [ratings]);
-
-  // ✅ Add this helper to update image metadata persistently
-  const updateImageMetadata = (imageId, metadataUpdate) => {
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === imageId
-          ? { ...img, metadata: { ...img.metadata, ...metadataUpdate } }
-          : img
-      )
-    );
-  };
+  const [artistGallery, setArtistGallery] = useState([]);
+  const [ratings, setRatings] = useState({});
+  const [galleryRatings, setGalleryRatings] = useState({});
+  const [cg1Selections, setCG1Selections] = useState({});
+  const [cg2Selections, setCG2Selections] = useState({}); // optional future
 
   return (
-    <YourCurationContext.Provider
+    <CurationContext.Provider
       value={{
         artistGallery,
         setArtistGallery,
         ratings,
         setRatings,
-        updateImageMetadata,
+        galleryRatings,
+        setGalleryRatings,
+        cg1Selections,
+        setCG1Selections,
+        cg2Selections,
+        setCG2Selections, // optional for next step
       }}
     >
       {children}
-    </YourCurationContext.Provider>
+    </CurationContext.Provider>
   );
 }
 
-export const useCuration = () => useContext(YourCurationContext);
+export function useCuration() {
+  return useContext(CurationContext);
+}

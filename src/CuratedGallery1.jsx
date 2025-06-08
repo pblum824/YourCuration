@@ -7,6 +7,7 @@ export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
     ratings = {},
+    setCG1Selections
   } = useCuration();
 
   const [groups, setGroups] = useState({ strong: [], medium: [], weak: [] });
@@ -133,7 +134,10 @@ export default function CuratedGallery1({ setView }) {
 
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
-          onClick={() => setView('curated2')}
+          onClick={() => {
+            setCG1Selections(selections); // ✅ Save before proceeding
+            setView('curated2');
+          }}
           style={{
             padding: '1rem 2rem',
             fontSize: '1.1rem',

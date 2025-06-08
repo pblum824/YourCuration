@@ -4,7 +4,11 @@ import { aggregateSampleTags, scoreImage, extractAllTags } from './utils/scoreIm
 import { loadBlob } from './utils/dbCache';
 
 export default function CuratedGallery2({ setView }) {
-  const { artistGallery = [], ratings = {} } = useCuration();
+  const {
+    artistGallery = [],
+    ratings = {},
+    setCG2Selections
+  } = useCuration();
 
   const [candidates, setCandidates] = useState([]);
   const [hydrated, setHydrated] = useState([]);
@@ -34,16 +38,15 @@ export default function CuratedGallery2({ setView }) {
         }))
         .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
 
-      setCandidates(scored.slice(0, 40)); // Grab more candidates for testing
+      setCandidates(scored.slice(0, 40));
 
-      // Compute debug stats
       const scores = scored.map((i) => i.matchScore).filter(Number.isFinite);
       const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
       setStats({
         totalCandidates: rawCandidates.length,
         safeCandidates: safe.length,
         scored: scored.length,
-        hydrated: 0, // update later
+        hydrated: 0,
         avgScore: avg.toFixed(2),
         maxScore: Math.max(...scores),
         minScore: Math.min(...scores),
@@ -190,7 +193,10 @@ Average Score:              ${stats.avgScore}`}
 
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
-          onClick={() => setView('curatedFinal')}
+          onClick={() => {
+            setCG2Selections(selections); // ✅ Save CG2 picks
+            setView('curatedFinal');      // ➡️ Move forward
+          }}
           style={{
             padding: '1rem 2rem',
             fontSize: '1.1rem',
