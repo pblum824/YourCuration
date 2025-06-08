@@ -61,6 +61,31 @@ export default function GenerateTags({ setView }) {
     }
   };
 
+  async function compressImage(file, maxDim = 384, quality = 0.7) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+      img.onload = () => {
+        const scale = maxDim / Math.max(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) =>
+            resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+          'image/jpeg',
+          quality
+        );
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   const handleGenerate = async () => {
     setLoading(true);
     try {
@@ -143,29 +168,4 @@ export default function GenerateTags({ setView }) {
       />
     </div>
   );
-}
-
-async function compressImage(file, maxDim = 384, quality = 0.7) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target.result;
-    };
-    img.onload = () => {
-      const scale = maxDim / Math.max(img.width, img.height);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) =>
-          resolve(new File([blob], file.name, { type: 'image/jpeg' })),
-        'image/jpeg',
-        quality
-      );
-    };
-    reader.readAsDataURL(file);
-  });
 }
