@@ -24,7 +24,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
   const [logs, setLogs] = useState([]);
-  const [sampleWarning, setSampleWarning] = useState(false);
+  const [sampleWarningId, setSampleWarningId] = useState(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   const isValidImage = (img) => img?.id && img?.url && img?.name;
@@ -78,15 +78,15 @@ export default function ArtistDashboard({ setView }) {
     const sampleCount = artistGallery.filter((img) => img.sampleEligible).length;
     const isTargetSample = artistGallery.find((img) => img.id === id)?.sampleEligible;
 
-    if (isTargetSample || sampleCount < 16) {
+    if (isTargetSample || sampleCount < 15) {
       setArtistGallery((prev) =>
         prev.map((img) =>
           img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
         )
       );
-      setSampleWarning(false);
+      setSampleWarningId(null);
     } else {
-      setSampleWarning(true);
+      setSampleWarningId(id);
     }
   };
 
@@ -134,22 +134,6 @@ export default function ArtistDashboard({ setView }) {
         Artist Dashboard
       </h2>
 
-      {sampleWarning && (
-        <div
-          style={{
-            backgroundColor: '#fef3c7',
-            color: '#92400e',
-            border: '1px solid #facc15',
-            padding: '0.75rem 1rem',
-            marginBottom: '1rem',
-            borderRadius: '0.5rem',
-            fontSize: '0.95rem',
-          }}
-        >
-          To make SampleRater quick and easy for your clients, we recommend selecting no more than 16 samples.
-        </div>
-      )}
-
       <GalleryControls
         onExport={() => setView('generate')}
         onImport={() => {}}
@@ -189,6 +173,7 @@ export default function ArtistDashboard({ setView }) {
         onToggleGallery={toggleImageGallery}
         onToggleSample={toggleImageSample}
         devMode={devMode}
+        sampleWarningId={sampleWarningId}
       />
     </div>
   );

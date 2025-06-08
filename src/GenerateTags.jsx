@@ -10,7 +10,7 @@ export default function GenerateTags({ setView }) {
   const [localGallery, setLocalGallery] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [sampleWarning, setSampleWarning] = useState(false);
+  const [sampleWarningId, setSampleWarningId] = useState(null);
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
@@ -49,15 +49,15 @@ export default function GenerateTags({ setView }) {
     const sampleCount = artistGallery.filter((img) => img.sampleEligible).length;
     const isTargetSample = artistGallery.find((img) => img.id === id)?.sampleEligible;
 
-    if (isTargetSample || sampleCount < 16) {
+    if (isTargetSample || sampleCount < 15) {
       setArtistGallery((prev) =>
         prev.map((img) =>
           img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
         )
       );
-      setSampleWarning(false);
+      setSampleWarningId(null);
     } else {
-      setSampleWarning(true);
+      setSampleWarningId(id);
     }
   };
 
@@ -118,22 +118,6 @@ export default function GenerateTags({ setView }) {
         {loading ? 'Generating Tags...' : 'Generate MetaTags'}
       </button>
 
-      {sampleWarning && (
-        <div
-          style={{
-            backgroundColor: '#fef3c7',
-            color: '#92400e',
-            border: '1px solid #facc15',
-            padding: '0.75rem 1rem',
-            marginTop: '1rem',
-            borderRadius: '0.5rem',
-            fontSize: '0.95rem',
-          }}
-        >
-          To make SampleRater quick and easy for your clients, we recommend selecting no more than 16 samples.
-        </div>
-      )}
-
       <div style={{ marginTop: '1rem', fontFamily: 'monospace' }}>
         {logs.map((log, i) => (
           <div key={i}>📝 {log}</div>
@@ -144,6 +128,7 @@ export default function GenerateTags({ setView }) {
         images={localGallery}
         onToggleSample={toggleSample}
         devMode={false}
+        sampleWarningId={sampleWarningId}
       />
     </div>
   );
