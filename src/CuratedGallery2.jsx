@@ -1,3 +1,4 @@
+// File: src/CuratedGallery2.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { aggregateSampleTags, scoreImage, extractAllTags } from './utils/scoreImage';
@@ -13,44 +14,26 @@ export default function CuratedGallery2({ setView }) {
   const [candidates, setCandidates] = useState([]);
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
-  const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     try {
       const samples = artistGallery.filter((img) => ratings[img.id]);
-
       const rawCandidates = artistGallery.filter(
         (img) => img.galleryEligible && !ratings[img.id]
       );
-
       const tagPools = aggregateSampleTags(samples, ratings);
-
       const safe = rawCandidates.filter((img) => {
         const tags = extractAllTags(img.metadata || {});
         return tags.every((tag) => !tagPools.less.has(tag));
       });
-
       const scored = safe
         .map((img) => ({
           ...img,
           matchScore: scoreImage(img, tagPools),
         }))
         .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
-
-      setCandidates(scored.slice(0, 40));
-
-      const scores = scored.map((i) => i.matchScore).filter(Number.isFinite);
-      const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-      setStats({
-        totalCandidates: rawCandidates.length,
-        safeCandidates: safe.length,
-        scored: scored.length,
-        hydrated: 0,
-        avgScore: avg.toFixed(2),
-        maxScore: Math.max(...scores),
-        minScore: Math.min(...scores),
-      });
+      setCandidates(scored.slice(0, 20));
     } catch (err) {
       setError(err.message || 'CG2 scoring failed.');
     }
@@ -82,12 +65,8 @@ export default function CuratedGallery2({ setView }) {
         })
       );
       setHydrated(hydrated);
-      setStats((s) => ({ ...s, hydrated: hydrated.length }));
     }
-
-    if (candidates.length > 0) {
-      hydrate();
-    }
+    if (candidates.length > 0) hydrate();
   }, [candidates]);
 
   const approveImage = (id) => {
@@ -104,35 +83,16 @@ export default function CuratedGallery2({ setView }) {
         Still You — But More
       </h2>
 
-      {stats && (
-        <pre style={{
-          background: '#f9f9f9',
-          border: '1px solid #ddd',
-          padding: '1rem',
-          fontSize: '0.85rem',
-          marginBottom: '2rem',
-          fontFamily: 'monospace',
-        }}>
-{`🔍 CG2 Debug Stats:
-Total Gallery Candidates:   ${stats.totalCandidates}
-Safe (non-less):            ${stats.safeCandidates}
-Scored Images:              ${stats.scored}
-Hydrated Images:            ${stats.hydrated}
-Score Range:                ${stats.minScore} → ${stats.maxScore}
-Average Score:              ${stats.avgScore}`}
-        </pre>
-      )}
-
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '2rem',
+          justifyItems: 'center',
         }}
       >
         {hydrated.map((img) => {
           const isSelected = selections[img.id] === 2;
-
           return (
             <div key={img.id} style={{ textAlign: 'center' }}>
               {img.url ? (
@@ -164,7 +124,6 @@ Average Score:              ${stats.avgScore}`}
                   image not loaded
                 </div>
               )}
-
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
               <p style={{ fontSize: '0.85rem', color: '#555' }}>
                 score: {typeof img.matchScore === 'number' ? img.matchScore : '—'}
@@ -194,8 +153,8 @@ Average Score:              ${stats.avgScore}`}
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
           onClick={() => {
-            setCG2Selections(selections); // ✅ Save CG2 picks
-            setView('curatedFinal');      // ➡️ Move forward
+            setCG2Selections(selections);
+            setView('curatedFinal');
           }}
           style={{
             padding: '1rem 2rem',

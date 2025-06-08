@@ -1,10 +1,11 @@
+// File: src/ArtistDashboard.jsx
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
 import { saveBlob } from './utils/dbCache';
 import GalleryControls from './GalleryControls';
 import HeroSection from './HeroSection';
-import ImageCard from './ImageCard';
+import GalleryGrid from './GalleryGrid';
 import DevToggle from './DevToggle';
 import MultiFilePicker from './MultiFilePicker';
 import UploadWarnings from './UploadWarnings';
@@ -23,7 +24,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
   const [logs, setLogs] = useState([]);
-
+  const [sampleWarning, setSampleWarning] = useState(false);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   const isValidImage = (img) => img?.id && img?.url && img?.name;
@@ -73,19 +74,34 @@ export default function ArtistDashboard({ setView }) {
     });
   };
 
-  const toggleImageSample = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img))
-    );
+  const toggleImageSample = (id) => {
+    const sampleCount = artistGallery.filter((img) => img.sampleEligible).length;
+    const isTargetSample = artistGallery.find((img) => img.id === id)?.sampleEligible;
+
+    if (isTargetSample || sampleCount < 16) {
+      setArtistGallery((prev) =>
+        prev.map((img) =>
+          img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+        )
+      );
+      setSampleWarning(false);
+    } else {
+      setSampleWarning(true);
+    }
+  };
 
   const toggleImageGallery = (id) =>
     setArtistGallery((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img))
+      prev.map((img) =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
     );
 
   const toggleImageScrape = (id) =>
     setArtistGallery((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img))
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
     );
 
   const removeImage = (id) => {
@@ -117,6 +133,22 @@ export default function ArtistDashboard({ setView }) {
       >
         Artist Dashboard
       </h2>
+
+      {sampleWarning && (
+        <div
+          style={{
+            backgroundColor: '#fef3c7',
+            color: '#92400e',
+            border: '1px solid #facc15',
+            padding: '0.75rem 1rem',
+            marginBottom: '1rem',
+            borderRadius: '0.5rem',
+            fontSize: '0.95rem',
+          }}
+        >
+          To make SampleRater quick and easy for your clients, we recommend selecting no more than 16 samples.
+        </div>
+      )}
 
       <GalleryControls
         onExport={() => setView('generate')}
@@ -150,19 +182,14 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {viewGallery.filter(isValidImage).map((img) => (
-          <ImageCard
-            key={img.id}
-            image={img}
-            onToggleSample={toggleImageSample}
-            onToggleGallery={toggleImageGallery}
-            onToggleScrape={toggleImageScrape}
-            onRemove={removeImage}
-            devMode={devMode}
-          />
-        ))}
-      </div>
+      <GalleryGrid
+        images={viewGallery.filter(isValidImage)}
+        onToggleScrape={toggleImageScrape}
+        onRemove={removeImage}
+        onToggleGallery={toggleImageGallery}
+        onToggleSample={toggleImageSample}
+        devMode={devMode}
+      />
     </div>
   );
 }

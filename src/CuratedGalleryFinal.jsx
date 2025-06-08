@@ -1,3 +1,4 @@
+// File: src/CuratedGalleryFinal.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
@@ -25,7 +26,7 @@ export default function CuratedGalleryFinal() {
       }
     });
 
-    const selectedImages = artistGallery.filter((img) => selectedIds.has(img.id));
+    const selectedImages = artistGallery.filter((img) => selectedIds.has(img.id)).slice(0, 40);
     setFinalGallery(selectedImages);
   }, [artistGallery, ratings, cg1Selections, cg2Selections]);
 
@@ -85,14 +86,16 @@ export default function CuratedGalleryFinal() {
       )}
 
       <p style={{ fontFamily: 'monospace', fontSize: '0.9rem', marginBottom: '1rem' }}>
-        Total selected images: {finalGallery.length}
+        Total selected images: {finalGallery.length} (showing max 40)
       </p>
 
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '2rem',
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
         }}
       >
         {finalGallery.map((img) => (

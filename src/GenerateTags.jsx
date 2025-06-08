@@ -1,13 +1,18 @@
+// File: src/GenerateTags.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
 
-export default function GenerateTags() {
+export default function GenerateTags({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
 
   const [localGallery, setLocalGallery] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sampleWarning, setSampleWarning] = useState(false);
+
+  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
     async function hydrateImages() {
@@ -40,65 +45,35 @@ export default function GenerateTags() {
     hydrateImages();
   }, [artistGallery]);
 
-  const images = localGallery;
+  const toggleSample = (id) => {
+    const sampleCount = artistGallery.filter((img) => img.sampleEligible).length;
+    const isTargetSample = artistGallery.find((img) => img.id === id)?.sampleEligible;
 
-  const toggleSample = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-      )
-    );
-
-  const toggleGallery = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
-      )
-    );
-
-  const toggleScrape = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
-    );
-
-  const removeImage = (id) =>
-    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
-
-  async function compressImage(file, maxDim = 384, quality = 0.7) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        img.src = e.target.result;
-      };
-      img.onload = () => {
-        const scale = maxDim / Math.max(img.width, img.height);
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(
-          (blob) =>
-            resolve(new File([blob], file.name, { type: 'image/jpeg' })),
-          'image/jpeg',
-          quality
-        );
-      };
-      reader.readAsDataURL(file);
-    });
-  }
+    if (isTargetSample || sampleCount < 16) {
+      setArtistGallery((prev) =>
+        prev.map((img) =>
+          img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+        )
+      );
+      setSampleWarning(false);
+    } else {
+      setSampleWarning(true);
+    }
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const uploadable = images.filter(
+      const uploadable = localGallery.filter(
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
 
-      if (uploadable.length === 0) return;
+      if (uploadable.length === 0) {
+        logToScreen('[GenerateTags] No images selected. Nothing to tag.');
+        return;
+      }
+
+      logToScreen(`[GenerateTags] Uploading ${uploadable.length} images`);
 
       const formData = new FormData();
       for (const img of uploadable) {
@@ -127,19 +102,7 @@ export default function GenerateTags() {
         prev.map((img) => tagged.find((t) => t.id === img.id) || img)
       );
     } catch (err) {
-      const fallback = images.map((img) => ({
-        ...img,
-        metadata: {
-          ...img.metadata,
-          imageTags: [],
-          textTags: [],
-          toneTags: [],
-          moodTags: [],
-          paletteTags: [],
-          error: err.message,
-        },
-      }));
-      setArtistGallery(fallback);
+      logToScreen(`[GenerateTags] Batch error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -147,33 +110,66 @@ export default function GenerateTags() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <button
-          onClick={handleGenerate}
-          disabled={loading}
+      <button
+        onClick={handleGenerate}
+        disabled={loading}
+        style={{ padding: '0.75rem 1.25rem' }}
+      >
+        {loading ? 'Generating Tags...' : 'Generate MetaTags'}
+      </button>
+
+      {sampleWarning && (
+        <div
           style={{
-            padding: '1rem 2rem',
-            fontSize: '1.25rem',
+            backgroundColor: '#fef3c7',
+            color: '#92400e',
+            border: '1px solid #facc15',
+            padding: '0.75rem 1rem',
+            marginTop: '1rem',
             borderRadius: '0.5rem',
-            backgroundColor: '#1e3a8a',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            opacity: loading ? 0.6 : 1,
+            fontSize: '0.95rem',
           }}
         >
-          {loading ? 'Generating Tags...' : 'Generate MetaTags'}
-        </button>
+          To make SampleRater quick and easy for your clients, we recommend selecting no more than 16 samples.
+        </div>
+      )}
+
+      <div style={{ marginTop: '1rem', fontFamily: 'monospace' }}>
+        {logs.map((log, i) => (
+          <div key={i}>📝 {log}</div>
+        ))}
       </div>
 
       <GalleryGrid
-        images={images}
+        images={localGallery}
         onToggleSample={toggleSample}
-        onToggleGallery={toggleGallery}
-        onToggleScrape={toggleScrape}
-        onRemove={removeImage}
         devMode={false}
       />
     </div>
   );
+}
+
+async function compressImage(file, maxDim = 384, quality = 0.7) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+    img.onload = () => {
+      const scale = maxDim / Math.max(img.width, img.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) =>
+          resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+        'image/jpeg',
+        quality
+      );
+    };
+    reader.readAsDataURL(file);
+  });
 }
