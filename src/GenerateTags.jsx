@@ -110,13 +110,24 @@ export default function GenerateTags({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        style={{ padding: '0.75rem 1.25rem' }}
-      >
-        {loading ? 'Generating Tags...' : 'Generate MetaTags'}
-      </button>
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.25rem',
+            borderRadius: '0.5rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? 'Generating Tags...' : 'Generate MetaTags'}
+        </button>
+      </div>
 
       <div style={{ marginTop: '1rem', fontFamily: 'monospace' }}>
         {logs.map((log, i) => (
