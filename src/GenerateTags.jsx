@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
-import GalleryGrid from './GalleryGrid';
+import EditableTagList from './EditableTagList';
+import ImageCard from './ImageCard';
 
-export default function GenerateTags({ setView }) {
+export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
 
   const [localGallery, setLocalGallery] = useState([]);
@@ -59,6 +60,42 @@ export default function GenerateTags({ setView }) {
     } else {
       setSampleWarningId(id);
     }
+  };
+
+  const toggleGallery = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
+  };
+
+  const toggleScrape = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
+  };
+
+  const removeImage = (id) => {
+    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const updateTagField = (id, key, values) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id
+          ? {
+              ...img,
+              metadata: {
+                ...img.metadata,
+                [key]: values,
+              },
+            }
+          : img
+      )
+    );
   };
 
   async function compressImage(file, maxDim = 384, quality = 0.7) {
@@ -160,12 +197,33 @@ export default function GenerateTags({ setView }) {
         ))}
       </div>
 
-      <GalleryGrid
-        images={localGallery}
-        onToggleSample={toggleSample}
-        devMode={false}
-        sampleWarningId={sampleWarningId}
-      />
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '2rem',
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          marginTop: '2rem',
+        }}
+      >
+        {localGallery.map((img) => (
+          <div key={img.id}>
+            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#888' }}>
+              🔍 rendering: {img.name}
+            </div>
+            <ImageCard
+              image={img}
+              onToggleSample={toggleSample}
+              onToggleGallery={toggleGallery}
+              onToggleScrape={toggleScrape}
+              onRemove={removeImage}
+              onUpdateTag={updateTagField}
+              sampleWarningId={sampleWarningId}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
