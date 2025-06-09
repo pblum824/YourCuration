@@ -4,8 +4,8 @@ import EditableTagSection from './EditableTagSection';
 
 export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, onUpdateTag, sampleWarningId }) {
   return (
-    <div style={{ width: '280px', textAlign: 'center' }}>
-      <div style={{ width: '100%', height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
+    <div style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
         <img
           src={image.url}
           alt={image.name}
