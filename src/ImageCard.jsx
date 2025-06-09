@@ -26,36 +26,38 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         <button onClick={() => onRemove?.(image.id)} style={buttonStyle('#fee2e2', '#991b1b')}>Remove</button>
       </div>
 
-      {image.metadata?.imageTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[image]</strong> {image.metadata.imageTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.textTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[text]</strong> {image.metadata.textTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.toneTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[tone]</strong> {image.metadata.toneTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.moodTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[mood]</strong> {image.metadata.moodTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.paletteTags?.length > 0 && (
-        <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          <strong>[palette]</strong> {image.metadata.paletteTags.join(', ')}
-        </div>
-      )}
-      {image.metadata?.error && (
-        <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-          <strong>Error:</strong> {image.metadata.error}
-        </div>
-      )}
+      <div style={{ height: '100px', overflowY: 'auto', marginTop: '0.5rem' }}>
+        {image.metadata?.imageTags?.length > 0 && (
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[image]</strong> {image.metadata.imageTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.textTags?.length > 0 && (
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[text]</strong> {image.metadata.textTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.toneTags?.length > 0 && (
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[tone]</strong> {image.metadata.toneTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.moodTags?.length > 0 && (
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[mood]</strong> {image.metadata.moodTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.paletteTags?.length > 0 && (
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[palette]</strong> {image.metadata.paletteTags.join(', ')}
+          </div>
+        )}
+        {image.metadata?.error && (
+          <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            <strong>Error:</strong> {image.metadata.error}
+          </div>
+        )}
+      </div>
 
       {sampleWarningId === image.id && (
         <div
