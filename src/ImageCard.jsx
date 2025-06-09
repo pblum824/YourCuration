@@ -26,7 +26,7 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         <button onClick={() => onRemove?.(image.id)} style={buttonStyle('#fee2e2', '#991b1b')}>Remove</button>
       </div>
 
-      <div style={{ height: '100px', overflowY: 'auto', marginTop: '0.5rem' }}>
+      <div style={{ height: '120px', marginTop: '0.5rem' }}>
         <div style={{ minHeight: '1.5rem' }}>
           {image.metadata?.imageTags?.length > 0 && (
             <div style={{ fontSize: '0.85rem' }}>
@@ -71,6 +71,8 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         </div>
       </div>
 
+      <EditableTagSection image={image} onUpdateTag={onUpdateTag} />
+
       {sampleWarningId === image.id && (
         <div
           style={{
@@ -88,8 +90,6 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
           we recommend selecting no more than 15 samples.
         </div>
       )}
-
-      <EditableTagSection image={image} onUpdateTag={onUpdateTag} />
     </div>
   );
 }
