@@ -2,39 +2,24 @@
 import React from 'react';
 import EditableTagSection from './EditableTagSection';
 
-export default function ImageCard({
-  image,
-  onToggleSample,
-  onToggleGallery,
-  onToggleScrape,
-  onRemove,
-  onUpdateTag,
-  sampleWarningId,
-}) {
+export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, onUpdateTag, sampleWarningId }) {
   return (
     <div style={{ width: '280px', textAlign: 'center' }}>
-      <img
-        src={image.url}
-        alt={image.name}
-        style={{
-          width: '100%',
-          height: '200px',
-          objectFit: 'cover',
-          borderRadius: '0.5rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }}
-      />
+      <div style={{ width: '100%', height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
+        <img
+          src={image.url}
+          alt={image.name}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+          }}
+        />
+      </div>
       <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{image.name}</p>
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          marginTop: '0.5rem',
-          flexWrap: 'wrap',
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
         <button onClick={() => onToggleScrape?.(image.id)} style={buttonStyle(image.scrapeEligible ? '#d1fae5' : '#fee2e2')}>Scrape</button>
         <button onClick={() => onToggleGallery?.(image.id)} style={buttonStyle(image.galleryEligible ? '#dbeafe' : '#f3f4f6')}>Gallery</button>
         <button onClick={() => onToggleSample?.(image.id)} style={buttonStyle(image.sampleEligible ? '#fef9c3' : '#f3f4f6')}>Sample</button>
