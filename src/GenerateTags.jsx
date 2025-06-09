@@ -205,7 +205,6 @@ export default function GenerateTags() {
         onUpdateTag={updateTagField}
         sampleWarningId={sampleWarningId}
         devMode={false}
-        showTags={true}
       />
     </div>
   );
