@@ -1,8 +1,7 @@
 // File: src/ImageCard.jsx
 import React from 'react';
-import EditableTagSection from './EditableTagSection';
 
-export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, onUpdateTag, sampleWarningId }) {
+export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, sampleWarningId }) {
   return (
     <div style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
       {/* Top: Fixed image block */}
@@ -61,10 +60,6 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
               <strong>Error:</strong> {image.metadata.error}
             </div>
           )}
-        </div>
-
-        <div style={{ marginTop: '0.5rem' }}>
-          <EditableTagSection image={image} onUpdateTag={onUpdateTag} />
         </div>
 
         {sampleWarningId === image.id && (
