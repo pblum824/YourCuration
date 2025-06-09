@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
-import EditableTagList from './EditableTagList';
-import ImageCard from './ImageCard';
+import GalleryGrid from './GalleryGrid';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -197,29 +196,16 @@ export default function GenerateTags() {
         ))}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '2rem',
-          justifyContent: 'center',
-          alignItems: 'flex-end',
-          marginTop: '2rem',
-        }}
-      >
-        {localGallery.map((img) => (
-          <ImageCard
-            key={img.id}
-            image={img}
-            onToggleSample={toggleSample}
-            onToggleGallery={toggleGallery}
-            onToggleScrape={toggleScrape}
-            onRemove={removeImage}
-            onUpdateTag={updateTagField}
-            sampleWarningId={sampleWarningId}
-          />
-        ))}
-      </div>
+      <GalleryGrid
+        images={localGallery}
+        onToggleSample={toggleSample}
+        onToggleGallery={toggleGallery}
+        onToggleScrape={toggleScrape}
+        onRemove={removeImage}
+        onUpdateTag={updateTagField}
+        sampleWarningId={sampleWarningId}
+        devMode={false}
+      />
     </div>
   );
 }
