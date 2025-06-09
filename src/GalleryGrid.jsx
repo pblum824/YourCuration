@@ -1,8 +1,9 @@
 // File: components/GalleryGrid.jsx
 import React from 'react';
 import { imageButton } from './utils/styles';
+import EditableTagSection from './EditableTagSection';
 
-export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggleGallery, onToggleSample, devMode, sampleWarningId }) {
+export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggleGallery, onToggleSample, devMode, sampleWarningId, onUpdateTag, showTags }) {
   return (
     <div
       style={{
@@ -80,7 +81,7 @@ export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggle
             </button>
           </div>
 
-          {img.id === sampleWarningId && (
+          {sampleWarningId === img.id && (
             <div
               style={{
                 marginTop: '0.75rem',
@@ -96,6 +97,42 @@ export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggle
               To make SampleRater quick and easy for your clients,<br />
               we recommend selecting no more than 15 samples.
             </div>
+          )}
+
+          {showTags && (
+            <>
+              {img.metadata?.imageTags?.length > 0 && (
+                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
+                </div>
+              )}
+              {img.metadata?.textTags?.length > 0 && (
+                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  <strong>[text]</strong> {img.metadata.textTags.join(', ')}
+                </div>
+              )}
+              {img.metadata?.toneTags?.length > 0 && (
+                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
+                </div>
+              )}
+              {img.metadata?.moodTags?.length > 0 && (
+                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
+                </div>
+              )}
+              {img.metadata?.paletteTags?.length > 0 && (
+                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
+                </div>
+              )}
+              {img.metadata?.error && (
+                <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                  <strong>Error:</strong> {img.metadata.error}
+                </div>
+              )}
+              <EditableTagSection image={img} onUpdateTag={onUpdateTag} />
+            </>
           )}
 
           {devMode && (
