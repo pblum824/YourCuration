@@ -208,20 +208,16 @@ export default function GenerateTags() {
         }}
       >
         {localGallery.map((img) => (
-          <div key={img.id}>
-            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#888' }}>
-              🔍 rendering: {img.name}
-            </div>
-            <ImageCard
-              image={img}
-              onToggleSample={toggleSample}
-              onToggleGallery={toggleGallery}
-              onToggleScrape={toggleScrape}
-              onRemove={removeImage}
-              onUpdateTag={updateTagField}
-              sampleWarningId={sampleWarningId}
-            />
-          </div>
+          <ImageCard
+            key={img.id}
+            image={img}
+            onToggleSample={toggleSample}
+            onToggleGallery={toggleGallery}
+            onToggleScrape={toggleScrape}
+            onRemove={removeImage}
+            onUpdateTag={updateTagField}
+            sampleWarningId={sampleWarningId}
+          />
         ))}
       </div>
     </div>
