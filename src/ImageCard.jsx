@@ -2,6 +2,7 @@
 import React from 'react';
 
 export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, sampleWarningId }) {
+  const { metadata = {} } = image;
   return (
     <div style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
@@ -27,26 +28,24 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
           <button onClick={() => onToggleSample?.(image.id)} style={buttonStyle(image.sampleEligible ? '#fef9c3' : '#f3f4f6')}>Sample</button>
         </div>
 
-        <div style={{ marginTop: '0.75rem' }}>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            <strong>[image]</strong> {image.metadata?.imageTags?.join(', ')}
-          </div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            <strong>[text]</strong> {image.metadata?.textTags?.join(', ')}
-          </div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            <strong>[tone]</strong> {image.metadata?.toneTags?.join(', ')}
-          </div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            <strong>[mood]</strong> {image.metadata?.moodTags?.join(', ')}
-          </div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            <strong>[palette]</strong> {image.metadata?.paletteTags?.join(', ')}
-          </div>
-          {image.metadata?.error && (
-            <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-              <strong>Error:</strong> {image.metadata.error}
-            </div>
+        <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+          {metadata.imageTags && (
+            <div><strong>[image]</strong> {metadata.imageTags.join(', ')}</div>
+          )}
+          {metadata.textTags && (
+            <div><strong>[text]</strong> {metadata.textTags.join(', ')}</div>
+          )}
+          {metadata.toneTags && (
+            <div><strong>[tone]</strong> {metadata.toneTags.join(', ')}</div>
+          )}
+          {metadata.moodTags && (
+            <div><strong>[mood]</strong> {metadata.moodTags.join(', ')}</div>
+          )}
+          {metadata.paletteTags && (
+            <div><strong>[palette]</strong> {metadata.paletteTags.join(', ')}</div>
+          )}
+          {metadata.error && (
+            <div style={{ color: 'red', fontSize: '0.8rem' }}><strong>Error:</strong> {metadata.error}</div>
           )}
         </div>
 
