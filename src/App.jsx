@@ -8,6 +8,7 @@ import CuratedGalleryFinal from './CuratedGalleryFinal';
 import { YourCurationProvider, useCuration } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
+import LandingPage from './LandingPage';
 
 const validViews = [
   'landing',
@@ -70,7 +71,7 @@ function InnerApp({ view, setView }) {
         </div>
       ) : (
         <ErrorCatcher onError={setError}>
-          {view === 'landing' && <ArtClientLanding setView={setView} />}
+          {view === 'landing' && <LandingPage setView={setView} />}
           {view === 'artist' && <ArtistDashboard setView={setView} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
           {view === 'rate' && <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} setView={setView} />}
