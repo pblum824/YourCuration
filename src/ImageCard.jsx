@@ -27,41 +27,29 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
           <button onClick={() => onToggleSample?.(image.id)} style={buttonStyle(image.sampleEligible ? '#fef9c3' : '#f3f4f6')}>Sample</button>
         </div>
 
-        <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
-          {imageTags?.length > 0 && (
-            <div><strong>[image]</strong> {imageTags.join(', ')}</div>
-          )}
-          {textTags?.length > 0 && (
-            <div><strong>[text]</strong> {textTags.join(', ')}</div>
-          )}
-          {toneTags?.length > 0 && (
-            <div><strong>[tone]</strong> {toneTags.join(', ')}</div>
-          )}
-          {moodTags?.length > 0 && (
-            <div><strong>[mood]</strong> {moodTags.join(', ')}</div>
-          )}
-          {paletteTags?.length > 0 && (
-            <div><strong>[palette]</strong> {paletteTags.join(', ')}</div>
+        <div style={{ height: '120px', overflow: 'hidden', marginTop: '0.75rem', fontSize: '0.85rem' }}>
+          {imageTags?.length > 0 && <div><strong>[image]</strong> {imageTags.join(', ')}</div>}
+          {textTags?.length > 0 && <div><strong>[text]</strong> {textTags.join(', ')}</div>}
+          {toneTags?.length > 0 && <div><strong>[tone]</strong> {toneTags.join(', ')}</div>}
+          {moodTags?.length > 0 && <div><strong>[mood]</strong> {moodTags.join(', ')}</div>}
+          {paletteTags?.length > 0 && <div><strong>[palette]</strong> {paletteTags.join(', ')}</div>}
+          {sampleWarningId === image.id && (
+            <div
+              style={{
+                marginTop: '0.5rem',
+                backgroundColor: '#fef3c7',
+                color: '#92400e',
+                border: '1px solid #facc15',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.5rem',
+                textAlign: 'center',
+              }}
+            >
+              To make SampleRater quick and easy for your clients,<br />
+              we recommend selecting no more than 15 samples.
+            </div>
           )}
         </div>
-
-        {sampleWarningId === image.id && (
-          <div
-            style={{
-              marginTop: '0.75rem',
-              fontSize: '0.85rem',
-              backgroundColor: '#fef3c7',
-              color: '#92400e',
-              border: '1px solid #facc15',
-              padding: '0.5rem 0.75rem',
-              borderRadius: '0.5rem',
-              textAlign: 'center',
-            }}
-          >
-            To make SampleRater quick and easy for your clients,<br />
-            we recommend selecting no more than 15 samples.
-          </div>
-        )}
       </div>
     </div>
   );
