@@ -15,6 +15,10 @@ export default function FullscreenImageViewer({ image, onClose }) {
       setFullUrl(objectUrl);
     }
     fetchFullImage();
+
+    // Trigger Safari chrome hide
+    setTimeout(() => window.scrollTo(0, 1), 100);
+
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
@@ -31,7 +35,7 @@ export default function FullscreenImageViewer({ image, onClose }) {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -44,19 +48,18 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          maxWidth: '90vw',
-          maxHeight: '90vh',
+          width: 'calc(100vw - 30px)',
+          height: 'calc(100vh - 30px)',
+          objectFit: 'contain',
           borderRadius: '0.5rem',
           boxShadow: '0 0 20px rgba(0,0,0,0.5)',
           transition: 'transform 0.3s ease-out',
-          transform: 'scale(1)'
         }}
       />
     </div>
   );
 }
 
-/* Simple keyframes for animation */
 const style = document.createElement('style');
 style.innerHTML = `
 @keyframes fadeIn {
