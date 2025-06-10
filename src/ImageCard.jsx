@@ -4,7 +4,6 @@ import React from 'react';
 export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, sampleWarningId }) {
   return (
     <div style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
-      {/* Top: Fixed image block */}
       <div style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
         <img
           src={image.url}
@@ -18,7 +17,6 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         />
       </div>
 
-      {/* Bottom: Dynamic content block */}
       <div style={{ paddingTop: '0.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
         <p style={{ fontStyle: 'italic', marginBottom: '0.5rem' }}>{image.name}</p>
 
@@ -30,31 +28,21 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         </div>
 
         <div style={{ marginTop: '0.75rem' }}>
-          {image.metadata?.imageTags?.length > 0 && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <strong>[image]</strong> {image.metadata.imageTags.join(', ')}
-            </div>
-          )}
-          {image.metadata?.textTags?.length > 0 && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <strong>[text]</strong> {image.metadata.textTags.join(', ')}
-            </div>
-          )}
-          {image.metadata?.toneTags?.length > 0 && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <strong>[tone]</strong> {image.metadata.toneTags.join(', ')}
-            </div>
-          )}
-          {image.metadata?.moodTags?.length > 0 && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <strong>[mood]</strong> {image.metadata.moodTags.join(', ')}
-            </div>
-          )}
-          {image.metadata?.paletteTags?.length > 0 && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <strong>[palette]</strong> {image.metadata.paletteTags.join(', ')}
-            </div>
-          )}
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[image]</strong> {image.metadata?.imageTags?.join(', ')}
+          </div>
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[text]</strong> {image.metadata?.textTags?.join(', ')}
+          </div>
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[tone]</strong> {image.metadata?.toneTags?.join(', ')}
+          </div>
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[mood]</strong> {image.metadata?.moodTags?.join(', ')}
+          </div>
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <strong>[palette]</strong> {image.metadata?.paletteTags?.join(', ')}
+          </div>
           {image.metadata?.error && (
             <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
               <strong>Error:</strong> {image.metadata.error}
