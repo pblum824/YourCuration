@@ -1,107 +1,80 @@
 // File: src/CuratedGalleryFinal.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadBlob } from './utils/dbCache';
+import FullscreenImageViewer from './FullscreenImageViewer';
 
 export default function CuratedGalleryFinal() {
-  const {
-    artistGallery = [],
-    ratings = {},
-    cg1Selections = {},
-    cg2Selections = {},
-  } = useCuration();
-
-  const [finalGallery, setFinalGallery] = useState([]);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const selectedIds = new Set();
-
-    artistGallery.forEach((img) => {
-      const isLoved = ratings[img.id] === 'love';
-      const isCG1 = cg1Selections[img.id] === 2;
-      const isCG2 = cg2Selections[img.id] === 2;
-      if (isLoved || isCG1 || isCG2) {
-        selectedIds.add(img.id);
-      }
-    });
-
-    const selectedImages = artistGallery.filter((img) => selectedIds.has(img.id)).slice(0, 40);
-    setFinalGallery(selectedImages);
-  }, [artistGallery, ratings, cg1Selections, cg2Selections]);
+  const { artistGallery } = useCuration();
+  const [activeImage, setActiveImage] = useState(null);
 
   const exportGallery = async () => {
-    try {
-      const images = await Promise.all(
-        finalGallery.map(async (img) => {
-          try {
-            const blob = await loadBlob(img.localRefId);
-            const base64 = await blobToBase64(blob);
-            return {
-              id: img.id,
-              name: img.name,
-              data: base64,
-              metadata: img.metadata || {},
-              tags: img.metadata?.imageTags || [],
-            };
-          } catch {
-            return null;
-          }
-        })
-      );
+    const images = await Promise.all(
+      artistGallery.map(async (img) => {
+        const blob = await loadBlob(img.localRefId);
+        const base64 = await blobToBase64(blob);
+        return {
+          name: img.name,
+          data: base64,
+          scrapeEligible: img.scrapeEligible,
+          galleryEligible: img.galleryEligible,
+          sampleEligible: img.sampleEligible,
+          metadata: img.metadata || {},
+        };
+      })
+    );
 
-      const valid = images.filter(Boolean);
+    const bundle = {
+      timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
+      images,
+    };
 
-      const bundle = {
-        createdAt: new Date().toISOString(),
-        count: valid.length,
-        images: valid,
-      };
-
-      const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-        type: 'application/json',
-      });
-
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `YourCuration-FinalGallery-${bundle.createdAt.replace(/[:.]/g, '-')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      setError(err.message || 'Failed to export gallery.');
-    }
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+      type: 'application/json',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `YourCuration-Gallery-${bundle.timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
-        Final Curated Gallery
+        Curated Gallery Final
       </h2>
 
-      {error && (
-        <div style={{ color: 'red', fontFamily: 'monospace' }}>
-          ❌ {error}
-        </div>
-      )}
-
-      <p style={{ fontFamily: 'monospace', fontSize: '0.9rem', marginBottom: '1rem' }}>
-        Total selected images: {finalGallery.length} (showing max 40)
-      </p>
+      <button
+        onClick={exportGallery}
+        style={{
+          padding: '0.75rem 1.5rem',
+          fontSize: '1rem',
+          borderRadius: '0.5rem',
+          border: '1px solid #ccc',
+          backgroundColor: '#f0fdfa',
+          cursor: 'pointer',
+        }}
+      >
+        Export Final Gallery
+      </button>
 
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
           gap: '2rem',
-          maxHeight: 'calc(100vh - 200px)',
-          overflowY: 'auto',
+          marginTop: '2rem',
         }}
       >
-        {finalGallery.map((img) => (
-          <div key={img.id} style={{ textAlign: 'center' }}>
+        {artistGallery.slice(0, 40).map((img) => (
+          <div
+            key={img.id}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setActiveImage(img)}
+          >
             <img
-              src={img.url || ''}
+              src={img.url}
               alt={img.name}
               style={{
                 width: '100%',
@@ -110,31 +83,15 @@ export default function CuratedGalleryFinal() {
                 borderRadius: '0.5rem',
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
               }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
             />
             <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
           </div>
         ))}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <button
-          onClick={exportGallery}
-          style={{
-            padding: '1rem 2rem',
-            fontSize: '1.1rem',
-            backgroundColor: '#1e3a8a',
-            color: '#fff',
-            borderRadius: '0.5rem',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          💾 Export Final Gallery
-        </button>
-      </div>
+      {activeImage && (
+        <FullscreenImageViewer image={activeImage} onClose={() => setActiveImage(null)} />
+      )}
     </div>
   );
 }
