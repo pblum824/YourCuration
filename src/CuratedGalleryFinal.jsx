@@ -41,23 +41,28 @@ export default function CuratedGalleryFinal() {
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
-        Curated Gallery Final
-      </h2>
+      {!activeImage && (
+        <>
+          <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
+            Curated Gallery Final
+          </h2>
 
-      <button
-        onClick={exportGallery}
-        style={{
-          padding: '0.75rem 1.5rem',
-          fontSize: '1rem',
-          borderRadius: '0.5rem',
-          border: '1px solid #ccc',
-          backgroundColor: '#f0fdfa',
-          cursor: 'pointer',
-        }}
-      >
-        Export Final Gallery
-      </button>
+          <button
+            onClick={exportGallery}
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid #ccc',
+              backgroundColor: '#f0fdfa',
+              cursor: 'pointer',
+              marginTop: '1rem'
+            }}
+          >
+            Export Final Gallery
+          </button>
+        </>
+      )}
 
       <div
         style={{
