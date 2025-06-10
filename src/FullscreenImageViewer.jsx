@@ -16,8 +16,13 @@ export default function FullscreenImageViewer({ image, onClose }) {
     }
     fetchFullImage();
 
-    // Trigger Safari chrome hide
-    setTimeout(() => window.scrollTo(0, 1), 100);
+    // Force page chrome to hide (Safari workaround)
+    const originalBodyHeight = document.body.style.height;
+    document.body.style.height = '200vh';
+    setTimeout(() => {
+      window.scrollTo(0, 1);
+      document.body.style.height = originalBodyHeight;
+    }, 150);
 
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -41,6 +46,7 @@ export default function FullscreenImageViewer({ image, onClose }) {
         alignItems: 'center',
         zIndex: 1000,
         cursor: 'zoom-out',
+        padding: '5vh 0',
         animation: 'fadeIn 0.3s ease-in-out'
       }}
     >
@@ -48,8 +54,8 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          width: 'calc(100vw - 30px)',
-          height: 'calc(100vh - 30px)',
+          maxWidth: '90vw',
+          maxHeight: '85vh',
           objectFit: 'contain',
           borderRadius: '0.5rem',
           boxShadow: '0 0 20px rgba(0,0,0,0.5)',
