@@ -1,8 +1,7 @@
 // File: src/ImageCard.jsx
 import React from 'react';
 
-export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, sampleWarningId }) {
-  const { metadata = {} } = image;
+export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, sampleWarningId, imageTags, textTags, toneTags, moodTags, paletteTags }) {
   return (
     <div style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
@@ -29,23 +28,20 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         </div>
 
         <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
-          {metadata.imageTags && (
-            <div><strong>[image]</strong> {metadata.imageTags.join(', ')}</div>
+          {imageTags?.length > 0 && (
+            <div><strong>[image]</strong> {imageTags.join(', ')}</div>
           )}
-          {metadata.textTags && (
-            <div><strong>[text]</strong> {metadata.textTags.join(', ')}</div>
+          {textTags?.length > 0 && (
+            <div><strong>[text]</strong> {textTags.join(', ')}</div>
           )}
-          {metadata.toneTags && (
-            <div><strong>[tone]</strong> {metadata.toneTags.join(', ')}</div>
+          {toneTags?.length > 0 && (
+            <div><strong>[tone]</strong> {toneTags.join(', ')}</div>
           )}
-          {metadata.moodTags && (
-            <div><strong>[mood]</strong> {metadata.moodTags.join(', ')}</div>
+          {moodTags?.length > 0 && (
+            <div><strong>[mood]</strong> {moodTags.join(', ')}</div>
           )}
-          {metadata.paletteTags && (
-            <div><strong>[palette]</strong> {metadata.paletteTags.join(', ')}</div>
-          )}
-          {metadata.error && (
-            <div style={{ color: 'red', fontSize: '0.8rem' }}><strong>Error:</strong> {metadata.error}</div>
+          {paletteTags?.length > 0 && (
+            <div><strong>[palette]</strong> {paletteTags.join(', ')}</div>
           )}
         </div>
 

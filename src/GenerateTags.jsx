@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
+import ImageCard from './ImageCard';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
@@ -196,16 +197,33 @@ export default function GenerateTags() {
         ))}
       </div>
 
-      <GalleryGrid
-        images={localGallery}
-        onToggleSample={toggleSample}
-        onToggleGallery={toggleGallery}
-        onToggleScrape={toggleScrape}
-        onRemove={removeImage}
-        onUpdateTag={updateTagField}
-        sampleWarningId={sampleWarningId}
-        devMode={false}
-      />
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '2rem',
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          marginTop: '2rem',
+        }}
+      >
+        {localGallery.map((img) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            onToggleSample={toggleSample}
+            onToggleGallery={toggleGallery}
+            onToggleScrape={toggleScrape}
+            onRemove={removeImage}
+            sampleWarningId={sampleWarningId}
+            imageTags={img.metadata?.imageTags}
+            textTags={img.metadata?.textTags}
+            toneTags={img.metadata?.toneTags}
+            moodTags={img.metadata?.moodTags}
+            paletteTags={img.metadata?.paletteTags}
+          />
+        ))}
+      </div>
     </div>
   );
 }
