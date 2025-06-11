@@ -10,8 +10,8 @@ export default function LandingPage({ setView }) {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        padding: '2rem',
-        textAlign: 'center',
+        padding: '0 1rem',
+        textAlign: 'center'
       }}
     >
       <h1 style={{ fontSize: '2.5rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a', marginBottom: '1.5rem' }}>
