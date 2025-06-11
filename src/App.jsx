@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// File: src/App.jsx
+import React, { useState, useEffect } from 'react';
 import ArtistDashboard from './ArtistDashboard';
 import GenerateTags from './GenerateTags';
 import SampleRater from './SampleRater';
@@ -18,7 +19,8 @@ const validViews = [
   'curated1',
   'curated2',
   'curatedFinal',
-  'curated'
+  'curated',
+  'client'
 ];
 
 function InnerApp({ view, setView }) {
@@ -79,6 +81,7 @@ function InnerApp({ view, setView }) {
           {view === 'curated2' && <CuratedGallery2 setView={setView} />}
           {view === 'curatedFinal' && <CuratedGalleryFinal />}
           {view === 'curated' && <YourCuration />}
+          {view === 'client' && <ArtClientLanding setView={setView} />}
         </ErrorCatcher>
       )}
     </div>
@@ -86,18 +89,11 @@ function InnerApp({ view, setView }) {
 }
 
 export default function App() {
-  const [view, setView] = useState(() => {
-    const saved = localStorage.getItem('yourcuration_view');
-    const parsed = validViews.includes(saved) ? saved : 'landing';
+  const [view, setView] = useState('landing');
 
-    if (parsed === 'rate' || parsed.startsWith('curated')) {
-      const storedGallery = JSON.parse(localStorage.getItem('artistGallery') || '[]');
-      const hasSamples = storedGallery.some((img) => img.sampleEligible);
-      return hasSamples ? parsed : 'landing';
-    }
+  useEffect(() => {
     localStorage.removeItem('yourcuration_view');
-    return parsed;
-  });
+  }, []);
 
   return (
     <YourCurationProvider>
