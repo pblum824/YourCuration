@@ -17,8 +17,8 @@ export default function LandingPage({ setView }) {
       <h1 style={{ fontSize: '2.5rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a', marginBottom: '1.5rem' }}>
         Welcome to YourCuration
       </h1>
-      <p style={{ fontSize: '1.1rem', marginBottom: '2rem', maxWidth: '600px' }}>
-        YourCuration connects artists with art clients through curated, beautiful, and deeply intentional image selection. Who are you?
+      <p style={{ fontSize: '1.1rem', marginBottom: '3rem', maxWidth: '600px' }}>
+        YourCuration connects artists with art clients through curated, beautiful, and deeply intentional image selection.
       </p>
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -26,13 +26,13 @@ export default function LandingPage({ setView }) {
           onClick={() => setView('artist')}
           style={buttonStyle('#1e3a8a', '#fff')}
         >
-          I’m an Artist
+          Artist
         </button>
         <button
           onClick={() => setView('client')}
-          style={buttonStyle('#f97316', '#fff')}
+          style={buttonStyle('#10b981', '#fff')}
         >
-          I’m an Art Client
+          Client
         </button>
       </div>
     </div>
@@ -48,6 +48,8 @@ function buttonStyle(bg, color) {
     color,
     border: 'none',
     cursor: 'pointer',
+    minWidth: '180px',
+    textAlign: 'center',
     boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
     transition: 'transform 0.2s ease',
   };
