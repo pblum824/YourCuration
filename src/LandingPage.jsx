@@ -1,15 +1,25 @@
 // File: src/LandingPage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function LandingPage({ setView }) {
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const update = () =>
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   return (
     <div
       style={{
+        height: `${viewport.height}px`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh',
         padding: '0 1rem',
         textAlign: 'center'
       }}
