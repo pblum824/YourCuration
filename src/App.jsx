@@ -95,7 +95,7 @@ export default function App() {
       const hasSamples = storedGallery.some((img) => img.sampleEligible);
       return hasSamples ? parsed : 'landing';
     }
-
+    localStorage.removeItem('yourcuration_view');
     return parsed;
   });
 
