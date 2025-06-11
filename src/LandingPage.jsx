@@ -1,27 +1,21 @@
 // File: src/LandingPage.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 export default function LandingPage({ setView }) {
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const update = () =>
-      setViewport({ width: window.innerWidth, height: window.innerHeight });
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
   return (
     <div
       style={{
-        height: `${viewport.height}px`,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '0 1rem',
-        textAlign: 'center'
+        textAlign: 'center',
+        padding: '1rem'
       }}
     >
       <h1 style={{ fontSize: '2.5rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a', marginBottom: '1.5rem' }}>
