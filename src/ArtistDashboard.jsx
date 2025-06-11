@@ -24,7 +24,6 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
   const [logs, setLogs] = useState([]);
-  const [sampleWarningId, setSampleWarningId] = useState(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   const isValidImage = (img) => img?.id && img?.url && img?.name;
@@ -74,21 +73,12 @@ export default function ArtistDashboard({ setView }) {
     });
   };
 
-  const toggleImageSample = (id) => {
-    const sampleCount = artistGallery.filter((img) => img.sampleEligible).length;
-    const isTargetSample = artistGallery.find((img) => img.id === id)?.sampleEligible;
-
-    if (isTargetSample || sampleCount < 15) {
-      setArtistGallery((prev) =>
-        prev.map((img) =>
-          img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-        )
-      );
-      setSampleWarningId(null);
-    } else {
-      setSampleWarningId(id);
-    }
-  };
+  const toggleImageSample = (id) =>
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+      )
+    );
 
   const toggleImageGallery = (id) =>
     setArtistGallery((prev) =>
@@ -149,6 +139,23 @@ export default function ArtistDashboard({ setView }) {
         }}
       />
 
+      <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
+        <button
+          onClick={() => setView('curated')}
+          style={{
+            padding: '0.75rem 1.25rem',
+            fontSize: '1rem',
+            borderRadius: '0.5rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Start Client Presentation
+        </button>
+      </div>
+
       <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
       <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
       <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
@@ -173,7 +180,6 @@ export default function ArtistDashboard({ setView }) {
         onToggleGallery={toggleImageGallery}
         onToggleSample={toggleImageSample}
         devMode={devMode}
-        sampleWarningId={sampleWarningId}
       />
     </div>
   );
