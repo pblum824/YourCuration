@@ -93,7 +93,7 @@ export default function App() {
     if (parsed === 'rate' || parsed.startsWith('curated')) {
       const storedGallery = JSON.parse(localStorage.getItem('artistGallery') || '[]');
       const hasSamples = storedGallery.some((img) => img.sampleEligible);
-      return hasSamples ? parsed : 'artist';
+      return hasSamples ? parsed : 'landing';
     }
 
     return parsed;
