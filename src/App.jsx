@@ -79,8 +79,8 @@ function InnerApp({ view, setView }) {
           {view === 'rate' && <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} setView={setView} />}
           {view === 'curated1' && <CuratedGallery1 setView={setView} />}
           {view === 'curated2' && <CuratedGallery2 setView={setView} />}
-          {view === 'curatedFinal' && <CuratedGalleryFinal />}
-          {view === 'curated' && <YourCuration />}
+          {view === 'curatedFinal' && <CuratedGalleryFinal setView={setView} />}
+          {view === 'curated' && <YourCuration setView={setView} />}
           {view === 'client' && <ArtClientLanding setView={setView} />}
         </ErrorCatcher>
       )}

@@ -38,7 +38,26 @@ export default function CuratedGalleryFinal() {
     link.click();
     document.body.removeChild(link);
   };
-
+  {setView && (
+    <button
+      onClick={() => setView('artist')}
+      style={{
+        position: 'absolute',
+        top: '1rem',
+        left: '1rem',
+        padding: '0.5rem 1rem',
+        fontSize: '1rem',
+        borderRadius: '0.5rem',
+        backgroundColor: '#1e3a8a',
+        color: '#fff',
+        border: 'none',
+        cursor: 'pointer',
+        zIndex: 1000,
+      }}
+    >
+      Exit Client Presentation
+    </button>
+  )}
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
       {!activeImage && (
