@@ -1,3 +1,4 @@
+// File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
@@ -52,28 +53,30 @@ export default function CuratedGallery1({ setView }) {
       </div>
     );
   }
-  {setView && (
-    <button
-      onClick={() => setView('artist')}
-      style={{
-        position: 'absolute',
-        top: '1rem',
-        left: '1rem',
-        padding: '0.5rem 1rem',
-        fontSize: '1rem',
-        borderRadius: '0.5rem',
-        backgroundColor: '#1e3a8a',
-        color: '#fff',
-        border: 'none',
-        cursor: 'pointer',
-        zIndex: 1000,
-      }}
-    >
-      Exit Client Presentation
-    </button>
-  )}
+
   return (
     <div style={{ padding: '2rem' }}>
+      {setView && (
+        <button
+          onClick={() => setView('artist')}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            padding: '0.5rem 1rem',
+            fontSize: '1rem',
+            borderRadius: '0.5rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 1000,
+          }}
+        >
+          Exit Client Presentation
+        </button>
+      )}
+
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
