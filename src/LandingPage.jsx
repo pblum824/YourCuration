@@ -27,7 +27,7 @@ export default function LandingPage({ setView }) {
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
-          onClick={() => setView('artist')}
+          onClick={() => setView('curated')}
           style={buttonStyle('#1e3a8a', '#fff')}
         >
           Artist
