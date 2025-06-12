@@ -27,13 +27,13 @@ export default function LandingPage({ setView }) {
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
-          onClick={() => setView('curated')}
+          onClick={() => setView('artist')}
           style={buttonStyle('#1e3a8a', '#fff')}
         >
           Artist
         </button>
         <button
-          onClick={() => setView('client')}
+          onClick={() => setView('curated')}
           style={buttonStyle('#10b981', '#fff')}
         >
           Client
