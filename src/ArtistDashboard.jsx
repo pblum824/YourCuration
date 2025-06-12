@@ -141,7 +141,7 @@ export default function ArtistDashboard({ setView }) {
 
       <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
         <button
-          onClick={() => setView('curated')}
+          onClick={() => setView('client')}
           style={{
             padding: '0.75rem 1.25rem',
             fontSize: '1rem',

@@ -33,7 +33,7 @@ export default function LandingPage({ setView }) {
           Artist
         </button>
         <button
-          onClick={() => setView('curated')}
+          onClick={() => setView('client')}
           style={buttonStyle('#10b981', '#fff')}
         >
           Client
