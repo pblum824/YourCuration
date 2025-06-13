@@ -125,7 +125,7 @@ export default function ArtistDashboard({ setView }) {
       </h2>
 
       <GalleryControls
-        onExport={() => setView('generate')}
+        onExport={handleExportGallery}
         onImport={() => {}}
         onGenerate={() => setView('generate')}
         onReset={() => {

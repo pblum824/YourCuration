@@ -1,16 +1,15 @@
 // File: src/CuratedGalleryFinal.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import { useCuration } from './YourCurationContext';
-import FullscreenImageViewer from './FullscreenImageViewer';
+import { saveBlob } from './utils/dbCache';
 
-export default function CuratedGalleryFinal() {
-  const { artistGallery } = useCuration();
-  const [activeImage, setActiveImage] = useState(null);
+export default function CuratedGalleryFinal({ setView }) {
+  const { artistGallery, mode } = useCuration();
 
   const exportGallery = async () => {
     const images = await Promise.all(
       artistGallery.map(async (img) => {
-        const blob = await loadBlob(img.localRefId);
+        const blob = await loadImageBlob(img.localRefId);
         const base64 = await blobToBase64(blob);
         return {
           name: img.name,
@@ -38,84 +37,46 @@ export default function CuratedGalleryFinal() {
     link.click();
     document.body.removeChild(link);
   };
-  {setView && (
-    <button
-      onClick={() => setView('artist')}
-      style={{
-        position: 'absolute',
-        top: '1rem',
-        left: '1rem',
-        padding: '0.5rem 1rem',
-        fontSize: '1rem',
-        borderRadius: '0.5rem',
-        backgroundColor: '#1e3a8a',
-        color: '#fff',
-        border: 'none',
-        cursor: 'pointer',
-        zIndex: 1000,
-      }}
-    >
-      Exit Client Presentation
-    </button>
-  )}
+
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      {!activeImage && (
-        <>
-          <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
-            Curated Gallery Final
-          </h2>
-
-          <button
-            onClick={exportGallery}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              borderRadius: '0.5rem',
-              border: '1px solid #ccc',
-              backgroundColor: '#f0fdfa',
-              cursor: 'pointer',
-              marginTop: '1rem'
-            }}
-          >
-            Export Final Gallery
-          </button>
-        </>
+      {mode === 'artist' && setView && (
+        <button
+          onClick={() => setView('artist')}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            padding: '0.5rem 1rem',
+            fontSize: '1rem',
+            borderRadius: '0.5rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 1000,
+          }}
+        >
+          Exit Client Presentation
+        </button>
       )}
 
-      <div
+      <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
+        Curated Gallery Final
+      </h2>
+      <button
+        onClick={exportGallery}
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: '2rem',
-          marginTop: '2rem',
+          padding: '0.75rem 1.5rem',
+          fontSize: '1rem',
+          borderRadius: '0.5rem',
+          border: '1px solid #ccc',
+          backgroundColor: '#f0fdfa',
+          cursor: 'pointer',
         }}
       >
-        {artistGallery.slice(0, 40).map((img) => (
-          <div
-            key={img.id}
-            style={{ cursor: 'pointer' }}
-            onClick={() => setActiveImage(img)}
-          >
-            <img
-              src={img.url}
-              alt={img.name}
-              style={{
-                width: '100%',
-                height: '200px',
-                objectFit: 'cover',
-                borderRadius: '0.5rem',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              }}
-            />
-            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-          </div>
-        ))}
-      </div>
-
-      {activeImage && (
-        <FullscreenImageViewer image={activeImage} onClose={() => setActiveImage(null)} />
-      )}
+        Export Final Gallery
+      </button>
     </div>
   );
 }
