@@ -14,7 +14,7 @@ import DragDropUpload from './DragDropUpload';
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
-  const { artistGallery, setArtistGallery, setMode } = useCuration();
+  const { artistGallery, setArtistGallery } = useCuration();
 
   const [heroImage, setHeroImage] = useState(null);
   const [borderSkin, setBorderSkin] = useState(null);
@@ -125,7 +125,7 @@ export default function ArtistDashboard({ setView }) {
       </h2>
 
       <GalleryControls
-        onExport={handleExportGallery}
+        onExport={() => setView('generate')}
         onImport={() => {}}
         onGenerate={() => setView('generate')}
         onReset={() => {
@@ -141,10 +141,7 @@ export default function ArtistDashboard({ setView }) {
 
       <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
         <button
-          onClick={() => {
-            setMode('client');
-            setView('client');
-          }}
+          onClick={() => setView('curated')}
           style={{
             padding: '0.75rem 1.25rem',
             fontSize: '1rem',
