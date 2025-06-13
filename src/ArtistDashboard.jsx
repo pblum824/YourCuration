@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
-import { saveBlob } from './utils/dbCache';
+import { saveBlob, loadBlob } from './utils/dbCache';
 import GalleryControls from './GalleryControls';
 import HeroSection from './HeroSection';
 import GalleryGrid from './GalleryGrid';
@@ -27,6 +27,40 @@ export default function ArtistDashboard({ setView }) {
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   const isValidImage = (img) => img?.id && img?.url && img?.name;
+
+  const exportGallery = async () => {
+    const images = await Promise.all(
+      artistGallery.map(async (img) => {
+        try {
+          const blob = await loadBlob(img.localRefId);
+          const base64 = await blobToBase64(blob);
+          return {
+            name: img.name,
+            data: base64,
+            scrapeEligible: img.scrapeEligible,
+            galleryEligible: img.galleryEligible,
+            sampleEligible: img.sampleEligible,
+            metadata: img.metadata || {},
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    const bundle = {
+      timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
+      images: images.filter(Boolean),
+    };
+
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+      type: 'application/json',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `YourCuration-Gallery-${bundle.timestamp}.json`;
+    link.click();
+  };
 
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
@@ -125,7 +159,7 @@ export default function ArtistDashboard({ setView }) {
       </h2>
 
       <GalleryControls
-          onExport={exportGallery}
+        onExport={exportGallery}
         onImport={() => {}}
         onGenerate={() => setView('generate')}
         onReset={() => {
@@ -183,4 +217,13 @@ export default function ArtistDashboard({ setView }) {
       />
     </div>
   );
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to convert blob'));
+    reader.readAsDataURL(blob);
+  });
 }
