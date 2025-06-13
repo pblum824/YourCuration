@@ -14,7 +14,7 @@ import DragDropUpload from './DragDropUpload';
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
-  const { artistGallery, setArtistGallery } = useCuration();
+  const { artistGallery, setArtistGallery, setMode } = useCuration();
 
   const [heroImage, setHeroImage] = useState(null);
   const [borderSkin, setBorderSkin] = useState(null);
@@ -141,7 +141,10 @@ export default function ArtistDashboard({ setView }) {
 
       <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
         <button
-          onClick={() => setView('client')}
+          onClick={() => {
+            setMode('client');
+            setView('client');
+          }}
           style={{
             padding: '0.75rem 1.25rem',
             fontSize: '1rem',

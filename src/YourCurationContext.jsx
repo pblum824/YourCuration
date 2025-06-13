@@ -1,34 +1,38 @@
+// File: src/YourCurationContext.jsx
 import React, { createContext, useContext, useState } from 'react';
 
-const CurationContext = createContext();
+const YourCurationContext = createContext();
 
 export function YourCurationProvider({ children }) {
   const [artistGallery, setArtistGallery] = useState([]);
+  const [artistSamples, setArtistSamples] = useState([]);
   const [ratings, setRatings] = useState({});
-  const [galleryRatings, setGalleryRatings] = useState({});
   const [cg1Selections, setCG1Selections] = useState({});
-  const [cg2Selections, setCG2Selections] = useState({}); // optional future
+  const [cg2Selections, setCG2Selections] = useState({});
+  const [mode, setMode] = useState('artist'); // 'artist' or 'client'
 
   return (
-    <CurationContext.Provider
+    <YourCurationContext.Provider
       value={{
         artistGallery,
         setArtistGallery,
+        artistSamples,
+        setArtistSamples,
         ratings,
         setRatings,
-        galleryRatings,
-        setGalleryRatings,
         cg1Selections,
         setCG1Selections,
         cg2Selections,
-        setCG2Selections, // optional for next step
+        setCG2Selections,
+        mode,
+        setMode,
       }}
     >
       {children}
-    </CurationContext.Provider>
+    </YourCurationContext.Provider>
   );
 }
 
 export function useCuration() {
-  return useContext(CurationContext);
+  return useContext(YourCurationContext);
 }

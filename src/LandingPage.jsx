@@ -1,7 +1,10 @@
 // File: src/LandingPage.jsx
 import React from 'react';
+import { useCuration } from './YourCurationContext';
 
 export default function LandingPage({ setView }) {
+  const { setMode } = useCuration();
+
   return (
     <div
       style={{
@@ -33,7 +36,10 @@ export default function LandingPage({ setView }) {
           Artist
         </button>
         <button
-          onClick={() => setView('client')}
+          onClick={() => {
+            setMode('client');
+            setView('client');
+          }}
           style={buttonStyle('#10b981', '#fff')}
         >
           Client
