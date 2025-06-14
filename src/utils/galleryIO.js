@@ -1,6 +1,7 @@
-// File: utils/galleryIO.js
+// File: src/utils/galleryIO.js
 import { imageToBase64, toUrl } from './imageHelpers';
 
+// EXPORT FUNCTION — unchanged
 export const exportGalleryData = async ({ heroImage, borderSkin, centerBackground, artistGallery }) => {
   const exportImage = async (img) => ({
     name: img.name,
@@ -24,6 +25,33 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
   });
 };
 
+// HELPER — convert data URL to Blob safely (iPad/Netlify-safe)
+function dataURLtoBlob(dataURL) {
+  const [header, base64] = dataURL.split(',');
+  const mimeMatch = header.match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) {
+    byteNumbers[i] = byteChars.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mime });
+}
+
+// TEXT LOGGER — prints to screen, fallback if logToScreen() unavailable
+function screenLog(msg) {
+  const existing = document.getElementById('import-logger');
+  const el = document.createElement('div');
+  el.textContent = `📥 ${msg}`;
+  el.style.fontFamily = 'monospace';
+  el.style.fontSize = '0.85rem';
+  el.style.color = '#333';
+  if (existing) existing.appendChild(el);
+  else console.log(msg);
+}
+
+// IMPORT FUNCTION — now uses safe blob parsing
 export const importGalleryData = async (file) => {
   const reader = new FileReader();
 
@@ -32,62 +60,48 @@ export const importGalleryData = async (file) => {
       try {
         const bundle = JSON.parse(reader.result);
 
-        const heroImage = bundle.heroImage
-          ? await toUrl(
-              bundle.heroImage.data,
-              bundle.heroImage.name,
-              bundle.heroImage.metadata,
-              bundle.heroImage.scrapeEligible,
-              bundle.heroImage.galleryEligible,
-              bundle.heroImage.sampleEligible
-            )
-          : null;
+        const restoreImage = async (img) => {
+          if (!img || !img.data) return null;
+          try {
+            const blob = dataURLtoBlob(img.data);
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            const url = URL.createObjectURL(blob);
+            const saved = await import('./dbCache').then(m => m.saveBlob(id, blob));
+            return {
+              id,
+              name: img.name,
+              url,
+              localRefId: id,
+              scrapeEligible: img.scrapeEligible,
+              galleryEligible: img.galleryEligible,
+              sampleEligible: img.sampleEligible,
+              metadata: img.metadata || {},
+            };
+          } catch {
+            return null;
+          }
+        };
 
-        const borderSkin = bundle.borderSkin
-          ? await toUrl(
-              bundle.borderSkin.data,
-              bundle.borderSkin.name,
-              bundle.borderSkin.metadata,
-              bundle.borderSkin.scrapeEligible,
-              bundle.borderSkin.galleryEligible,
-              bundle.borderSkin.sampleEligible
-            )
-          : null;
+        const heroImage = await restoreImage(bundle.heroImage);
+        const borderSkin = await restoreImage(bundle.borderSkin);
+        const centerBackground = await restoreImage(bundle.centerBackground);
+        const images = await Promise.all((bundle.images || []).map(restoreImage));
 
-        const centerBackground = bundle.centerBackground
-          ? await toUrl(
-              bundle.centerBackground.data,
-              bundle.centerBackground.name,
-              bundle.centerBackground.metadata,
-              bundle.centerBackground.scrapeEligible,
-              bundle.centerBackground.galleryEligible,
-              bundle.centerBackground.sampleEligible
-            )
-          : null;
+        screenLog(`Imported ${images.filter(Boolean).length} image(s)`);
+        if (images[0]) screenLog(`First: ${images[0].name}`);
 
-        const images = Array.isArray(bundle.images)
-          ? await Promise.all(
-              bundle.images.map((img) =>
-                toUrl(
-                  img.data,
-                  img.name,
-                  img.metadata,
-                  img.scrapeEligible,
-                  img.galleryEligible,
-                  img.sampleEligible
-                )
-              )
-            )
-          : [];
-        logToScreen(`🧠 Imported ${images.length} image(s) from bundle`);
-        logToScreen(`📦 First image: ${images[0]?.name || 'none'}`);
         resolve({ heroImage, borderSkin, centerBackground, images });
       } catch (err) {
+        screenLog(`❌ Import failed: ${err.message}`);
         reject(err);
       }
     };
 
-    reader.onerror = () => reject(reader.error);
+    reader.onerror = () => {
+      screenLog(`❌ Read error: ${reader.error?.message || 'unknown error'}`);
+      reject(reader.error);
+    };
+
     reader.readAsText(file);
   });
 };
