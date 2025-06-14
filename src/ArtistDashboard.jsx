@@ -73,13 +73,8 @@ export default function ArtistDashboard({ setView }) {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (!Array.isArray(data.images) || data.images.length === 0) {
-          logToScreen('❌ No images found in bundle');
-          return;
-        }
-
         const restored = await Promise.all(
-          data.images.map(async (img) => {
+          (data.images || []).map(async (img) => {
             try {
               const response = await fetch(img.data);
               const blob = await response.blob();
@@ -96,21 +91,15 @@ export default function ArtistDashboard({ setView }) {
                 sampleEligible: img.sampleEligible,
                 metadata: img.metadata || {},
               };
-            } catch (err) {
-              logToScreen(`⚠️ Failed to restore image: ${img.name}`);
+            } catch {
               return null;
             }
           })
         );
-
-        const valid = restored.filter(Boolean);
-        setArtistGallery((prev) => [...prev, ...valid]);
-        logToScreen(`✅ Imported ${valid.length} image(s)`);
-        if (valid.length > 0) {
-          logToScreen(`📦 First image: ${valid[0].name}`);
-        }
+        setArtistGallery((prev) => [...prev, ...restored.filter(Boolean)]);
+        logToScreen(`✅ Imported ${restored.length} items`);
       } catch (err) {
-        logToScreen(`❌ Import error: ${err.message}`);
+        alert('Failed to import gallery');
       }
     };
     input.click();
@@ -261,13 +250,14 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <div style={{ fontFamily: 'monospace', color: '#444', marginTop: '1.5rem' }}>
-        {logs.map((log, i) => (
-          <div key={i}>🧾 {log}</div>
-        ))}
-      </div>
-
-      $1
+      <GalleryGrid
+        images={viewGallery.filter(isValidImage)}
+        onToggleScrape={toggleImageScrape}
+        onRemove={removeImage}
+        onToggleGallery={toggleImageGallery}
+        onToggleSample={toggleImageSample}
+        devMode={devMode}
+      />
     </div>
   );
 }
