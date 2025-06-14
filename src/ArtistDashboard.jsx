@@ -69,37 +69,12 @@ export default function ArtistDashboard({ setView }) {
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        const restored = await Promise.all(
-          (data.images || []).map(async (img) => {
-            try {
-              const response = await fetch(img.data);
-              const blob = await response.blob();
-              const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-              const url = URL.createObjectURL(blob);
-              await saveBlob(id, blob);
-              return {
-                id,
-                name: img.name,
-                url,
-                localRefId: id,
-                scrapeEligible: img.scrapeEligible,
-                galleryEligible: img.galleryEligible,
-                sampleEligible: img.sampleEligible,
-                metadata: img.metadata || {},
-              };
-            } catch {
-              return null;
-            }
-          })
-        );
-        setArtistGallery((prev) => [...prev, ...restored.filter(Boolean)]);
-        logToScreen(`✅ Imported ${restored.length} items`);
+        const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
+        setArtistGallery((prev) => [...prev, ...images]);
+        logToScreen(`✅ Imported ${images.length} image(s)`);
       } catch (err) {
-        alert('Failed to import gallery');
+        logToScreen(`❌ Import failed: ${err.message}`);
       }
     };
     input.click();
@@ -250,14 +225,13 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <GalleryGrid
-        images={viewGallery.filter(isValidImage)}
-        onToggleScrape={toggleImageScrape}
-        onRemove={removeImage}
-        onToggleGallery={toggleImageGallery}
-        onToggleSample={toggleImageSample}
-        devMode={devMode}
-      />
+      <div style={{ fontFamily: 'monospace', color: '#444', marginTop: '1.5rem' }}>
+        {logs.map((log, i) => (
+          <div key={i}>🧾 {log}</div>
+        ))}
+      </div>
+
+      $1
     </div>
   );
 }
