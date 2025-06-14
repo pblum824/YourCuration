@@ -265,7 +265,10 @@ export default function ArtistDashboard({ setView }) {
           <div key={i}>📦 {log}</div>
         ))}
       </div>
-
+      <p style={{ color: '#444', fontStyle: 'italic', fontSize: '0.9rem' }}>
+        Gallery length now: {artistGallery.length}
+      </p>
+      
       <div style={{ fontFamily: 'monospace', color: '#444', marginTop: '1.5rem' }}>
         {logs.map((log, i) => (
           <div key={i}>🧾 {log}</div>
