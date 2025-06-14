@@ -62,6 +62,48 @@ export default function ArtistDashboard({ setView }) {
     link.click();
   };
 
+  const handleImportGallery = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const restored = await Promise.all(
+          (data.images || []).map(async (img) => {
+            try {
+              const res = await fetch(img.data);
+              const blob = await res.blob();
+              const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+              await saveBlob(id, blob);
+              return {
+                id,
+                name: img.name,
+                url: URL.createObjectURL(blob),
+                localRefId: id,
+                scrapeEligible: img.scrapeEligible,
+                galleryEligible: img.galleryEligible,
+                sampleEligible: img.sampleEligible,
+                metadata: img.metadata || {},
+              };
+            } catch {
+              return null;
+            }
+          })
+        );
+        setArtistGallery((prev) => [...prev, ...restored.filter(Boolean)]);
+        logToScreen(`✅ Imported ${restored.length} items`);
+      } catch (err) {
+        alert('Failed to import gallery');
+      }
+    };
+    input.click();
+  };
+
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
@@ -160,7 +202,7 @@ export default function ArtistDashboard({ setView }) {
 
       <GalleryControls
         onExport={exportGallery}
-        onImport={() => {}}
+        onImport={handleImportGallery}
         onGenerate={() => setView('generate')}
         onReset={() => {
           if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
