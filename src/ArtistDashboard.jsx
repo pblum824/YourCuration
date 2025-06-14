@@ -73,7 +73,6 @@ export default function ArtistDashboard({ setView }) {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-
         const restored = await Promise.all(
           (data.images || []).map(async (img) => {
             try {
@@ -84,42 +83,23 @@ export default function ArtistDashboard({ setView }) {
               await saveBlob(id, blob);
               return {
                 id,
-                name: img.name || 'untitled',
+                name: img.name,
                 url,
                 localRefId: id,
-                scrapeEligible: !!img.scrapeEligible,
-                galleryEligible: !!img.galleryEligible,
-                sampleEligible: !!img.sampleEligible,
+                scrapeEligible: img.scrapeEligible,
+                galleryEligible: img.galleryEligible,
+                sampleEligible: img.sampleEligible,
                 metadata: img.metadata || {},
               };
-            } catch (err) {
-              logToScreen(`❌ Failed to hydrate image: ${img.name || 'unnamed'}`);
+            } catch {
               return null;
             }
           })
         );
-
-        const filtered = restored.filter(Boolean);
-        const skipped = restored.length - filtered.length;
-
-        if (filtered.length > 0) {
-          logToScreen(`✅ Imported ${filtered.length} image${filtered.length === 1 ? '' : 's'}`);
-          logToScreen(`🖼️ First image: ${filtered[0].name || 'unnamed'} (id: ${filtered[0].id})`);
-          if (filtered[1]) logToScreen(`🖼️ Second image: ${filtered[1].name || 'unnamed'} (id: ${filtered[1].id})`);
-        }
-
-        if (skipped > 0) {
-          logToScreen(`⚠️ Skipped ${skipped} invalid image${skipped === 1 ? '' : 's'}`);
-        }
-
-        setArtistGallery((prev) => [...prev, ...filtered]);
-        logToScreen(`📌 Committed ${filtered.length} items to artistGallery`);
-        window.scrollTo(0, 0);
-        logToScreen(`✅ Imported ${filtered.length} image${filtered.length === 1 ? '' : 's'}`);
-        if (filtered.length) window.scrollTo(0, 0);
+        setArtistGallery((prev) => [...prev, ...restored.filter(Boolean)]);
+        logToScreen(`✅ Imported ${restored.length} items`);
       } catch (err) {
-        alert('Failed to import gallery.');
-        logToScreen(`❌ Import error: ${err.message}`);
+        alert('Failed to import gallery');
       }
     };
     input.click();
@@ -270,13 +250,14 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <div style={{ fontFamily: 'monospace', color: '#444', marginTop: '1.5rem' }}>
-        {logs.map((log, i) => (
-          <div key={i}>🧾 {log}</div>
-        ))}
-      </div>
-
-      $1
+      <GalleryGrid
+        images={viewGallery.filter(isValidImage)}
+        onToggleScrape={toggleImageScrape}
+        onRemove={removeImage}
+        onToggleGallery={toggleImageGallery}
+        onToggleSample={toggleImageSample}
+        devMode={devMode}
+      />
     </div>
   );
 }
