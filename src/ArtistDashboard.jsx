@@ -263,14 +263,13 @@ export default function ArtistDashboard({ setView }) {
         ))}
       </div>
 
-      <GalleryGrid
-        images={viewGallery.filter(isValidImage)}
-        onToggleScrape={toggleImageScrape}
-        onRemove={removeImage}
-        onToggleGallery={toggleImageGallery}
-        onToggleSample={toggleImageSample}
-        devMode={devMode}
-      />
+      <div style={{ fontFamily: 'monospace', color: '#444', marginTop: '1.5rem' }}>
+        {logs.map((log, i) => (
+          <div key={i}>🧾 {log}</div>
+        ))}
+      </div>
+
+      $1
     </div>
   );
 }
