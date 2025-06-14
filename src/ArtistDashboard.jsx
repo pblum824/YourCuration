@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
 import { saveBlob, loadBlob } from './utils/dbCache';
-import { importGalleryData } from './utils/galleryIO';
+import { importGalleryData, exportGalleryData } from './utils/galleryIO';
 import GalleryGrid from './GalleryGrid';
 import HeroSection from './HeroSection';
 import UploadWarnings from './UploadWarnings';
@@ -41,8 +41,18 @@ export default function ArtistDashboard({ setView }) {
       setArtistGallery((prev) => [...prev, ...images]);
       logToScreen(`✅ Imported ${images.length} image(s)`);
     } catch (err) {
-      alert('Failed to import gallery');
+      logToScreen(`❌ Import failed: ${err.message}`);
     }
+  };
+
+  const handleExportGallery = async () => {
+    const blob = await exportGalleryData({ heroImage, borderSkin, centerBackground, artistGallery });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    link.click();
+    logToScreen('✅ Gallery exported');
   };
 
   const handleFiles = async (fileList) => {
@@ -116,6 +126,16 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => Math.max(0, prev - 1));
   };
 
+  const handleReset = () => {
+    if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
+    setHeroImage(null);
+    setBorderSkin(null);
+    setCenterBackground(null);
+    setArtistGallery([]);
+    setUploadCount(0);
+    setUploadWarnings([]);
+  };
+
   const viewGallery = artistGallery.map((img) => ({
     id: img.id,
     name: img.name,
@@ -141,7 +161,7 @@ export default function ArtistDashboard({ setView }) {
         Artist Dashboard
       </h2>
 
-      <div style={{ marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
         <input
           type="file"
           accept=".json"
@@ -149,58 +169,10 @@ export default function ArtistDashboard({ setView }) {
           ref={fileInputRef}
           onChange={handleImportGallery}
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          style={{
-            padding: '0.5rem 1rem',
-            fontSize: '0.9rem',
-            borderRadius: '0.5rem',
-            border: '1px solid #ccc',
-            backgroundColor: '#f3f4f6',
-            color: '#1e3a8a',
-            cursor: 'pointer',
-            marginRight: '0.5rem',
-          }}
-        >
-          📥 Import Gallery
-        </button>
-        <button
-          onClick={() => setView('generate')}
-          style={{
-            padding: '0.5rem 1rem',
-            fontSize: '0.9rem',
-            borderRadius: '0.5rem',
-            border: '1px solid #ccc',
-            backgroundColor: '#f3f4f6',
-            color: '#1e3a8a',
-            cursor: 'pointer',
-            marginRight: '0.5rem',
-          }}
-        >
-          🛠️ Generate Tags
-        </button>
-        <button
-          onClick={() => {
-            if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
-            setHeroImage(null);
-            setBorderSkin(null);
-            setCenterBackground(null);
-            setArtistGallery([]);
-            setUploadCount(0);
-            setUploadWarnings([]);
-          }}
-          style={{
-            padding: '0.5rem 1rem',
-            fontSize: '0.9rem',
-            borderRadius: '0.5rem',
-            border: '1px solid #ccc',
-            backgroundColor: '#fee2e2',
-            color: '#b91c1c',
-            cursor: 'pointer',
-          }}
-        >
-          🔄 Reset Dashboard
-        </button>
+        <button onClick={() => fileInputRef.current?.click()} style={buttonStyle}>📥 Import Gallery</button>
+        <button onClick={handleExportGallery} style={buttonStyle}>📤 Export Gallery</button>
+        <button onClick={() => setView('generate')} style={buttonStyle}>🛠️ Generate Tags</button>
+        <button onClick={handleReset} style={{ ...buttonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}>🔄 Reset Dashboard</button>
       </div>
 
       <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
@@ -231,7 +203,7 @@ export default function ArtistDashboard({ setView }) {
       <p style={{ color: '#999', fontStyle: 'italic', fontSize: '0.85rem' }}>
         Debug: artistGallery length = {artistGallery.length}
       </p>
-      <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
+      <div id="import-logger" style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
         {logs.map((log, i) => (
           <div key={i}>📦 {log}</div>
         ))}
@@ -248,3 +220,14 @@ export default function ArtistDashboard({ setView }) {
     </div>
   );
 }
+
+const buttonStyle = {
+  padding: '0.5rem 1rem',
+  fontSize: '0.9rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  backgroundColor: '#f3f4f6',
+  color: '#1e3a8a',
+  cursor: 'pointer',
+  marginRight: '0.5rem',
+};
