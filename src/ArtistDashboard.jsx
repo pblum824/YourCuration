@@ -76,14 +76,15 @@ export default function ArtistDashboard({ setView }) {
         const restored = await Promise.all(
           (data.images || []).map(async (img) => {
             try {
-              const res = await fetch(img.data);
-              const blob = await res.blob();
+              const response = await fetch(img.data);
+              const blob = await response.blob();
               const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+              const url = URL.createObjectURL(blob);
               await saveBlob(id, blob);
               return {
                 id,
                 name: img.name,
-                url: URL.createObjectURL(blob),
+                url,
                 localRefId: id,
                 scrapeEligible: img.scrapeEligible,
                 galleryEligible: img.galleryEligible,
