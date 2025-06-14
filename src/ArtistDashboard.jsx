@@ -72,8 +72,8 @@ export default function ArtistDashboard({ setView }) {
       try {
         const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
         setArtistGallery((prev) => [...prev, ...images]);
-        logToScreen(`📦 First imported: ${images[0]?.name || 'none'}`);
-        logToScreen(`🧮 Added ${images.length} image(s) to artistGallery`);
+logToScreen(`🧠 Imported ${images.length} image(s) from bundle`);
+logToScreen(`📦 First image: ${images[0]?.name || 'none'}`);
         logToScreen(`✅ Imported ${images.length} image(s)`);
       } catch (err) {
         logToScreen(`❌ Import failed: ${err.message}`);
