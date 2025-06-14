@@ -1,15 +1,55 @@
 // File: src/CuratedGalleryFinal.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadBlob as loadImageBlob } from './utils/dbCache';
+import { loadBlob } from './utils/dbCache';
 
 export default function CuratedGalleryFinal({ setView }) {
-  const { artistGallery, mode } = useCuration();
+  const {
+    artistGallery = [],
+    ratings = {},
+    cg1Selections = {},
+    cg2Selections = {},
+    mode,
+  } = useCuration();
+
+  const [finalGallery, setFinalGallery] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const selectedIds = new Set();
+
+    artistGallery.forEach((img) => {
+      const isLoved = ratings[img.id] === 'love';
+      const isCG1 = cg1Selections[img.id] === 2;
+      const isCG2 = cg2Selections[img.id] === 2;
+      if (isLoved || isCG1 || isCG2) {
+        selectedIds.add(img.id);
+      }
+    });
+
+    async function hydrate() {
+      const selected = artistGallery.filter((img) => selectedIds.has(img.id));
+      const hydrated = await Promise.all(
+        selected.map(async (img) => {
+          try {
+            const blob = await loadBlob(img.localRefId);
+            const url = URL.createObjectURL(blob);
+            return { ...img, url };
+          } catch {
+            return { ...img, url: '' };
+          }
+        })
+      );
+      setFinalGallery(hydrated);
+    }
+
+    hydrate();
+  }, [artistGallery, ratings, cg1Selections, cg2Selections]);
 
   const exportGallery = async () => {
     const images = await Promise.all(
-      artistGallery.map(async (img) => {
-        const blob = await loadImageBlob(img.localRefId);
+      finalGallery.map(async (img) => {
+        const blob = await loadBlob(img.localRefId);
         const base64 = await blobToBase64(blob);
         return {
           name: img.name,
@@ -64,6 +104,7 @@ export default function CuratedGalleryFinal({ setView }) {
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
         Curated Gallery Final
       </h2>
+
       <button
         onClick={exportGallery}
         style={{
@@ -77,6 +118,49 @@ export default function CuratedGalleryFinal({ setView }) {
       >
         Export Final Gallery
       </button>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '2rem',
+          marginTop: '2rem',
+        }}
+      >
+        {finalGallery.map((img) => (
+          <div key={img.id} style={{ textAlign: 'center' }}>
+            {img.url ? (
+              <img
+                src={img.url}
+                alt={img.name}
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  backgroundColor: '#f3f4f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#999',
+                  fontStyle: 'italic',
+                }}
+              >
+                image not loaded
+              </div>
+            )}
+            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
