@@ -73,6 +73,7 @@ export default function ArtistDashboard({ setView }) {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
+
         const restored = await Promise.all(
           (data.images || []).map(async (img) => {
             try {
@@ -83,23 +84,28 @@ export default function ArtistDashboard({ setView }) {
               await saveBlob(id, blob);
               return {
                 id,
-                name: img.name,
+                name: img.name || 'untitled',
                 url,
                 localRefId: id,
-                scrapeEligible: img.scrapeEligible,
-                galleryEligible: img.galleryEligible,
-                sampleEligible: img.sampleEligible,
+                scrapeEligible: !!img.scrapeEligible,
+                galleryEligible: !!img.galleryEligible,
+                sampleEligible: !!img.sampleEligible,
                 metadata: img.metadata || {},
               };
-            } catch {
+            } catch (err) {
+              logToScreen(`❌ Failed to hydrate image: ${img.name || 'unnamed'}`);
               return null;
             }
           })
         );
-        setArtistGallery((prev) => [...prev, ...restored.filter(Boolean)]);
-        logToScreen(`✅ Imported ${restored.length} items`);
+
+        const filtered = restored.filter(Boolean);
+        setArtistGallery((prev) => [...prev, ...filtered]);
+        logToScreen(`✅ Imported ${filtered.length} image${filtered.length === 1 ? '' : 's'}`);
+        if (filtered.length) window.scrollTo(0, 0);
       } catch (err) {
-        alert('Failed to import gallery');
+        alert('Failed to import gallery.');
+        logToScreen(`❌ Import error: ${err.message}`);
       }
     };
     input.click();
