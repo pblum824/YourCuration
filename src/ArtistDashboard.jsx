@@ -108,6 +108,9 @@ export default function ArtistDashboard({ setView }) {
         }
         if (skipped > 0) logToScreen(`⚠️ Skipped ${skipped} invalid image${skipped === 1 ? '' : 's'}`);
         setArtistGallery((prev) => [...prev, ...filtered]);
+        setTimeout(() => {
+          logToScreen(`🧪 Final gallery size: ${artistGallery.length}`);
+        }, 500);
         logToScreen(`✅ Imported ${filtered.length} image${filtered.length === 1 ? '' : 's'}`);
         if (filtered.length) window.scrollTo(0, 0);
       } catch (err) {
