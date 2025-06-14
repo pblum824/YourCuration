@@ -69,14 +69,48 @@ export default function ArtistDashboard({ setView }) {
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
       try {
-        const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
-        setArtistGallery((prev) => [...prev, ...images]);
-logToScreen(`🧠 Imported ${images.length} image(s) from bundle`);
-logToScreen(`📦 First image: ${images[0]?.name || 'none'}`);
-        logToScreen(`✅ Imported ${images.length} image(s)`);
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!Array.isArray(data.images) || data.images.length === 0) {
+          logToScreen('❌ No images found in bundle');
+          return;
+        }
+
+        const restored = await Promise.all(
+          data.images.map(async (img) => {
+            try {
+              const response = await fetch(img.data);
+              const blob = await response.blob();
+              const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+              const url = URL.createObjectURL(blob);
+              await saveBlob(id, blob);
+              return {
+                id,
+                name: img.name,
+                url,
+                localRefId: id,
+                scrapeEligible: img.scrapeEligible,
+                galleryEligible: img.galleryEligible,
+                sampleEligible: img.sampleEligible,
+                metadata: img.metadata || {},
+              };
+            } catch (err) {
+              logToScreen(`⚠️ Failed to restore image: ${img.name}`);
+              return null;
+            }
+          })
+        );
+
+        const valid = restored.filter(Boolean);
+        setArtistGallery((prev) => [...prev, ...valid]);
+        logToScreen(`✅ Imported ${valid.length} image(s)`);
+        if (valid.length > 0) {
+          logToScreen(`📦 First image: ${valid[0].name}`);
+        }
       } catch (err) {
-        logToScreen(`❌ Import failed: ${err.message}`);
+        logToScreen(`❌ Import error: ${err.message}`);
       }
     };
     input.click();
