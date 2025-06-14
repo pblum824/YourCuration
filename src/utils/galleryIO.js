@@ -79,7 +79,8 @@ export const importGalleryData = async (file) => {
               )
             )
           : [];
-
+        logToScreen(`🧠 Imported ${images.length} image(s) from bundle`);
+        logToScreen(`📦 First image: ${images[0]?.name || 'none'}`);
         resolve({ heroImage, borderSkin, centerBackground, images });
       } catch (err) {
         reject(err);
