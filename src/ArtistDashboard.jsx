@@ -1,15 +1,15 @@
 // File: src/ArtistDashboard.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
 import { saveBlob, loadBlob } from './utils/dbCache';
-import GalleryControls from './GalleryControls';
-import HeroSection from './HeroSection';
+import { importGalleryData } from './utils/galleryIO';
 import GalleryGrid from './GalleryGrid';
-import DevToggle from './DevToggle';
-import MultiFilePicker from './MultiFilePicker';
+import HeroSection from './HeroSection';
 import UploadWarnings from './UploadWarnings';
 import DragDropUpload from './DragDropUpload';
+import MultiFilePicker from './MultiFilePicker';
+import DevToggle from './DevToggle';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -24,85 +24,25 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [devMode, setDevMode] = useState(false);
   const [logs, setLogs] = useState([]);
-  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
+  const fileInputRef = useRef(null);
+  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
-  const exportGallery = async () => {
-    const images = await Promise.all(
-      artistGallery.map(async (img) => {
-        try {
-          const blob = await loadBlob(img.localRefId);
-          const base64 = await blobToBase64(blob);
-          return {
-            name: img.name,
-            data: base64,
-            scrapeEligible: img.scrapeEligible,
-            galleryEligible: img.galleryEligible,
-            sampleEligible: img.sampleEligible,
-            metadata: img.metadata || {},
-          };
-        } catch {
-          return null;
-        }
-      })
-    );
+  const handleImportGallery = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const bundle = {
-      timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
-      images: images.filter(Boolean),
-    };
-
-    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-      type: 'application/json',
-    });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `YourCuration-Gallery-${bundle.timestamp}.json`;
-    link.click();
-  };
-
-  const handleImportGallery = async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        const restored = await Promise.all(
-          (data.images || []).map(async (img) => {
-            try {
-              const response = await fetch(img.data);
-              const blob = await response.blob();
-              const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-              const url = URL.createObjectURL(blob);
-              await saveBlob(id, blob);
-              return {
-                id,
-                name: img.name,
-                url,
-                localRefId: id,
-                scrapeEligible: img.scrapeEligible,
-                galleryEligible: img.galleryEligible,
-                sampleEligible: img.sampleEligible,
-                metadata: img.metadata || {},
-              };
-            } catch {
-              return null;
-            }
-          })
-        );
-        setArtistGallery((prev) => [...prev, ...restored.filter(Boolean)]);
-        logToScreen(`✅ Imported ${restored.length} items`);
-      } catch (err) {
-        alert('Failed to import gallery');
-      }
-    };
-    input.click();
+    try {
+      const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
+      if (heroImage) setHeroImage(heroImage);
+      if (borderSkin) setBorderSkin(borderSkin);
+      if (centerBackground) setCenterBackground(centerBackground);
+      setArtistGallery((prev) => [...prev, ...images]);
+      logToScreen(`✅ Imported ${images.length} image(s)`);
+    } catch (err) {
+      alert('Failed to import gallery');
+    }
   };
 
   const handleFiles = async (fileList) => {
@@ -201,20 +141,67 @@ export default function ArtistDashboard({ setView }) {
         Artist Dashboard
       </h2>
 
-      <GalleryControls
-        onExport={exportGallery}
-        onImport={handleImportGallery}
-        onGenerate={() => setView('generate')}
-        onReset={() => {
-          if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
-          setHeroImage(null);
-          setBorderSkin(null);
-          setCenterBackground(null);
-          setArtistGallery([]);
-          setUploadCount(0);
-          setUploadWarnings([]);
-        }}
-      />
+      <div style={{ marginBottom: '1rem' }}>
+        <input
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          ref={fileInputRef}
+          onChange={handleImportGallery}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            padding: '0.5rem 1rem',
+            fontSize: '0.9rem',
+            borderRadius: '0.5rem',
+            border: '1px solid #ccc',
+            backgroundColor: '#f3f4f6',
+            color: '#1e3a8a',
+            cursor: 'pointer',
+            marginRight: '0.5rem',
+          }}
+        >
+          📥 Import Gallery
+        </button>
+        <button
+          onClick={() => setView('generate')}
+          style={{
+            padding: '0.5rem 1rem',
+            fontSize: '0.9rem',
+            borderRadius: '0.5rem',
+            border: '1px solid #ccc',
+            backgroundColor: '#f3f4f6',
+            color: '#1e3a8a',
+            cursor: 'pointer',
+            marginRight: '0.5rem',
+          }}
+        >
+          🛠️ Generate Tags
+        </button>
+        <button
+          onClick={() => {
+            if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
+            setHeroImage(null);
+            setBorderSkin(null);
+            setCenterBackground(null);
+            setArtistGallery([]);
+            setUploadCount(0);
+            setUploadWarnings([]);
+          }}
+          style={{
+            padding: '0.5rem 1rem',
+            fontSize: '0.9rem',
+            borderRadius: '0.5rem',
+            border: '1px solid #ccc',
+            backgroundColor: '#fee2e2',
+            color: '#b91c1c',
+            cursor: 'pointer',
+          }}
+        >
+          🔄 Reset Dashboard
+        </button>
+      </div>
 
       <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
         <button
@@ -226,7 +213,7 @@ export default function ArtistDashboard({ setView }) {
             backgroundColor: '#1e3a8a',
             color: '#fff',
             border: 'none',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           Start Client Presentation
@@ -260,13 +247,4 @@ export default function ArtistDashboard({ setView }) {
       />
     </div>
   );
-}
-
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to convert blob'));
-    reader.readAsDataURL(blob);
-  });
 }
