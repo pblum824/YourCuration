@@ -100,6 +100,13 @@ export default function ArtistDashboard({ setView }) {
         );
 
         const filtered = restored.filter(Boolean);
+        const skipped = restored.length - filtered.length;
+        if (filtered.length > 0) {
+          logToScreen(`✅ Imported ${filtered.length} image${filtered.length === 1 ? '' : 's'}`);
+          logToScreen(`🖼️ First image: ${filtered[0].name || 'unnamed'} (id: ${filtered[0].id})`);
+          if (filtered[1]) logToScreen(`🖼️ Second image: ${filtered[1].name || 'unnamed'} (id: ${filtered[1].id})`);
+        }
+        if (skipped > 0) logToScreen(`⚠️ Skipped ${skipped} invalid image${skipped === 1 ? '' : 's'}`);
         setArtistGallery((prev) => [...prev, ...filtered]);
         logToScreen(`✅ Imported ${filtered.length} image${filtered.length === 1 ? '' : 's'}`);
         if (filtered.length) window.scrollTo(0, 0);
