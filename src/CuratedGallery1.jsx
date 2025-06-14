@@ -43,7 +43,15 @@ export default function CuratedGallery1({ setView }) {
   }, [artistGallery, ratings]);
 
   const approveImage = (id) => {
-    setSelections((prev) => ({ ...prev, [id]: 2 }));
+    setSelections((prev) => {
+      const next = { ...prev };
+      if (next[id] === 2) {
+        delete next[id]; // unselect
+      } else {
+        next[id] = 2; // select
+      }
+      return next;
+    });
   };
 
   if (error) {
