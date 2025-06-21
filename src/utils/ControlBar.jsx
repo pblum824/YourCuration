@@ -1,7 +1,7 @@
 // File: src/components/ControlBar.jsx
 import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
-import DevToggle from './DevToggle';
+import DevToggle from '../context/DevModeToggle';
 
 export default function ControlBar({
   onImport,
