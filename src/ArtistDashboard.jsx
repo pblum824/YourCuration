@@ -9,7 +9,7 @@ import HeroSection from './HeroSection';
 import UploadWarnings from './UploadWarnings';
 import DragDropUpload from './DragDropUpload';
 import MultiFilePicker from './MultiFilePicker';
-import DevToggle from './DevToggle';
+import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -149,32 +149,17 @@ export default function ArtistDashboard({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <DevToggle devMode={devMode} setDevMode={setDevMode} />
-      <h2
-        style={{
-          fontSize: '2.25rem',
-          fontFamily: 'Parisienne, cursive',
-          color: '#1e3a8a',
-          textAlign: 'center',
-          marginBottom: '2rem',
-        }}
-      >
-        Artist Dashboard
-      </h2>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
-        <input
-          type="file"
-          accept=".json"
-          style={{ display: 'none' }}
-          ref={fileInputRef}
-          onChange={handleImportGallery}
-        />
-        <button onClick={() => fileInputRef.current?.click()} style={buttonStyle}>📥 Import Gallery</button>
-        <button onClick={handleExportGallery} style={buttonStyle}>📤 Export Gallery</button>
-        <button onClick={() => setView('generate')} style={buttonStyle}>🛠️ Generate Tags</button>
-        <button onClick={handleReset} style={{ ...buttonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}>🔄 Reset Dashboard</button>
-      </div>
+      <ControlBar
+        onImport={handleImportGallery}
+        onExport={handleExportGallery}
+        onGenerate={() => setView('generate')}
+        onReset={handleReset}
+        devMode={devMode}
+        setDevMode={setDevMode}
+        showDevToggle
+        showImport
+        showExport
+      />
 
       <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
         <button
