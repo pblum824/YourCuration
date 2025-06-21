@@ -3,13 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
+import { useDevMode } from './context/DevModeContext';
 
 export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
     ratings = {},
-    setCG1Selections
+    setCG1Selections,
   } = useCuration();
+  const { devMode } = useDevMode();
 
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
@@ -27,9 +29,9 @@ export default function CuratedGallery1({ setView }) {
             try {
               const blob = await loadBlob(img.localRefId);
               const url = URL.createObjectURL(blob);
-              return { id: img.id, name: img.name, url };
+              return { id: img.id, name: img.name, url, metadata: img.metadata };
             } catch {
-              return { id: img.id, name: img.name, url: '' };
+              return { id: img.id, name: img.name, url: '', metadata: img.metadata };
             }
           })
         );
@@ -43,15 +45,7 @@ export default function CuratedGallery1({ setView }) {
   }, [artistGallery, ratings]);
 
   const approveImage = (id) => {
-    setSelections((prev) => {
-      const next = { ...prev };
-      if (next[id] === 2) {
-        delete next[id]; // unselect
-      } else {
-        next[id] = 2; // select
-      }
-      return next;
-    });
+    setSelections((prev) => ({ ...prev, [id]: 2 }));
   };
 
   if (error) {
@@ -147,6 +141,11 @@ export default function CuratedGallery1({ setView }) {
               >
                 More Like This
               </button>
+              {devMode && (
+                <pre style={{ fontSize: '0.7rem', marginTop: '0.5rem', color: '#666', textAlign: 'left' }}>
+                  {JSON.stringify(img.metadata, null, 2)}
+                </pre>
+              )}
             </div>
           );
         })}

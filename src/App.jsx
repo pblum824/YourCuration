@@ -10,6 +10,7 @@ import { YourCurationProvider, useCuration } from './YourCurationContext';
 import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
 import LandingPage from './LandingPage';
+import { DevModeProvider } from './context/DevModeContext';
 
 const validViews = [
   'landing',
@@ -94,9 +95,11 @@ export default function App() {
   const [view, setView] = useState('landing');
 
   return (
-    <YourCurationProvider>
-      <InnerApp view={view} setView={setView} />
-    </YourCurationProvider>
+    <DevModeProvider>
+      <YourCurationProvider>
+        <InnerApp view={view} setView={setView} />
+      </YourCurationProvider>
+    </DevModeProvider>
   );
 }
 
