@@ -27,6 +27,7 @@ export default function ControlBar({
         gap: '0.75rem',
         marginBottom: '1.5rem',
         justifyContent: 'center',
+        alignItems: 'center',
       }}
     >
       {showDevToggle && <DevToggle devMode={devMode} setDevMode={setDevMode} />}
