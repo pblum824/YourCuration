@@ -1,7 +1,9 @@
+// File: src/SampleRater.jsx
 import React, { useEffect, useState } from 'react';
 import './SampleRater.css';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
+import ControlBar from './utils/ControlBar';
 
 const SAMPLE_OPTIONS = ['love', 'like', 'less'];
 
@@ -38,6 +40,8 @@ export default function SampleRater({ images, setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <ControlBar view="rate" setView={setView} />
+
       <h2
         style={{
           fontFamily: 'Parisienne, cursive',
@@ -107,4 +111,4 @@ export default function SampleRater({ images, setView }) {
       </div>
     </div>
   );
-}
+} 
