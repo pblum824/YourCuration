@@ -3,15 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
-import { useDevMode } from './context/DevModeContext';
+import ControlBar from './utils/ControlBar';
 
 export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
     ratings = {},
     setCG1Selections,
+    devMode
   } = useCuration();
-  const { devMode } = useDevMode();
 
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
@@ -20,8 +20,7 @@ export default function CuratedGallery1({ setView }) {
   useEffect(() => {
     try {
       const result = curateGallery1({ artistGallery, ratings });
-      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])]
-        .slice(0, 20);
+      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])].slice(0, 20);
 
       async function hydrate() {
         const hydrated = await Promise.all(
@@ -29,9 +28,9 @@ export default function CuratedGallery1({ setView }) {
             try {
               const blob = await loadBlob(img.localRefId);
               const url = URL.createObjectURL(blob);
-              return { id: img.id, name: img.name, url, metadata: img.metadata };
+              return { id: img.id, name: img.name, url };
             } catch {
-              return { id: img.id, name: img.name, url: '', metadata: img.metadata };
+              return { id: img.id, name: img.name, url: '' };
             }
           })
         );
@@ -58,26 +57,7 @@ export default function CuratedGallery1({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      {setView && (
-        <button
-          onClick={() => setView('artist')}
-          style={{
-            position: 'absolute',
-            top: '1rem',
-            left: '1rem',
-            padding: '0.5rem 1rem',
-            fontSize: '1rem',
-            borderRadius: '0.5rem',
-            backgroundColor: '#1e3a8a',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            zIndex: 1000,
-          }}
-        >
-          Exit Client Presentation
-        </button>
-      )}
+      <ControlBar view="curated1" setView={setView} />
 
       <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
         Curated Gallery Preview
@@ -141,11 +121,6 @@ export default function CuratedGallery1({ setView }) {
               >
                 More Like This
               </button>
-              {devMode && (
-                <pre style={{ fontSize: '0.7rem', marginTop: '0.5rem', color: '#666', textAlign: 'left' }}>
-                  {JSON.stringify(img.metadata, null, 2)}
-                </pre>
-              )}
             </div>
           );
         })}
