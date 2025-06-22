@@ -106,7 +106,7 @@ export default function SampleRater({ images, setView }) {
             cursor: 'pointer',
           }}
         >
-          ➡️ Generate Gallery Preview
+          ➡️ Generate Gallery Preview 
         </button>
       </div>
     </div>
