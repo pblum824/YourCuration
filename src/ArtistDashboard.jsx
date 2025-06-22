@@ -161,23 +161,6 @@ export default function ArtistDashboard({ setView }) {
         showExport
       />
 
-      <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
-        <button
-          onClick={() => setView('curated')}
-          style={{
-            padding: '0.75rem 1.25rem',
-            fontSize: '1rem',
-            borderRadius: '0.5rem',
-            backgroundColor: '#1e3a8a',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          Start Client Presentation
-        </button>
-      </div>
-
       <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
       <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
       <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
