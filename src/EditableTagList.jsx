@@ -24,7 +24,7 @@ export default function EditableTagList({ tags, onChange }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
       {tags.map((tag) => (
         <span
           key={tag}
@@ -33,11 +33,10 @@ export default function EditableTagList({ tags, onChange }) {
             color: '#1e3a8a',
             padding: '0.25rem 0.75rem',
             borderRadius: '1rem',
-            fontSize: '0.9rem',
-            fontFamily: 'Parisienne, cursive',
+            fontSize: '0.85rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.25rem'
+            gap: '0.25rem',
           }}
         >
           {tag}
@@ -47,9 +46,8 @@ export default function EditableTagList({ tags, onChange }) {
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '0.9rem',
-              marginLeft: '0.25rem',
-              color: '#991b1b'
+              fontSize: '0.85rem',
+              color: '#991b1b',
             }}
           >
             ×
@@ -64,10 +62,11 @@ export default function EditableTagList({ tags, onChange }) {
         placeholder="Add tag"
         style={{
           padding: '0.5rem',
-          fontSize: '0.9rem',
+          fontSize: '0.85rem',
           border: '1px solid #ccc',
           borderRadius: '0.5rem',
-          fontFamily: 'Parisienne, cursive'
+          fontFamily: 'sans-serif',
+          minWidth: '80px',
         }}
       />
     </div>
