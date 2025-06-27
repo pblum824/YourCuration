@@ -1,4 +1,4 @@
-// File: src/components/GalleryGrid.jsx
+// File: src/GalleryGrid.jsx
 import React from 'react';
 import { imageButton } from './utils/styles';
 import EditableTagSection from './EditableTagSection';
@@ -110,29 +110,31 @@ export default function GalleryGrid({
           )}
 
           {showTags && (
-            <div
-              style={{
-                fontSize: '0.85rem',
-                marginTop: '0.5rem',
-                maxHeight: '120px',
-                overflowY: 'auto',
-                width: '100%',
-              }}
-            >
+            <div style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
               {img.metadata?.imageTags?.length > 0 && (
-                <div><strong>[image]</strong> {img.metadata.imageTags.join(', ')}</div>
+                <div>
+                  <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
+                </div>
               )}
               {img.metadata?.textTags?.length > 0 && (
-                <div><strong>[text]</strong> {img.metadata.textTags.join(', ')}</div>
+                <div>
+                  <strong>[text]</strong> {img.metadata.textTags.join(', ')}
+                </div>
               )}
               {img.metadata?.toneTags?.length > 0 && (
-                <div><strong>[tone]</strong> {img.metadata.toneTags.join(', ')}</div>
+                <div>
+                  <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
+                </div>
               )}
               {img.metadata?.moodTags?.length > 0 && (
-                <div><strong>[mood]</strong> {img.metadata.moodTags.join(', ')}</div>
+                <div>
+                  <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
+                </div>
               )}
               {img.metadata?.paletteTags?.length > 0 && (
-                <div><strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}</div>
+                <div>
+                  <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
+                </div>
               )}
               {img.metadata?.error && (
                 <div style={{ color: 'red', fontSize: '0.8rem' }}>
