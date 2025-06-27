@@ -3,17 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
-import { useDevMode } from './context/DevModeContext';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
-  const { devMode } = useDevMode();
 
   const [localGallery, setLocalGallery] = useState([]);
-  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
     async function hydrateImages() {
@@ -124,12 +119,7 @@ export default function GenerateTags() {
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
 
-      if (uploadable.length === 0) {
-        logToScreen('[GenerateTags] No images selected. Nothing to tag.');
-        return;
-      }
-
-      logToScreen(`[GenerateTags] Uploading ${uploadable.length} images`);
+      if (uploadable.length === 0) return;
 
       const formData = new FormData();
       for (const img of uploadable) {
@@ -158,7 +148,7 @@ export default function GenerateTags() {
         prev.map((img) => tagged.find((t) => t.id === img.id) || img)
       );
     } catch (err) {
-      logToScreen(`[GenerateTags] Batch error: ${err.message}`);
+      console.error(`[GenerateTags] Batch error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -185,21 +175,15 @@ export default function GenerateTags() {
         </button>
       </div>
 
-      <div style={{ marginTop: '1rem', fontFamily: 'monospace' }}>
-        {logs.map((log, i) => (
-          <div key={i}>📝 {log}</div>
-        ))}
-      </div>
-
       <GalleryGrid
         images={images}
         onToggleSample={toggleSample}
         onToggleGallery={toggleGallery}
         onToggleScrape={toggleScrape}
         onRemove={removeImage}
-        devMode={devMode}
-        showTags={true}
         onUpdateTag={updateTagField}
+        showTags
+        devMode={false}
       />
     </div>
   );
