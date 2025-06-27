@@ -2,29 +2,21 @@
 import React from 'react';
 import EditableTagList from './EditableTagList';
 
-export default function EditableTagSection({ image, onUpdateTag, devMode, showTags }) {
-  if (!image?.metadata || (!devMode && !showTags)) return null;
+export default function EditableTagSection({ image, onUpdateTag }) {
+  const tags = image.metadata?.userTags || [];
 
-  const keys = ['imageTags', 'textTags', 'toneTags', 'moodTags', 'paletteTags'];
-  const labels = {
-    imageTags: '[image]',
-    textTags: '[text]',
-    toneTags: '[tone]',
-    moodTags: '[mood]',
-    paletteTags: '[palette]'
+  const updateTags = (newTags) => {
+    const newMeta = {
+      ...image.metadata,
+      userTags: newTags
+    };
+    onUpdateTag(image.id, newMeta);
   };
 
   return (
-    <div style={{ marginTop: '0.75rem' }}>
-      {keys.map((key) => (
-        <div key={key} style={{ marginBottom: '0.5rem' }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{labels[key]}</div>
-          <EditableTagList
-            tags={image.metadata[key] || []}
-            onChange={(newTags) => onUpdateTag?.(image.id, key, newTags)}
-          />
-        </div>
-      ))}
+    <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+      <p style={{ fontStyle: 'italic', fontSize: '0.85rem' }}>✏️ Tags (editable) — click ✕ to remove, or type to add</p>
+      <EditableTagList tags={tags} onChange={updateTags} />
     </div>
   );
 }

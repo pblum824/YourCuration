@@ -1,4 +1,4 @@
-// File: components/GalleryGrid.jsx
+// File: src/components/GalleryGrid.jsx
 import React from 'react';
 import { imageButton } from './utils/styles';
 import EditableTagSection from './EditableTagSection';
@@ -110,44 +110,39 @@ export default function GalleryGrid({
           )}
 
           {showTags && (
-            <>
+            <div style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
               {img.metadata?.imageTags?.length > 0 && (
-                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <div>
                   <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
                 </div>
               )}
               {img.metadata?.textTags?.length > 0 && (
-                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <div>
                   <strong>[text]</strong> {img.metadata.textTags.join(', ')}
                 </div>
               )}
               {img.metadata?.toneTags?.length > 0 && (
-                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <div>
                   <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
                 </div>
               )}
               {img.metadata?.moodTags?.length > 0 && (
-                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <div>
                   <strong>[mood]</strong> {img.metadata.moodTags.join(', ')}
                 </div>
               )}
               {img.metadata?.paletteTags?.length > 0 && (
-                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <div>
                   <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
                 </div>
               )}
               {img.metadata?.error && (
-                <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                <div style={{ color: 'red', fontSize: '0.8rem' }}>
                   <strong>Error:</strong> {img.metadata.error}
                 </div>
               )}
-              <EditableTagSection
-                image={img}
-                onUpdateTag={onUpdateTag}
-                devMode={devMode}
-                showTags={showTags}
-              />
-            </>
+              <EditableTagSection image={img} onUpdateTag={onUpdateTag} />
+            </div>
           )}
 
           {devMode && (
