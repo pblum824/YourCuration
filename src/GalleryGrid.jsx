@@ -3,7 +3,17 @@ import React from 'react';
 import { imageButton } from './utils/styles';
 import EditableTagSection from './EditableTagSection';
 
-export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggleGallery, onToggleSample, devMode, sampleWarningId, onUpdateTag, showTags }) {
+export default function GalleryGrid({
+  images,
+  onToggleScrape,
+  onRemove,
+  onToggleGallery,
+  onToggleSample,
+  devMode,
+  sampleWarningId,
+  onUpdateTag,
+  showTags,
+}) {
   return (
     <div
       style={{
@@ -131,7 +141,12 @@ export default function GalleryGrid({ images, onToggleScrape, onRemove, onToggle
                   <strong>Error:</strong> {img.metadata.error}
                 </div>
               )}
-              <EditableTagSection image={img} onUpdateTag={onUpdateTag} />
+              <EditableTagSection
+                image={img}
+                onUpdateTag={onUpdateTag}
+                devMode={devMode}
+                showTags={showTags}
+              />
             </>
           )}
 

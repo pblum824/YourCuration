@@ -1,7 +1,19 @@
 // File: src/ImageCard.jsx
 import React from 'react';
+import EditableTagList from './EditableTagList';
 
-export default function ImageCard({ image, onToggleSample, onToggleGallery, onToggleScrape, onRemove, sampleWarningId, imageTags, textTags, toneTags, moodTags, paletteTags }) {
+export default function ImageCard({
+  image,
+  onToggleSample,
+  onToggleGallery,
+  onToggleScrape,
+  onRemove,
+  sampleWarningId,
+  devMode = false,
+  onUpdateTag = () => {},
+}) {
+  const metadata = image.metadata || {};
+
   return (
     <div style={{ width: '280px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
@@ -28,11 +40,31 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
         </div>
 
         <div style={{ height: '120px', overflow: 'hidden', marginTop: '0.75rem', fontSize: '0.85rem' }}>
-          {imageTags?.length > 0 && <div><strong>[image]</strong> {imageTags.join(', ')}</div>}
-          {textTags?.length > 0 && <div><strong>[text]</strong> {textTags.join(', ')}</div>}
-          {toneTags?.length > 0 && <div><strong>[tone]</strong> {toneTags.join(', ')}</div>}
-          {moodTags?.length > 0 && <div><strong>[mood]</strong> {moodTags.join(', ')}</div>}
-          {paletteTags?.length > 0 && <div><strong>[palette]</strong> {paletteTags.join(', ')}</div>}
+          {metadata.imageTags?.length > 0 && (
+            <div>
+              <strong>[image]</strong> {metadata.imageTags.join(', ')}
+            </div>
+          )}
+          {metadata.textTags?.length > 0 && (
+            <div>
+              <strong>[text]</strong> {metadata.textTags.join(', ')}
+            </div>
+          )}
+          {metadata.toneTags?.length > 0 && (
+            <div>
+              <strong>[tone]</strong> {metadata.toneTags.join(', ')}
+            </div>
+          )}
+          {metadata.moodTags?.length > 0 && (
+            <div>
+              <strong>[mood]</strong> {metadata.moodTags.join(', ')}
+            </div>
+          )}
+          {metadata.paletteTags?.length > 0 && (
+            <div>
+              <strong>[palette]</strong> {metadata.paletteTags.join(', ')}
+            </div>
+          )}
           {sampleWarningId === image.id && (
             <div
               style={{
@@ -50,6 +82,15 @@ export default function ImageCard({ image, onToggleSample, onToggleGallery, onTo
             </div>
           )}
         </div>
+
+        {devMode && (
+          <div style={{ marginTop: '0.5rem' }}>
+            <EditableTagList
+              tags={metadata.editableTags || []}
+              onChange={(updated) => onUpdateTag(image.id, 'editableTags', updated)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,15 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
-import ImageCard from './ImageCard';
+import { useDevMode } from './context/DevModeContext';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
+  const { devMode } = useDevMode();
 
   const [localGallery, setLocalGallery] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [sampleWarningId, setSampleWarningId] = useState(null);
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
@@ -46,20 +46,14 @@ export default function GenerateTags() {
     hydrateImages();
   }, [artistGallery]);
 
-  const toggleSample = (id) => {
-    const sampleCount = artistGallery.filter((img) => img.sampleEligible).length;
-    const isTargetSample = artistGallery.find((img) => img.id === id)?.sampleEligible;
+  const images = localGallery;
 
-    if (isTargetSample || sampleCount < 15) {
-      setArtistGallery((prev) =>
-        prev.map((img) =>
-          img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-        )
-      );
-      setSampleWarningId(null);
-    } else {
-      setSampleWarningId(id);
-    }
+  const toggleSample = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
+      )
+    );
   };
 
   const toggleGallery = (id) => {
@@ -126,7 +120,7 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const uploadable = localGallery.filter(
+      const uploadable = images.filter(
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
 
@@ -197,33 +191,16 @@ export default function GenerateTags() {
         ))}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '2rem',
-          justifyContent: 'center',
-          alignItems: 'flex-end',
-          marginTop: '2rem',
-        }}
-      >
-        {localGallery.map((img) => (
-          <ImageCard
-            key={img.id}
-            image={img}
-            onToggleSample={toggleSample}
-            onToggleGallery={toggleGallery}
-            onToggleScrape={toggleScrape}
-            onRemove={removeImage}
-            sampleWarningId={sampleWarningId}
-            imageTags={img.metadata?.imageTags}
-            textTags={img.metadata?.textTags}
-            toneTags={img.metadata?.toneTags}
-            moodTags={img.metadata?.moodTags}
-            paletteTags={img.metadata?.paletteTags}
-          />
-        ))}
-      </div>
+      <GalleryGrid
+        images={images}
+        onToggleSample={toggleSample}
+        onToggleGallery={toggleGallery}
+        onToggleScrape={toggleScrape}
+        onRemove={removeImage}
+        devMode={devMode}
+        showTags={true}
+        onUpdateTag={updateTagField}
+      />
     </div>
   );
 }
