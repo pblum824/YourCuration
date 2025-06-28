@@ -20,7 +20,7 @@ export default function EditableTagSection({ image, onUpdateTag }) {
         [field]: updatedTags,
       },
     };
-    onUpdateTag(updatedImage);
+    onUpdateTag(image.id, 'customTags', updatedTags);
   };
 
   return (
