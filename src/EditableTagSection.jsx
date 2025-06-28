@@ -13,14 +13,7 @@ const tagFields = [
 
 export default function EditableTagSection({ image, onUpdateTag }) {
   const handleChange = (field, updatedTags) => {
-    const updatedImage = {
-      ...image,
-      metadata: {
-        ...image.metadata,
-        [field]: updatedTags,
-      },
-    };
-    onUpdateTag(image.id, 'customTags', updatedTags);
+    onUpdateTag(image.id, field, updatedTags);
   };
 
   return (
@@ -30,7 +23,10 @@ export default function EditableTagSection({ image, onUpdateTag }) {
         return (
           <div key={key} style={{ marginBottom: '0.5rem' }}>
             <strong>{label}</strong>
-            <EditableTagList tags={tags} onChange={(updated) => handleChange(key, updated)} />
+            <EditableTagList
+              tags={tags}
+              onChange={(updated) => handleChange(key, updated)}
+            />
           </div>
         );
       })}
