@@ -6,14 +6,8 @@ export default function EditableTagSection({ image, onUpdateTag }) {
   const customTags = image.metadata?.customTags || [];
 
   const handleChange = (updatedTags) => {
-    const updatedImage = {
-      ...image,
-      metadata: {
-        ...image.metadata,
-        customTags: updatedTags,
-      },
-    };
-    onUpdateTag(updatedImage);
+    // Fix: pass ID, field name, and new values to match onUpdateTag expected signature
+    onUpdateTag(image.id, 'customTags', updatedTags);
   };
 
   return (
