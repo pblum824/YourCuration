@@ -34,6 +34,7 @@ export default function GalleryGrid({
             flexDirection: 'column',
             justifyContent: 'flex-end',
             alignItems: 'center',
+            position: 'relative',
           }}
         >
           <img
@@ -94,7 +95,11 @@ export default function GalleryGrid({
           {sampleWarningId === img.id && (
             <div
               style={{
-                marginTop: '0.75rem',
+                position: 'absolute',
+                top: '10px',
+                left: '10px',
+                right: '10px',
+                zIndex: 999,
                 fontSize: '0.85rem',
                 backgroundColor: '#fef3c7',
                 color: '#92400e',
@@ -102,6 +107,7 @@ export default function GalleryGrid({
                 padding: '0.5rem 0.75rem',
                 borderRadius: '0.5rem',
                 textAlign: 'center',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
               }}
             >
               To make SampleRater quick and easy for your clients,<br />
