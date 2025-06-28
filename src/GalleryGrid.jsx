@@ -110,7 +110,16 @@ export default function GalleryGrid({
           )}
 
           {showTags && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
+            <div
+              style={{
+                fontSize: '0.85rem',
+                marginTop: '0.5rem',
+                maxHeight: '120px',
+                overflowY: 'auto',
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
               {img.metadata?.imageTags?.length > 0 && (
                 <div>
                   <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
@@ -134,6 +143,11 @@ export default function GalleryGrid({
               {img.metadata?.paletteTags?.length > 0 && (
                 <div>
                   <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
+                </div>
+              )}
+              {img.metadata?.customTags?.length > 0 && (
+                <div>
+                  <strong>[custom]</strong> {img.metadata.customTags.join(', ')}
                 </div>
               )}
               {img.metadata?.error && (
