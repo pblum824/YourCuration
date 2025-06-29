@@ -73,8 +73,15 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => prev + filtered.length);
 
     const newImages = [];
-    for (const file of filtered) {
+    for (const file of valid) {
       if (cancelUpload) break;
+
+      const isDuplicate = artistGallery.some((img) => img.name === file.name);
+      if (isDuplicate) {
+        logToScreen(`⚠️ Duplicate file skipped: ${file.name}`);
+        continue;
+      }
+
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
