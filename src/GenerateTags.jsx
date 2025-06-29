@@ -5,9 +5,13 @@ import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
 import LoadingOverlay from './utils/LoadingOverlay';
+import ControlBar from './utils/ControlBar';
+import { useDevMode } from './context/DevModeContext';
 
-export default function GenerateTags() {
+export default function GenerateTags({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
+  const { devMode } = useDevMode();
+
   const [localGallery, setLocalGallery] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sampleWarningId, setSampleWarningId] = useState(null);
@@ -99,7 +103,8 @@ export default function GenerateTags() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(
-          (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+          (blob) =>
+            resolve(new File([blob], file.name, { type: 'image/jpeg' })),
           'image/jpeg',
           quality
         );
@@ -153,6 +158,8 @@ export default function GenerateTags() {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <ControlBar setView={setView} devMode={devMode} />
+
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <button
           onClick={handleGenerate}
