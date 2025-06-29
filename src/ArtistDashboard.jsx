@@ -11,7 +11,7 @@ import DragDropUpload from './DragDropUpload';
 import MultiFilePicker from './MultiFilePicker';
 import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
-import { toggleSampleWithLimit } from './utils/sampleUtils'
+import { toggleSampleWithLimit } from './utils/sampleUtils';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -35,7 +35,6 @@ export default function ArtistDashboard({ setView }) {
   const handleImportGallery = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     try {
       const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
       if (heroImage) setHeroImage(heroImage);
@@ -65,7 +64,6 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => prev + valid.length);
 
     const newImages = [];
-
     for (const file of valid) {
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -104,27 +102,20 @@ export default function ArtistDashboard({ setView }) {
   };
 
   const toggleImageSample = (id) => {
-    safeToggleSample({
-      id,
-      gallery: artistGallery,
-      setGallery: setArtistGallery,
-      onLimitReached: setSampleWarningId,
-    });
+    toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
   };
 
-  const toggleImageGallery = (id) =>
+  const toggleImageGallery = (id) => {
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img))
     );
+  };
 
-  const toggleImageScrape = (id) =>
+  const toggleImageScrape = (id) => {
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img))
     );
+  };
 
   const removeImage = (id) => {
     setArtistGallery((prev) => prev.filter((img) => img.id !== id));
@@ -132,7 +123,7 @@ export default function ArtistDashboard({ setView }) {
   };
 
   const handleReset = () => {
-    if (!window.confirm('Are you sure you want to reset your entire dashboard? This will remove all uploads and settings.')) return;
+    if (!window.confirm('Are you sure you want to reset your entire dashboard?')) return;
     setHeroImage(null);
     setBorderSkin(null);
     setCenterBackground(null);

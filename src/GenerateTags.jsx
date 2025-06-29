@@ -3,11 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
-import { toggleSampleWithLimit } from './utils/sampleUtils'
+import { toggleSampleWithLimit } from './utils/sampleUtils';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
-
   const [localGallery, setLocalGallery] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sampleWarningId, setSampleWarningId] = useState(null);
@@ -43,10 +42,8 @@ export default function GenerateTags() {
     hydrateImages();
   }, [artistGallery]);
 
-  const images = localGallery;
-
   const toggleSample = (id) => {
-    safeToggleSample(id, artistGallery, setArtistGallery, setSampleWarningId);
+    toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
   };
 
   const toggleGallery = (id) => {
@@ -100,8 +97,7 @@ export default function GenerateTags() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(
-          (blob) =>
-            resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+          (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
           'image/jpeg',
           quality
         );
@@ -113,7 +109,7 @@ export default function GenerateTags() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const uploadable = images.filter(
+      const uploadable = localGallery.filter(
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
 
@@ -174,7 +170,7 @@ export default function GenerateTags() {
       </div>
 
       <GalleryGrid
-        images={images}
+        images={localGallery}
         onToggleSample={toggleSample}
         onToggleGallery={toggleGallery}
         onToggleScrape={toggleScrape}
