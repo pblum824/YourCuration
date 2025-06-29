@@ -43,7 +43,7 @@ function InnerApp({ view, setView }) {
   return (
     <div className="App" style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
       {mode === 'artist' && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '.25rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '.05rem' }}>
           {[
             { key: 'artist', label: '🎨 Artist Dashboard' },
             { key: 'generate', label: '🛠️ Generate Tags' },
