@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
+import { toggleSampleWithLimit } from './utils/sampleUtils'
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
 
   const [localGallery, setLocalGallery] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sampleWarningId, setSampleWarningId] = useState(null);
 
   useEffect(() => {
     async function hydrateImages() {
@@ -44,11 +46,7 @@ export default function GenerateTags() {
   const images = localGallery;
 
   const toggleSample = (id) => {
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-      )
-    );
+    safeToggleSample(id, artistGallery, setArtistGallery, setSampleWarningId);
   };
 
   const toggleGallery = (id) => {
@@ -182,6 +180,7 @@ export default function GenerateTags() {
         onToggleScrape={toggleScrape}
         onRemove={removeImage}
         onUpdateTag={updateTagField}
+        sampleWarningId={sampleWarningId}
         showTags
         devMode={false}
       />

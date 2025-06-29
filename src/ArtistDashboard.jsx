@@ -11,6 +11,7 @@ import DragDropUpload from './DragDropUpload';
 import MultiFilePicker from './MultiFilePicker';
 import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
+import { toggleSampleWithLimit } from './utils/sampleUtils'
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -25,6 +26,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [sampleWarningId, setSampleWarningId] = useState(null);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
@@ -101,12 +103,14 @@ export default function ArtistDashboard({ setView }) {
     });
   };
 
-  const toggleImageSample = (id) =>
-    setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, sampleEligible: !img.sampleEligible } : img
-      )
-    );
+  const toggleImageSample = (id) => {
+    safeToggleSample({
+      id,
+      gallery: artistGallery,
+      setGallery: setArtistGallery,
+      onLimitReached: setSampleWarningId,
+    });
+  };
 
   const toggleImageGallery = (id) =>
     setArtistGallery((prev) =>
@@ -186,6 +190,7 @@ export default function ArtistDashboard({ setView }) {
         onRemove={removeImage}
         onToggleGallery={toggleImageGallery}
         onToggleSample={toggleImageSample}
+        sampleWarningId={sampleWarningId}
         devMode={devMode}
       />
     </div>
