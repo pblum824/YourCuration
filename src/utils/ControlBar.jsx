@@ -1,7 +1,19 @@
 // File: src/utils/ControlBar.jsx
 import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
-import { useDevMode } from '../context/DevModeContext';
+import DevToggle from '../DevToggle';
+
+const navBtnStyle = {
+  padding: '0.5rem 1rem',
+  fontSize: '0.9rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  backgroundColor: '#f3f4f6',
+  color: '#1e3a8a',
+  cursor: 'pointer',
+  flex: '1 1 auto',
+  minWidth: '150px',
+};
 
 export default function ControlBar({
   view,
@@ -14,21 +26,22 @@ export default function ControlBar({
   setDevMode,
   showImport = true,
   showExport = true,
+  showDevToggle = true,
 }) {
-  const { mode, setMode } = useCuration();
+  const { mode } = useCuration();
   const fileInputRef = useRef();
 
   if (mode !== 'artist') return null;
 
   return (
     <>
-      {/* Tier 1: Nav Bar */}
+      {/* Tier 1: Nav */}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.5rem',
-          marginBottom: '0.5rem',
+          marginBottom: '0.25rem',
           justifyContent: 'center',
         }}
       >
@@ -44,7 +57,7 @@ export default function ControlBar({
             key={key}
             onClick={() => setView(key)}
             style={{
-              ...navButtonStyle,
+              ...navBtnStyle,
               backgroundColor: view === key ? '#ede9fe' : '#f3f4f6',
               color: view === key ? '#5b21b6' : '#1e3a8a',
               border: '1px solid #1e3a8a',
@@ -62,31 +75,26 @@ export default function ControlBar({
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.5rem',
-          marginBottom: '2.25rem',
+          marginBottom: '2rem',
           justifyContent: 'center',
         }}
       >
         <button
-          onClick={() => setMode('client')}
-          style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
+          onClick={() => setView('client')}
+          style={{ ...navBtnStyle, backgroundColor: '#e0e7ff' }}
         >
           🎬 Preview Client Mode
         </button>
-        <button
-          onClick={() => setDevMode(!devMode)}
-          style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
-        >
-          🧪 Dev Mode: {devMode ? 'ON' : 'OFF'}
-        </button>
+        {showDevToggle && <DevToggle devMode={devMode} setDevMode={setDevMode} />}
       </div>
 
-      {/* Tier 3: Image Controls */}
+      {/* Tier 3: File/Image Controls */}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.75rem',
-          marginBottom: '1.5rem',
+          marginBottom: '2rem',
           justifyContent: 'center',
         }}
       >
@@ -99,28 +107,25 @@ export default function ControlBar({
               onChange={onImport}
               style={{ display: 'none' }}
             />
-            <button onClick={() => fileInputRef.current?.click()} style={controlButton}>
+            <button onClick={() => fileInputRef.current?.click()} style={navBtnStyle}>
               📥 Import Gallery
             </button>
           </>
         )}
-
         {showExport && (
-          <button onClick={onExport} style={controlButton}>
+          <button onClick={onExport} style={navBtnStyle}>
             📤 Export Gallery
           </button>
         )}
-
         {onGenerate && (
-          <button onClick={onGenerate} style={controlButton}>
+          <button onClick={onGenerate} style={navBtnStyle}>
             🛠️ Generate Tags
           </button>
         )}
-
         {onReset && (
           <button
             onClick={onReset}
-            style={{ ...controlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
+            style={{ ...navBtnStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}
           >
             🔄 Reset Dashboard
           </button>
@@ -129,24 +134,3 @@ export default function ControlBar({
     </>
   );
 }
-
-const navButtonStyle = {
-  padding: '0.5rem 1rem',
-  fontSize: '0.9rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #1e3a8a',
-  backgroundColor: '#f3f4f6',
-  color: '#1e3a8a',
-  cursor: 'pointer',
-  minWidth: '150px',
-};
-
-const controlButton = {
-  padding: '0.5rem 1rem',
-  fontSize: '0.9rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #ccc',
-  backgroundColor: '#f3f4f6',
-  color: '#1e3a8a',
-  cursor: 'pointer',
-};

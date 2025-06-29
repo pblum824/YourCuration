@@ -12,20 +12,8 @@ import YourCuration from './YourCuration';
 import LandingPage from './LandingPage';
 import { DevModeProvider } from './context/DevModeContext';
 
-const validViews = [
-  'landing',
-  'artist',
-  'generate',
-  'rate',
-  'curated1',
-  'curated2',
-  'curatedFinal',
-  'curated',
-  'client'
-];
-
 function InnerApp({ view, setView }) {
-  const { artistGallery } = useCuration();
+  const { artistGallery, mode } = useCuration();
   const [error, setError] = useState(null);
 
   return (
@@ -40,7 +28,9 @@ function InnerApp({ view, setView }) {
           {view === 'landing' && <LandingPage setView={setView} />}
           {view === 'artist' && <ArtistDashboard setView={setView} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
-          {view === 'rate' && <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} setView={setView} />}
+          {view === 'rate' && (
+            <SampleRater images={artistGallery.filter((img) => img.sampleEligible)} setView={setView} />
+          )}
           {view === 'curated1' && <CuratedGallery1 setView={setView} />}
           {view === 'curated2' && <CuratedGallery2 setView={setView} />}
           {view === 'curatedFinal' && <CuratedGalleryFinal setView={setView} />}
