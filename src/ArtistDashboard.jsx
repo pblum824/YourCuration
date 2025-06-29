@@ -29,6 +29,7 @@ export default function ArtistDashboard({ setView }) {
   const [logs, setLogs] = useState([]);
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [cancelUpload, setCancelUpload] = useState(false);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
@@ -60,14 +61,16 @@ export default function ArtistDashboard({ setView }) {
   };
 
   const handleFiles = async (fileList) => {
+    setIsUploading(true);
+    setCancelUpload(false);
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
     setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
     setUploadCount((prev) => prev + valid.length);
 
     const newImages = [];
-    setIsUploading(true);
     for (const file of valid) {
+      if (cancelUpload) break;
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
@@ -86,6 +89,7 @@ export default function ArtistDashboard({ setView }) {
         localRefId: id,
       });
     }
+
     setArtistGallery((prev) => [...prev, ...newImages]);
     setIsUploading(false);
   };
@@ -147,8 +151,6 @@ export default function ArtistDashboard({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      {isUploading && <LoadingOverlay onCancel={() => setIsUploading(false)} />}
-
       <ControlBar
         onImport={handleImportGallery}
         onExport={handleExportGallery}
@@ -191,6 +193,27 @@ export default function ArtistDashboard({ setView }) {
         sampleWarningId={sampleWarningId}
         devMode={devMode}
       />
+
+      {isUploading && (
+        <LoadingOverlay
+          duration={120}
+          onCancel={() => {
+            setCancelUpload(true);
+            setIsUploading(false);
+          }}
+        />
+      )}
     </div>
   );
 }
+
+const buttonStyle = {
+  padding: '0.5rem 1rem',
+  fontSize: '0.9rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  backgroundColor: '#f3f4f6',
+  color: '#1e3a8a',
+  cursor: 'pointer',
+  marginRight: '0.5rem',
+};
