@@ -10,7 +10,7 @@ import { useDevMode } from './context/DevModeContext';
 
 export default function GenerateTags({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
-  const { devMode } = useDevMode();
+    const { devMode, setDevMode } = useDevMode();
 
   const [localGallery, setLocalGallery] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -162,7 +162,7 @@ export default function GenerateTags({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <ControlBar setView={setView} devMode={devMode} />
+      <ControlBar setView={setView} devMode={devMode} setDevMode={setDevMode} />
 
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <button
