@@ -20,17 +20,17 @@ export default function ControlBar({
 
   return (
     <>
-      {/* Tier 2: Mode Controls */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginTop: '0.15rem',
-          marginBottom: '2.25rem',
-          justifyContent: 'center',
-        }}
-      >
+        {/* Tier 2: Mode Controls */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            marginTop: '0.25rem',       // Slightly increased spacing from Tier 1
+            marginBottom: '1rem',       // Tighter spacing above Tier 3
+            justifyContent: 'center',
+          }}
+        >
         <button
           onClick={() => setMode('client')}
           style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
