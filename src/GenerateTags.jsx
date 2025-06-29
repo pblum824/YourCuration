@@ -16,6 +16,8 @@ export default function GenerateTags({ setView }) {
   const [loading, setLoading] = useState(false);
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
     async function hydrateImages() {
@@ -149,8 +151,10 @@ export default function GenerateTags({ setView }) {
       setArtistGallery((prev) =>
         prev.map((img) => tagged.find((t) => t.id === img.id) || img)
       );
+      logToScreen(`✅ Tagged ${tagged.length} images.`);
     } catch (err) {
       console.error(`[GenerateTags] Batch error: ${err.message}`);
+      logToScreen(`❌ Tagging failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -188,8 +192,16 @@ export default function GenerateTags({ setView }) {
         onUpdateTag={updateTagField}
         sampleWarningId={sampleWarningId}
         showTags
-        devMode={false}
+        devMode={devMode}
       />
+
+      {devMode && logs.length > 0 && (
+        <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
+          {logs.map((log, i) => (
+            <div key={i}>📦 {log}</div>
+          ))}
+        </div>
+      )}
 
       {loading && (
         <LoadingOverlay
