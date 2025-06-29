@@ -37,6 +37,7 @@ export default function ControlBar({
           flexWrap: 'wrap',
           gap: '0.5rem',
           marginBottom: '0.5rem',
+          marginTop: '0rem',
           justifyContent: 'center',
         }}
       >
