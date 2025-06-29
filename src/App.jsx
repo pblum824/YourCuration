@@ -29,16 +29,15 @@ function InnerApp({ view, setView }) {
   const [error, setError] = useState(null);
 
   const navBtnStyle = {
-    padding: '0.35rem 0.5rem',    // reduced vertical and horizontal padding
-    fontSize: '0.85rem',           // slightly smaller text
+    padding: '0.5rem .25rem',
+    fontSize: '0.9rem',
     borderRadius: '0.5rem',
     border: '1px solid #ccc',
     backgroundColor: '#f3f4f6',
     color: '#1e3a8a',
     cursor: 'pointer',
-    flex: '0 1 auto',              // don’t expand too much
-    minWidth: '120px',             // give room to tighten layout
-    lineHeight: '1.2',             // ensures no vertical stretching
+    flex: '1 1 auto',
+    minWidth: '150px',
   };
 
   return (
