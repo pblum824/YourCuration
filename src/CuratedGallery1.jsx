@@ -44,7 +44,10 @@ export default function CuratedGallery1({ setView }) {
   }, [artistGallery, ratings]);
 
   const approveImage = (id) => {
-    setSelections((prev) => ({ ...prev, [id]: 2 }));
+    setSelections((prev) => ({
+      ...prev,
+      [id]: prev[id] === 2 ? undefined : 2
+    }));
   };
 
   if (error) {
