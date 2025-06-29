@@ -1,4 +1,4 @@
-// File: src/ArtistDashboard.jsx
+// File: src/ArtistDashboard.jsx before adding duplicate rejection strat
 import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
@@ -13,7 +13,6 @@ import ControlBar from './utils/ControlBar';
 import LoadingOverlay from './utils/LoadingOverlay';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
-import { isDuplicateUpload } from './utils/checkDuplicateUpload';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -66,22 +65,12 @@ export default function ArtistDashboard({ setView }) {
     setCancelUpload(false);
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
-    const duplicateWarnings = valid.filter((f) => isDuplicateFile(f.name, artistGallery)).map((f) => `${f.name} is a duplicate.`);
-    const filtered = valid.filter((f) => !isDuplicateFile(f.name, artistGallery));
-
-    setUploadWarnings([...duplicateWarnings, ...files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`)]);
-    setUploadCount((prev) => prev + filtered.length);
+    setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
+    setUploadCount((prev) => prev + valid.length);
 
     const newImages = [];
     for (const file of valid) {
       if (cancelUpload) break;
-
-      const isDuplicate = artistGallery.some((img) => img.name === file.name);
-      if (isDuplicate) {
-        logToScreen(`⚠️ Duplicate file skipped: ${file.name}`);
-        continue;
-      }
-
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
@@ -228,4 +217,4 @@ const buttonStyle = {
   color: '#1e3a8a',
   cursor: 'pointer',
   marginRight: '0.5rem',
-  };
+};
