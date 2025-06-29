@@ -29,21 +29,22 @@ function InnerApp({ view, setView }) {
   const [error, setError] = useState(null);
 
   const navBtnStyle = {
-    padding: '0.5rem 1rem',
-    fontSize: '0.9rem',
+    padding: '0.35rem 0.5rem',    // reduced vertical and horizontal padding
+    fontSize: '0.85rem',           // slightly smaller text
     borderRadius: '0.5rem',
     border: '1px solid #ccc',
     backgroundColor: '#f3f4f6',
     color: '#1e3a8a',
     cursor: 'pointer',
-    flex: '1 1 auto',
-    minWidth: '150px',
+    flex: '0 1 auto',              // don’t expand too much
+    minWidth: '120px',             // give room to tighten layout
+    lineHeight: '1.2',             // ensures no vertical stretching
   };
 
   return (
     <div className="App" style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
       {mode === 'artist' && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '.05rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0rem' }}>
           {[
             { key: 'artist', label: '🎨 Artist Dashboard' },
             { key: 'generate', label: '🛠️ Generate Tags' },
