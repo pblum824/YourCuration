@@ -1,7 +1,7 @@
 // File: src/utils/ControlBar.jsx
 import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
-import { useDevMode } from '../context/DevModeContext';
+import DevToggle from '../DevToggle';
 
 export default function ControlBar({
   onImport,
@@ -26,7 +26,8 @@ export default function ControlBar({
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.5rem',
-          marginBottom: '0.5rem',
+          marginTop: '0.5rem',
+          marginBottom: '1.25rem',
           justifyContent: 'center',
         }}
       >
@@ -36,12 +37,7 @@ export default function ControlBar({
         >
           🎬 Preview Client Mode
         </button>
-        <button
-          onClick={() => setDevMode(!devMode)}
-          style={navButtonStyle}
-        >
-          🛠️ Dev Mode: {devMode ? 'ON' : 'OFF'}
-        </button>
+        <DevToggle devMode={devMode} setDevMode={setDevMode} buttonStyle={navButtonStyle} />
       </div>
 
       {/* Tier 3: Image Controls */}
@@ -50,7 +46,7 @@ export default function ControlBar({
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.75rem',
-          marginBottom: '1.5rem',
+          marginBottom: '2rem',
           justifyContent: 'center',
         }}
       >
@@ -63,31 +59,30 @@ export default function ControlBar({
               onChange={onImport}
               style={{ display: 'none' }}
             />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={controlButton}
-            >
+            <button onClick={() => fileInputRef.current?.click()} style={controlButton}>
               📥 Import Gallery
             </button>
           </>
         )}
-
         {showExport && (
           <button onClick={onExport} style={controlButton}>
             📤 Export Gallery
           </button>
         )}
-
         {onGenerate && (
           <button onClick={onGenerate} style={controlButton}>
             🛠️ Generate Tags
           </button>
         )}
-
         {onReset && (
           <button
             onClick={onReset}
-            style={{ ...controlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
+            style={{
+              ...controlButton,
+              backgroundColor: '#fee2e2',
+              color: '#b91c1c',
+              border: '1px solid #fca5a5',
+            }}
           >
             🔄 Reset Dashboard
           </button>
