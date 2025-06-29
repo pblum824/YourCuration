@@ -123,7 +123,7 @@ export default function ControlBar({
 }
 
 const navControlButton = {
-  padding: '0.5rem 1rem',
+  padding: '0rem 1rem',
   fontSize: '0.9rem',
   borderRadius: '0.5rem',
   border: '1px solid #1e3a8a',
