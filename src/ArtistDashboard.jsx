@@ -164,15 +164,17 @@ export default function ArtistDashboard({ setView }) {
       <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
       <MultiFilePicker onChange={(files) => handleFiles(files)} uploadCount={uploadCount} acceptedFormats={ACCEPTED_FORMATS} />
 
-      <p style={{ color: '#999', fontStyle: 'italic', fontSize: '0.85rem' }}>
-        Debug: artistGallery length = {artistGallery.length}
-      </p>
       {devMode && (
-        <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
-          {logs.map((log, i) => (
-            <div key={i}>📦 {log}</div>
-          ))}
-        </div>
+        <>
+          <p style={{ color: '#999', fontStyle: 'italic', fontSize: '0.85rem' }}>
+            Debug: artistGallery length = {artistGallery.length}
+          </p>
+          <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
+            {logs.map((log, i) => (
+              <div key={i}>📦 {log}</div>
+            ))}
+          </div>
+        </>
       )}
 
       <GalleryGrid
