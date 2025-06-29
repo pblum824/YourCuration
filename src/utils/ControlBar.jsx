@@ -1,9 +1,11 @@
 // File: src/utils/ControlBar.jsx
 import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
-import DevToggle from '../DevToggle';
+import { useDevMode } from '../context/DevModeContext';
 
 export default function ControlBar({
+  view,
+  setView,
   onImport,
   onExport,
   onGenerate,
@@ -20,24 +22,62 @@ export default function ControlBar({
 
   return (
     <>
-        {/* Tier 2: Mode Controls */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            marginTop: '0.25rem',       // Slightly increased spacing from Tier 1
-            marginBottom: '1rem',       // Tighter spacing above Tier 3
-            justifyContent: 'center',
-          }}
-        >
+      {/* Tier 1: Nav Bar */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          marginBottom: '0.5rem',
+          justifyContent: 'center',
+        }}
+      >
+        {[
+          { key: 'artist', label: '🎨 Artist Dashboard' },
+          { key: 'generate', label: '🛠️ Generate Tags' },
+          { key: 'rate', label: '🧪 Sample Rater' },
+          { key: 'curated1', label: '🖼️ Gallery 1' },
+          { key: 'curated2', label: '🔍 Gallery 2' },
+          { key: 'curatedFinal', label: '🏁 Final Gallery' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            style={{
+              ...navButtonStyle,
+              backgroundColor: view === key ? '#ede9fe' : '#f3f4f6',
+              color: view === key ? '#5b21b6' : '#1e3a8a',
+              border: '1px solid #1e3a8a',
+              fontWeight: view === key ? 'bold' : 'normal',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tier 2: Mode Controls */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          marginBottom: '2.25rem',
+          justifyContent: 'center',
+        }}
+      >
         <button
           onClick={() => setMode('client')}
           style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
         >
           🎬 Preview Client Mode
         </button>
-        <DevToggle devMode={devMode} setDevMode={setDevMode} buttonStyle={navButtonStyle} />
+        <button
+          onClick={() => setDevMode(!devMode)}
+          style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
+        >
+          🧪 Dev Mode: {devMode ? 'ON' : 'OFF'}
+        </button>
       </div>
 
       {/* Tier 3: Image Controls */}
@@ -46,7 +86,7 @@ export default function ControlBar({
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.75rem',
-          marginBottom: '2rem',
+          marginBottom: '1.5rem',
           justifyContent: 'center',
         }}
       >
@@ -64,25 +104,23 @@ export default function ControlBar({
             </button>
           </>
         )}
+
         {showExport && (
           <button onClick={onExport} style={controlButton}>
             📤 Export Gallery
           </button>
         )}
+
         {onGenerate && (
           <button onClick={onGenerate} style={controlButton}>
             🛠️ Generate Tags
           </button>
         )}
+
         {onReset && (
           <button
             onClick={onReset}
-            style={{
-              ...controlButton,
-              backgroundColor: '#fee2e2',
-              color: '#b91c1c',
-              border: '1px solid #fca5a5',
-            }}
+            style={{ ...controlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
           >
             🔄 Reset Dashboard
           </button>
