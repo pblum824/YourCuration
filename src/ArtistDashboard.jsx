@@ -13,6 +13,7 @@ import ControlBar from './utils/ControlBar';
 import LoadingOverlay from './utils/LoadingOverlay';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
+import { isDuplicateUpload } from './utils/checkDuplicateUpload';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -65,11 +66,14 @@ export default function ArtistDashboard({ setView }) {
     setCancelUpload(false);
     const files = Array.from(fileList);
     const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
-    setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
-    setUploadCount((prev) => prev + valid.length);
+    const duplicateWarnings = valid.filter((f) => isDuplicateFile(f.name, artistGallery)).map((f) => `${f.name} is a duplicate.`);
+    const filtered = valid.filter((f) => !isDuplicateFile(f.name, artistGallery));
+
+    setUploadWarnings([...duplicateWarnings, ...files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`)]);
+    setUploadCount((prev) => prev + filtered.length);
 
     const newImages = [];
-    for (const file of valid) {
+    for (const file of filtered) {
       if (cancelUpload) break;
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -217,4 +221,4 @@ const buttonStyle = {
   color: '#1e3a8a',
   cursor: 'pointer',
   marginRight: '0.5rem',
-};
+  };
