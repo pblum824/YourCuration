@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
+import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
 
 export default function CuratedGalleryFinal({ setView }) {
@@ -19,31 +20,41 @@ export default function CuratedGalleryFinal({ setView }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const selectedIds = new Set();
-
-    artistGallery.forEach((img) => {
-      const isLoved = ratings[img.id] === 'love';
-      const isCG1 = cg1Selections[img.id] === 2;
-      const isCG2 = cg2Selections[img.id] === 2;
-      if (isLoved || isCG1 || isCG2) {
-        selectedIds.add(img.id);
-      }
-    });
-
     async function hydrate() {
-      const selected = artistGallery.filter((img) => selectedIds.has(img.id));
-      const hydrated = await Promise.all(
-        selected.map(async (img) => {
-          try {
-            const blob = await loadBlob(img.localRefId);
-            const url = URL.createObjectURL(blob);
-            return { ...img, url };
-          } catch {
-            return { ...img, url: '' };
-          }
-        })
-      );
-      setFinalGallery(hydrated);
+      try {
+        const samples = artistGallery.filter((img) => ratings[img.id]);
+        const tagPools = aggregateSampleTags(samples, ratings);
+
+        const scored = artistGallery
+          .filter((img) => img.galleryEligible)
+          .map((img) => {
+            const tags = extractAllTags(img.metadata);
+            const tagScore = Math.round(scoreImage(img, tagPools) * 6); // normalize to 0–6
+            const loveScore = ratings[img.id] === 'love' ? 3 : 0;
+            const cg1Score = cg1Selections[img.id] === 2 ? 2 : 0;
+            const cg2Score = cg2Selections[img.id] === 2 ? 2 : 0;
+            const totalScore = loveScore + cg1Score + cg2Score + tagScore;
+            return { ...img, score: totalScore, tagScore };
+          })
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 20);
+
+        const hydrated = await Promise.all(
+          scored.map(async (img) => {
+            try {
+              const blob = await loadBlob(img.localRefId);
+              const url = URL.createObjectURL(blob);
+              return { ...img, url };
+            } catch {
+              return { ...img, url: '' };
+            }
+          })
+        );
+
+        setFinalGallery(hydrated);
+      } catch (err) {
+        setError(err.message || 'Failed to generate final gallery.');
+      }
     }
 
     hydrate();
@@ -80,6 +91,14 @@ export default function CuratedGalleryFinal({ setView }) {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', color: 'red', fontFamily: 'monospace' }}>
+        ❌ CGF Error: {error}
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -142,6 +161,11 @@ export default function CuratedGalleryFinal({ setView }) {
               </div>
             )}
             <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+            {devMode && (
+              <p style={{ fontSize: '0.75rem', color: '#666' }}>
+                Score: {img.score} (Tags: {img.tagScore})
+              </p>
+            )}
           </div>
         ))}
       </div>
