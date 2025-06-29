@@ -37,7 +37,6 @@ export default function ControlBar({
           flexWrap: 'wrap',
           gap: '0.5rem',
           marginBottom: '0.5rem',
-          marginTop: '0rem',
           justifyContent: 'center',
         }}
       >
@@ -45,7 +44,7 @@ export default function ControlBar({
           <button
             key={key}
             onClick={() => setView?.(key)}
-            style={navControlButton}
+            style={navButtonStyle}
           >
             {label}
           </button>
@@ -64,13 +63,11 @@ export default function ControlBar({
       >
         <button
           onClick={() => setView?.('client')}
-          style={{ ...navControlButton, backgroundColor: '#e0e7ff' }}
+          style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
         >
           🎬 Preview Client Mode
         </button>
-        {showDevToggle && (
-          <DevToggle devMode={devMode} setDevMode={setDevMode} buttonStyle={navControlButton} />
-        )}
+        {showDevToggle && <DevToggle devMode={devMode} setDevMode={setDevMode} buttonStyle={navButtonStyle} />}
       </div>
 
       {/* Tier 3: Image Controls */}
@@ -92,20 +89,20 @@ export default function ControlBar({
               onChange={onImport}
               style={{ display: 'none' }}
             />
-            <button onClick={() => fileInputRef.current?.click()} style={navControlButton}>
+            <button onClick={() => fileInputRef.current?.click()} style={navButtonStyle}>
               📥 Import Gallery
             </button>
           </>
         )}
 
         {showExport && (
-          <button onClick={onExport} style={navControlButton}>
+          <button onClick={onExport} style={navButtonStyle}>
             📤 Export Gallery
           </button>
         )}
 
         {onGenerate && (
-          <button onClick={onGenerate} style={navControlButton}>
+          <button onClick={onGenerate} style={navButtonStyle}>
             🛠️ Generate Tags
           </button>
         )}
@@ -113,7 +110,7 @@ export default function ControlBar({
         {onReset && (
           <button
             onClick={onReset}
-            style={{ ...navControlButton, backgroundColor: '#fee2e2', color: '#b91c1c' }}
+            style={{ ...navButtonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}
           >
             🔄 Reset Dashboard
           </button>
@@ -123,8 +120,8 @@ export default function ControlBar({
   );
 }
 
-const navControlButton = {
-  padding: '.5rem 1rem',
+const navButtonStyle = {
+  padding: '0.5rem 1rem',
   fontSize: '0.9rem',
   borderRadius: '0.5rem',
   border: '1px solid #1e3a8a',
@@ -132,7 +129,6 @@ const navControlButton = {
   color: '#1e3a8a',
   cursor: 'pointer',
   minWidth: '150px',
-  textAlign: 'center',
-  flex: '0 1 auto',   // ✅ allow to shrink a bit if needed
-  lineHeight: '1.2',  // ✅ avoids vertical stretching
+  height: '42px',
+  boxSizing: 'border-box',
 };
