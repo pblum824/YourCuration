@@ -74,18 +74,29 @@ export default function ControlBar({
         style={{
           display: 'flex',
           flexWrap: 'wrap',
+          justifyContent: 'center',
+          alignItems: 'center',
           gap: '0.5rem',
           marginBottom: '2rem',
-          justifyContent: 'center',
+          marginTop: '0.75rem',
         }}
       >
         <button
           onClick={() => setView('client')}
-          style={{ ...navBtnStyle, backgroundColor: '#e0e7ff' }}
+          style={{
+            ...navBtnStyle,
+            backgroundColor: '#e0e7ff',
+            flex: 'unset',
+            minWidth: '150px',
+          }}
         >
           🎬 Preview Client Mode
         </button>
-        {showDevToggle && <DevToggle devMode={devMode} setDevMode={setDevMode} />}
+        {showDevToggle && (
+          <div style={{ flex: 'unset' }}>
+            <DevToggle devMode={devMode} setDevMode={setDevMode} />
+          </div>
+        )}
       </div>
 
       {/* Tier 3: File/Image Controls */}
