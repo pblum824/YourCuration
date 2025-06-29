@@ -131,7 +131,7 @@ const navControlButton = {
   color: '#1e3a8a',
   cursor: 'pointer',
   minWidth: '150px',
-  width: '150px',            // ✅ Fix width
   textAlign: 'center',
-  flex: '0 0 auto',          // ✅ Prevent stretch
+  flex: '0 1 auto',   // ✅ allow to shrink a bit if needed
+  lineHeight: '1.2',  // ✅ avoids vertical stretching
 };
