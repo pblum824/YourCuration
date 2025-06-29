@@ -1,7 +1,7 @@
 // File: src/utils/ControlBar.jsx
 import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
-import DevToggle from '../DevToggle';
+import { useDevMode } from '../context/DevModeContext';
 
 export default function ControlBar({
   onImport,
@@ -26,7 +26,7 @@ export default function ControlBar({
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.5rem',
-          marginBottom: '0.75rem',
+          marginBottom: '0.5rem',
           justifyContent: 'center',
         }}
       >
@@ -36,7 +36,12 @@ export default function ControlBar({
         >
           🎬 Preview Client Mode
         </button>
-        <DevToggle devMode={devMode} setDevMode={setDevMode} buttonStyle={navButtonStyle} />
+        <button
+          onClick={() => setDevMode(!devMode)}
+          style={navButtonStyle}
+        >
+          🛠️ Dev Mode: {devMode ? 'ON' : 'OFF'}
+        </button>
       </div>
 
       {/* Tier 3: Image Controls */}
@@ -58,7 +63,10 @@ export default function ControlBar({
               onChange={onImport}
               style={{ display: 'none' }}
             />
-            <button onClick={() => fileInputRef.current?.click()} style={controlButton}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={controlButton}
+            >
               📥 Import Gallery
             </button>
           </>
