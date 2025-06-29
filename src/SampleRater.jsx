@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import './SampleRater.css';
 import { useCuration } from './YourCurationContext';
+import { useDevMode } from './context/DevModeContext';
 import { loadBlob } from './utils/dbCache';
 import ControlBar from './utils/ControlBar';
 
@@ -9,6 +10,7 @@ const SAMPLE_OPTIONS = ['love', 'like', 'less'];
 
 export default function SampleRater({ images, setView }) {
   const { ratings, setRatings } = useCuration();
+  const { devMode } = useDevMode();
   const [hydratedImages, setHydratedImages] = useState([]);
 
   useEffect(() => {
@@ -43,18 +45,17 @@ export default function SampleRater({ images, setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <ControlBar view="rate" setView={setView} />
+      <ControlBar view="rate" setView={setView} devMode={devMode} />
 
-      <h2
-        style={{
-          fontFamily: 'Parisienne, cursive',
-          fontSize: '2rem',
-          marginBottom: '0.25rem',
-          color: '#1e3a8a'
-        }}
-      >
+      <h2 style={{
+        fontFamily: 'Parisienne, cursive',
+        fontSize: '2rem',
+        marginBottom: '0.25rem',
+        color: '#1e3a8a'
+      }}>
         Please Rate These Artist Samples
       </h2>
+
       <p style={{ fontSize: '0.95rem', color: '#555', marginBottom: '1.5rem' }}>
         (The curation works best if you rate all 15.)
       </p>
@@ -98,7 +99,6 @@ export default function SampleRater({ images, setView }) {
         })}
       </div>
 
-      {/* Forward button */}
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
           onClick={() => setView('curated1')}
