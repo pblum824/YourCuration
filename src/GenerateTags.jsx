@@ -4,12 +4,14 @@ import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
+import LoadingOverlay from './utils/LoadingOverlay';
 
 export default function GenerateTags() {
   const { artistGallery, setArtistGallery } = useCuration();
   const [localGallery, setLocalGallery] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sampleWarningId, setSampleWarningId] = useState(null);
+  const [cancelRequested, setCancelRequested] = useState(false);
 
   useEffect(() => {
     async function hydrateImages() {
@@ -108,15 +110,16 @@ export default function GenerateTags() {
 
   const handleGenerate = async () => {
     setLoading(true);
+    setCancelRequested(false);
     try {
       const uploadable = localGallery.filter(
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
-
       if (uploadable.length === 0) return;
 
       const formData = new FormData();
       for (const img of uploadable) {
+        if (cancelRequested) throw new Error('User cancelled');
         const compressed = await compressImage(img.file, 384, 0.7);
         formData.append('files', compressed);
       }
@@ -180,6 +183,13 @@ export default function GenerateTags() {
         showTags
         devMode={false}
       />
+
+      {loading && (
+        <LoadingOverlay
+          text="Generating MetaTags..."
+          onCancel={() => setCancelRequested(true)}
+        />
+      )}
     </div>
   );
 }

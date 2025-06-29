@@ -12,6 +12,7 @@ import MultiFilePicker from './MultiFilePicker';
 import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
+import LoadingOverlay from './utils/LoadingOverlay';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -27,10 +28,13 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [logs, setLogs] = useState([]);
   const [sampleWarningId, setSampleWarningId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
+
+  const handleCancelLoading = () => setLoading(false);
 
   const handleImportGallery = async (event) => {
     const file = event.target.files?.[0];
@@ -64,7 +68,10 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => prev + valid.length);
 
     const newImages = [];
+    setLoading(true);
+
     for (const file of valid) {
+      if (!loading) break;
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
@@ -84,6 +91,7 @@ export default function ArtistDashboard({ setView }) {
       });
     }
 
+    setLoading(false);
     setArtistGallery((prev) => [...prev, ...newImages]);
   };
 
@@ -186,6 +194,8 @@ export default function ArtistDashboard({ setView }) {
         sampleWarningId={sampleWarningId}
         devMode={devMode}
       />
+
+      <LoadingOverlay visible={loading} onCancel={handleCancelLoading} message="Uploading images..." />
     </div>
   );
 }
