@@ -86,19 +86,26 @@ export default function ControlBar({
           style={{
             ...navBtnStyle,
             backgroundColor: '#e0e7ff',
-            flex: 'unset',
             minWidth: '150px',
           }}
         >
           🎬 Preview Client Mode
         </button>
+
         {showDevToggle && (
-          <div style={{ flex: 'unset' }}>
-            <DevToggle devMode={devMode} setDevMode={setDevMode} />
-          </div>
+          <button
+            onClick={() => setDevMode(!devMode)}
+            style={{
+              ...navBtnStyle,
+              minWidth: '150px',
+              fontSize: '0.85rem',
+              opacity: 0.7,
+            }}
+          >
+            {devMode ? '🧠 Dev Mode: ON' : '🧠 Dev Mode: OFF'}
+          </button>
         )}
       </div>
-
       {/* Tier 3: File/Image Controls */}
       <div
         style={{
