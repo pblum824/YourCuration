@@ -10,9 +10,9 @@ import UploadWarnings from './UploadWarnings';
 import DragDropUpload from './DragDropUpload';
 import MultiFilePicker from './MultiFilePicker';
 import ControlBar from './utils/ControlBar';
+import LoadingOverlay from './utils/LoadingOverlay';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
-import LoadingOverlay from './utils/LoadingOverlay';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -28,7 +28,7 @@ export default function ArtistDashboard({ setView }) {
   const [uploadWarnings, setUploadWarnings] = useState([]);
   const [logs, setLogs] = useState([]);
   const [sampleWarningId, setSampleWarningId] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
@@ -66,7 +66,7 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => prev + valid.length);
 
     const newImages = [];
-    setLoading(true);
+    setIsUploading(true);
     for (const file of valid) {
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -87,7 +87,7 @@ export default function ArtistDashboard({ setView }) {
       });
     }
     setArtistGallery((prev) => [...prev, ...newImages]);
-    setLoading(false);
+    setIsUploading(false);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -147,6 +147,8 @@ export default function ArtistDashboard({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
+      {isUploading && <LoadingOverlay onCancel={() => setIsUploading(false)} />}
+
       <ControlBar
         onImport={handleImportGallery}
         onExport={handleExportGallery}
@@ -189,19 +191,6 @@ export default function ArtistDashboard({ setView }) {
         sampleWarningId={sampleWarningId}
         devMode={devMode}
       />
-
-      <LoadingOverlay visible={loading} onCancel={() => setLoading(false)} />
     </div>
   );
 }
-
-const buttonStyle = {
-  padding: '0.5rem 1rem',
-  fontSize: '0.9rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #ccc',
-  backgroundColor: '#f3f4f6',
-  color: '#1e3a8a',
-  cursor: 'pointer',
-  marginRight: '0.5rem',
-};
