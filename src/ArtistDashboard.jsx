@@ -34,8 +34,6 @@ export default function ArtistDashboard({ setView }) {
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
-  const handleCancelLoading = () => setLoading(false);
-
   const handleImportGallery = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -69,9 +67,7 @@ export default function ArtistDashboard({ setView }) {
 
     const newImages = [];
     setLoading(true);
-
     for (const file of valid) {
-      if (!loading) break;
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
@@ -90,9 +86,8 @@ export default function ArtistDashboard({ setView }) {
         localRefId: id,
       });
     }
-
-    setLoading(false);
     setArtistGallery((prev) => [...prev, ...newImages]);
+    setLoading(false);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -195,7 +190,7 @@ export default function ArtistDashboard({ setView }) {
         devMode={devMode}
       />
 
-      <LoadingOverlay visible={loading} onCancel={handleCancelLoading} message="Uploading images..." />
+      <LoadingOverlay visible={loading} onCancel={() => setLoading(false)} />
     </div>
   );
 }
