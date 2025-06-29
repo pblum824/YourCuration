@@ -17,8 +17,7 @@ function InnerApp({ view, setView }) {
   const [error, setError] = useState(null);
 
   return (
-      <div className="App" style={{ padding: '0.35rem 1rem 1rem 1rem', fontFamily: 'sans-serif' }}>
-      {error ? (
+        <div className="App" style={{ padding: '0.15rem 1rem 1rem', fontFamily: 'sans-serif' }}>      {error ? (
         <div style={{ color: 'red', background: '#fee', padding: '1rem', borderRadius: '0.5rem' }}>
           <strong>Runtime Error:</strong>
           <pre>{error.toString()}</pre>
