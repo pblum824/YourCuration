@@ -34,6 +34,9 @@ export default function SampleRater({ images, setView }) {
     setRatings((prev) => ({ ...prev, [id]: value }));
   };
 
+  const ratedCount = Object.keys(ratings).length;
+  const isDisabled = ratedCount !== 15;
+
   if (!hydratedImages || hydratedImages.length === 0) {
     return <p style={{ textAlign: 'center', marginTop: '2rem', color: '#999' }}>No images to rate.</p>;
   }
@@ -46,12 +49,15 @@ export default function SampleRater({ images, setView }) {
         style={{
           fontFamily: 'Parisienne, cursive',
           fontSize: '2rem',
-          marginBottom: '1rem',
+          marginBottom: '0.25rem',
           color: '#1e3a8a'
         }}
       >
-        Rate Your Sample Images
+        Please Rate These Artist Samples
       </h2>
+      <p style={{ fontSize: '0.95rem', color: '#555', marginBottom: '1.5rem' }}>
+        (The curation works best if you rate all 15.)
+      </p>
 
       <div
         style={{
@@ -96,14 +102,16 @@ export default function SampleRater({ images, setView }) {
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
           onClick={() => setView('curated1')}
+          disabled={isDisabled}
           style={{
             padding: '1rem 2rem',
             fontSize: '1.1rem',
-            backgroundColor: '#1e3a8a',
-            color: '#fff',
+            backgroundColor: isDisabled ? '#d1d5db' : '#1e3a8a',
+            color: isDisabled ? '#666' : '#fff',
             borderRadius: '0.5rem',
             border: 'none',
-            cursor: 'pointer',
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
+            opacity: isDisabled ? 0.6 : 1,
           }}
         >
           ➡️ Generate Gallery Preview 
@@ -111,4 +119,4 @@ export default function SampleRater({ images, setView }) {
       </div>
     </div>
   );
-} 
+}
