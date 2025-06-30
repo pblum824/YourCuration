@@ -31,8 +31,8 @@ export default function ArtistDashboard({ setView }) {
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [cancelUpload, setCancelUpload] = useState(false);
-  const [duplicateQueue, setDuplicateQueue] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [duplicateFiles, setDuplicateFiles] = useState([]);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
@@ -67,29 +67,35 @@ export default function ArtistDashboard({ setView }) {
     setIsUploading(true);
     setCancelUpload(false);
     const files = Array.from(fileList);
-    const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
+    const accepted = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
 
     const existingNames = new Set(artistGallery.map((img) => img.name));
-    const uploads = [];
+    const valid = [];
     const duplicates = [];
+    const warnings = [];
 
-    for (const file of valid) {
+    for (const file of accepted) {
       if (existingNames.has(file.name)) {
         duplicates.push(file);
+        warnings.push(`${file.name} is a duplicate.`);
       } else {
-        uploads.push(file);
+        valid.push(file);
       }
     }
 
+    setUploadWarnings(warnings);
+    setDuplicateFiles(duplicates);
+    setUploadCount((prev) => prev + valid.length);
+
     const newImages = [];
-    for (const file of uploads) {
+    for (const file of valid) {
       if (cancelUpload) break;
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🦢 Saved to IndexedDB: ${id}`);
+      logToScreen(`🧼 Saved to IndexedDB: ${id}`);
 
       newImages.push({
         id,
@@ -104,23 +110,22 @@ export default function ArtistDashboard({ setView }) {
     }
 
     setArtistGallery((prev) => [...prev, ...newImages]);
-    setUploadCount((prev) => prev + newImages.length);
-    setUploadWarnings(duplicates.map((f) => `${f.name} is a duplicate.`));
-    setDuplicateQueue(duplicates);
     setIsUploading(false);
-    if (duplicates.length) setShowModal(true);
+
+    if (duplicates.length > 0) {
+      setShowDuplicateModal(true);
+    }
   };
 
-  const confirmDuplicateOverride = async () => {
-    setShowModal(false);
+  const uploadDuplicates = async () => {
     const newImages = [];
-    for (const file of duplicateQueue) {
+    for (const file of duplicateFiles) {
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🦢 Override saved: ${id}`);
+      logToScreen(`🧼 Duplicate uploaded: ${file.name}`);
 
       newImages.push({
         id,
@@ -133,9 +138,11 @@ export default function ArtistDashboard({ setView }) {
         localRefId: id,
       });
     }
+
     setArtistGallery((prev) => [...prev, ...newImages]);
-    setUploadCount((prev) => prev + newImages.length);
-    setDuplicateQueue([]);
+    setUploadCount((prev) => prev + duplicateFiles.length);
+    setDuplicateFiles([]);
+    setShowDuplicateModal(false);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -249,11 +256,11 @@ export default function ArtistDashboard({ setView }) {
         />
       )}
 
-      {showModal && (
-        <Modal
-          duplicates={duplicateQueue}
-          onCancel={() => setShowModal(false)}
-          onConfirm={confirmDuplicateOverride}
+      {showDuplicateModal && (
+        <DuplicateUploadModal
+          duplicates={duplicateFiles}
+          onConfirm={uploadDuplicates}
+          onCancel={() => setShowDuplicateModal(false)}
         />
       )}
     </div>
