@@ -11,8 +11,10 @@ import DragDropUpload from './DragDropUpload';
 import MultiFilePicker from './MultiFilePicker';
 import ControlBar from './utils/ControlBar';
 import LoadingOverlay from './utils/LoadingOverlay';
+import DuplicateUploadModal from './utils/DuplicateUploadModal';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
+import { filterDuplicateFiles } from './utils/checkDuplicateUpload';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -30,58 +32,23 @@ export default function ArtistDashboard({ setView }) {
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [cancelUpload, setCancelUpload] = useState(false);
+  const [pendingDuplicates, setPendingDuplicates] = useState([]);
+  const [showDupModal, setShowDupModal] = useState(false);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
-  const handleImportGallery = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
-      if (heroImage) setHeroImage(heroImage);
-      if (borderSkin) setBorderSkin(borderSkin);
-      if (centerBackground) setCenterBackground(centerBackground);
-      setArtistGallery((prev) => [...prev, ...images]);
-      logToScreen(`✅ Imported ${images.length} image(s)`);
-    } catch (err) {
-      logToScreen(`❌ Import failed: ${err.message}`);
-    }
-  };
-
-  const handleExportGallery = async () => {
-    const blob = await exportGalleryData({ heroImage, borderSkin, centerBackground, artistGallery });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    link.click();
-    logToScreen('✅ Gallery exported');
-  };
-
-  const handleFiles = async (fileList) => {
-    setIsUploading(true);
-    setCancelUpload(false);
-    const files = Array.from(fileList);
-    const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
-
-    const existingNames = new Set(artistGallery.map((img) => img.name));
+  const uploadFiles = async (files) => {
     const newImages = [];
-    const warnings = [];
-
-    for (const file of valid) {
+    for (const file of files) {
       if (cancelUpload) break;
-      if (existingNames.has(file.name)) {
-        warnings.push(`${file.name} is a duplicate.`);
-        continue;
-      }
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🧫 Saved to IndexedDB: ${id}`);
+      logToScreen(`🧠 Saved to IndexedDB: ${id}`);
 
       newImages.push({
         id,
@@ -94,11 +61,41 @@ export default function ArtistDashboard({ setView }) {
         localRefId: id,
       });
     }
-
     setArtistGallery((prev) => [...prev, ...newImages]);
-    setUploadCount((prev) => prev + newImages.length);
-    setUploadWarnings(warnings);
+  };
+
+  const handleFiles = async (fileList) => {
+    setIsUploading(true);
+    setCancelUpload(false);
+    const files = Array.from(fileList);
+    const accepted = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
+
+    const [valid, duplicates] = filterDuplicateFiles(accepted, artistGallery);
+    setUploadWarnings([
+      ...files.filter((f) => !accepted.includes(f)).map((f) => `${f.name} skipped.`),
+    ]);
+    setUploadCount((prev) => prev + valid.length);
+
+    await uploadFiles(valid);
     setIsUploading(false);
+
+    if (duplicates.length > 0) {
+      setPendingDuplicates(duplicates);
+      setShowDupModal(true);
+    }
+  };
+
+  const confirmDuplicateUpload = async () => {
+    setShowDupModal(false);
+    setIsUploading(true);
+    await uploadFiles(pendingDuplicates);
+    setIsUploading(false);
+    setPendingDuplicates([]);
+  };
+
+  const cancelDuplicateUpload = () => {
+    setShowDupModal(false);
+    setPendingDuplicates([]);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -209,6 +206,14 @@ export default function ArtistDashboard({ setView }) {
             setCancelUpload(true);
             setIsUploading(false);
           }}
+        />
+      )}
+
+      {showDupModal && (
+        <DuplicateUploadModal
+          duplicates={pendingDuplicates.map((f) => f.name)}
+          onConfirm={confirmDuplicateUpload}
+          onCancel={cancelDuplicateUpload}
         />
       )}
     </div>
