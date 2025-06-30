@@ -1,98 +1,82 @@
-// File: src/ArtistDashboard.jsx before adding duplicate rejection strat
-import React, { useState, useRef } from 'react';
-import { useCuration } from './YourCurationContext';
-import { compressImage } from './utils/imageHelpers';
-import { saveBlob, loadBlob } from './utils/dbCache';
-import { importGalleryData, exportGalleryData } from './utils/galleryIO';
-import GalleryGrid from './GalleryGrid';
-import HeroSection from './HeroSection';
-import UploadWarnings from './UploadWarnings';
-import DragDropUpload from './DragDropUpload';
-import MultiFilePicker from './MultiFilePicker';
-import ControlBar from './utils/ControlBar';
-import LoadingOverlay from './utils/LoadingOverlay';
-import { useDevMode } from './context/DevModeContext';
-import { toggleSampleWithLimit } from './utils/sampleUtils';
+  // File: src/ArtistDashboard.jsx
+  import React, { useState, useRef } from 'react';
+  import { useCuration } from './YourCurationContext';
+  import { compressImage } from './utils/imageHelpers';
+  import { saveBlob, loadBlob } from './utils/dbCache';
+  import { importGalleryData, exportGalleryData } from './utils/galleryIO';
+  import GalleryGrid from './GalleryGrid';
+  import HeroSection from './HeroSection';
+  import UploadWarnings from './UploadWarnings';
+  import DragDropUpload from './DragDropUpload';
+  import MultiFilePicker from './MultiFilePicker';
+  import ControlBar from './utils/ControlBar';
+  import LoadingOverlay from './utils/LoadingOverlay';
+  import { useDevMode } from './context/DevModeContext';
+  import { toggleSampleWithLimit } from './utils/sampleUtils';
+  import { filterDuplicateFiles } from './utils/checkDuplicateUpload';
 
-const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
+  const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
-export default function ArtistDashboard({ setView }) {
-  const { artistGallery, setArtistGallery } = useCuration();
-  const { devMode, setDevMode } = useDevMode();
+  export default function ArtistDashboard({ setView }) {
+    const { artistGallery, setArtistGallery } = useCuration();
+    const { devMode, setDevMode } = useDevMode();
 
-  const [heroImage, setHeroImage] = useState(null);
-  const [borderSkin, setBorderSkin] = useState(null);
-  const [centerBackground, setCenterBackground] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [uploadCount, setUploadCount] = useState(0);
-  const [uploadWarnings, setUploadWarnings] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [sampleWarningId, setSampleWarningId] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [cancelUpload, setCancelUpload] = useState(false);
+    const [heroImage, setHeroImage] = useState(null);
+    const [borderSkin, setBorderSkin] = useState(null);
+    const [centerBackground, setCenterBackground] = useState(null);
+    const [dragging, setDragging] = useState(false);
+    const [uploadCount, setUploadCount] = useState(0);
+    const [uploadWarnings, setUploadWarnings] = useState([]);
+    const [logs, setLogs] = useState([]);
+    const [sampleWarningId, setSampleWarningId] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [cancelUpload, setCancelUpload] = useState(false);
 
-  const fileInputRef = useRef(null);
-  const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
-  const isValidImage = (img) => img?.id && img?.url && img?.name;
+    const fileInputRef = useRef(null);
+    const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
+    const isValidImage = (img) => img?.id && img?.url && img?.name;
 
-  const handleImportGallery = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
-      if (heroImage) setHeroImage(heroImage);
-      if (borderSkin) setBorderSkin(borderSkin);
-      if (centerBackground) setCenterBackground(centerBackground);
-      setArtistGallery((prev) => [...prev, ...images]);
-      logToScreen(`✅ Imported ${images.length} image(s)`);
-    } catch (err) {
-      logToScreen(`❌ Import failed: ${err.message}`);
-    }
-  };
+    const handleFiles = async (fileList) => {
+      setIsUploading(true);
+      setCancelUpload(false);
+      const files = Array.from(fileList);
+      const accepted = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
 
-  const handleExportGallery = async () => {
-    const blob = await exportGalleryData({ heroImage, borderSkin, centerBackground, artistGallery });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    link.click();
-    logToScreen('✅ Gallery exported');
-  };
+      const [valid, duplicates] = filterDuplicateFiles(accepted, artistGallery);
+      setUploadWarnings(
+        [...files.filter((f) => !accepted.includes(f)).map((f) => `${f.name} skipped.`),
+         ...duplicates.map((f) => `${f.name} is a duplicate.`)]
+      );
+      setUploadCount((prev) => prev + valid.length);
 
-  const handleFiles = async (fileList) => {
-    setIsUploading(true);
-    setCancelUpload(false);
-    const files = Array.from(fileList);
-    const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
-    setUploadWarnings(files.filter((f) => !valid.includes(f)).map((f) => `${f.name} skipped.`));
-    setUploadCount((prev) => prev + valid.length);
+      const newImages = [];
+      for (const file of valid) {
+        if (cancelUpload) break;
+        const compressed = await compressImage(file);
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const url = URL.createObjectURL(compressed);
 
-    const newImages = [];
-    for (const file of valid) {
-      if (cancelUpload) break;
-      const compressed = await compressImage(file);
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const url = URL.createObjectURL(compressed);
+        await saveBlob(id, compressed);
+        logToScreen(`🧠 Saved to IndexedDB: ${id}`);
 
-      await saveBlob(id, compressed);
-      logToScreen(`🧠 Saved to IndexedDB: ${id}`);
+        newImages.push({
+          id,
+          name: file.name,
+          url,
+          scrapeEligible: true,
+          metadata: {},
+          galleryEligible: true,
+          sampleEligible: false,
+          localRefId: id,
+        });
+      }
 
-      newImages.push({
-        id,
-        name: file.name,
-        url,
-        scrapeEligible: true,
-        metadata: {},
-        galleryEligible: true,
-        sampleEligible: false,
-        localRefId: id,
-      });
-    }
+      setArtistGallery((prev) => [...prev, ...newImages]);
+      setIsUploading(false);
+    };
 
-    setArtistGallery((prev) => [...prev, ...newImages]);
-    setIsUploading(false);
-  };
+    // ...rest of the file remains unchanged
+
 
   const handleSingleUpload = async (e, setter) => {
     const file = e.target.files[0];

@@ -1,27 +1,21 @@
 // File: src/utils/checkDuplicateUpload.js
 
 /**
- * Detects duplicate filenames in a batch of uploaded files against current gallery.
- * If duplicates exist, returns a list of names that conflict.
- *
- * @param {File[]} newFiles - files selected for upload
- * @param {Array} currentGallery - the artistGallery with current uploads
- * @returns {string[]} - list of duplicate file names
+ * Checks if any of the new files match existing image names in the gallery.
+ * Returns a tuple: [validFiles, duplicateNames]
  */
-export function getDuplicateFilenames(newFiles, currentGallery) {
-  const existingNames = new Set(currentGallery.map((img) => img.name));
-  return newFiles.filter((file) => existingNames.has(file.name)).map((file) => file.name);
-}
+export function filterDuplicateFiles(files, existingImages) {
+  const existingNames = new Set(existingImages.map((img) => img.name));
+  const valid = [];
+  const duplicates = [];
 
-/**
- * Filters out files that would be duplicates, based on file name.
- * Returns only those files safe to upload.
- *
- * @param {File[]} newFiles
- * @param {Array} currentGallery
- * @returns {File[]} files with unique names
- */
-export function filterOutDuplicates(newFiles, currentGallery) {
-  const existingNames = new Set(currentGallery.map((img) => img.name));
-  return newFiles.filter((file) => !existingNames.has(file.name));
+  for (const file of files) {
+    if (existingNames.has(file.name)) {
+      duplicates.push(file.name);
+    } else {
+      valid.push(file);
+    }
+  }
+
+  return [valid, duplicates];
 }
