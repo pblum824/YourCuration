@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
-import { saveBlob } from './utils/dbCache';
+import { saveBlob, loadBlob } from './utils/dbCache';
 import { importGalleryData, exportGalleryData } from './utils/galleryIO';
 import GalleryGrid from './GalleryGrid';
 import HeroSection from './HeroSection';
@@ -13,7 +13,6 @@ import ControlBar from './utils/ControlBar';
 import LoadingOverlay from './utils/LoadingOverlay';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
-import { filterDuplicateFiles } from './utils/checkDuplicateUpload';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -36,36 +35,53 @@ export default function ArtistDashboard({ setView }) {
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
   const isValidImage = (img) => img?.id && img?.url && img?.name;
 
+  const handleImportGallery = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
+      if (heroImage) setHeroImage(heroImage);
+      if (borderSkin) setBorderSkin(borderSkin);
+      if (centerBackground) setCenterBackground(centerBackground);
+      setArtistGallery((prev) => [...prev, ...images]);
+      logToScreen(`✅ Imported ${images.length} image(s)`);
+    } catch (err) {
+      logToScreen(`❌ Import failed: ${err.message}`);
+    }
+  };
+
+  const handleExportGallery = async () => {
+    const blob = await exportGalleryData({ heroImage, borderSkin, centerBackground, artistGallery });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    link.click();
+    logToScreen('✅ Gallery exported');
+  };
+
   const handleFiles = async (fileList) => {
     setIsUploading(true);
     setCancelUpload(false);
     const files = Array.from(fileList);
-    const accepted = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
+    const valid = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
 
-    const [valid, duplicates] = filterDuplicateFiles(accepted, artistGallery);
-    const duplicateNames = duplicates.map((f) => f.name);
-    const typeSkipped = files.filter((f) => !accepted.includes(f)).map((f) => `${f.name} skipped.`);
-
-    setUploadWarnings(
-      duplicateNames.length > 0
-        ? [
-            'Some files were not added (duplicates):',
-            ...duplicateNames,
-            ...typeSkipped
-          ]
-        : typeSkipped
-    );
-    setUploadCount((prev) => prev + valid.length);
-
+    const existingNames = new Set(artistGallery.map((img) => img.name));
     const newImages = [];
+    const warnings = [];
+
     for (const file of valid) {
       if (cancelUpload) break;
+      if (existingNames.has(file.name)) {
+        warnings.push(`${file.name} is a duplicate.`);
+        continue;
+      }
       const compressed = await compressImage(file);
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🧠 Saved to IndexedDB: ${id}`);
+      logToScreen(`🧫 Saved to IndexedDB: ${id}`);
 
       newImages.push({
         id,
@@ -80,6 +96,8 @@ export default function ArtistDashboard({ setView }) {
     }
 
     setArtistGallery((prev) => [...prev, ...newImages]);
+    setUploadCount((prev) => prev + newImages.length);
+    setUploadWarnings(warnings);
     setIsUploading(false);
   };
 
