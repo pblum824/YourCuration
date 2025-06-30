@@ -72,18 +72,15 @@ export default function ArtistDashboard({ setView }) {
     const existingNames = new Set(artistGallery.map((img) => img.name));
     const valid = [];
     const duplicates = [];
-    const warnings = [];
 
     for (const file of accepted) {
       if (existingNames.has(file.name)) {
         duplicates.push(file);
-        warnings.push(`${file.name} is a duplicate.`);
       } else {
         valid.push(file);
       }
     }
 
-    setUploadWarnings(warnings);
     setDuplicateFiles(duplicates);
     setUploadCount((prev) => prev + valid.length);
 
@@ -141,6 +138,13 @@ export default function ArtistDashboard({ setView }) {
 
     setArtistGallery((prev) => [...prev, ...newImages]);
     setUploadCount((prev) => prev + duplicateFiles.length);
+    setUploadWarnings(duplicateFiles.map((f) => `${f.name} was uploaded by user choice.`));
+    setDuplicateFiles([]);
+    setShowDuplicateModal(false);
+  };
+
+  const handleDuplicateCancel = () => {
+    setUploadWarnings(duplicateFiles.map((f) => `${f.name} upload was canceled.`));
     setDuplicateFiles([]);
     setShowDuplicateModal(false);
   };
@@ -260,7 +264,7 @@ export default function ArtistDashboard({ setView }) {
         <DuplicateUploadModal
           duplicates={duplicateFiles}
           onConfirm={uploadDuplicates}
-          onCancel={() => setShowDuplicateModal(false)}
+          onCancel={handleDuplicateCancel}
         />
       )}
     </div>
