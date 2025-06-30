@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
-import { saveBlob, loadBlob } from './utils/dbCache';
+import { saveBlob } from './utils/dbCache';
 import { importGalleryData, exportGalleryData } from './utils/galleryIO';
 import GalleryGrid from './GalleryGrid';
 import HeroSection from './HeroSection';
@@ -43,9 +43,17 @@ export default function ArtistDashboard({ setView }) {
     const accepted = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
 
     const [valid, duplicates] = filterDuplicateFiles(accepted, artistGallery);
+    const duplicateNames = duplicates.map((f) => f.name);
+    const typeSkipped = files.filter((f) => !accepted.includes(f)).map((f) => `${f.name} skipped.`);
+
     setUploadWarnings(
-      [...files.filter((f) => !accepted.includes(f)).map((f) => `${f.name} skipped.`),
-       ...duplicates.map((f) => `${f.name} is a duplicate.`)]
+      duplicateNames.length > 0
+        ? [
+            'Some files were not added (duplicates):',
+            ...duplicateNames,
+            ...typeSkipped
+          ]
+        : typeSkipped
     );
     setUploadCount((prev) => prev + valid.length);
 
@@ -73,31 +81,6 @@ export default function ArtistDashboard({ setView }) {
 
     setArtistGallery((prev) => [...prev, ...newImages]);
     setIsUploading(false);
-  };
-
-  const handleImportGallery = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
-      if (heroImage) setHeroImage(heroImage);
-      if (borderSkin) setBorderSkin(borderSkin);
-      if (centerBackground) setCenterBackground(centerBackground);
-      setArtistGallery((prev) => [...prev, ...images]);
-      logToScreen(`✅ Imported ${images.length} image(s)`);
-    } catch (err) {
-      logToScreen(`❌ Import failed: ${err.message}`);
-    }
-  };
-
-  const handleExportGallery = async () => {
-    const blob = await exportGalleryData({ heroImage, borderSkin, centerBackground, artistGallery });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    link.click();
-    logToScreen('✅ Gallery exported');
   };
 
   const handleSingleUpload = async (e, setter) => {
