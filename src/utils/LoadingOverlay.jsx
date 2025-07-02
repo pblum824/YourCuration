@@ -1,18 +1,18 @@
 // File: src/utils/LoadingOverlay.jsx
 import React, { useEffect, useState } from 'react';
 
-export default function LoadingOverlay({ onCancel }) {
+export default function LoadingOverlay({ onCancel, duration = 120 }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let frame;
     let start;
-    const duration = 120000; // 2 minutes
+    const durationMs = duration * 1000; // duration in seconds to milliseconds
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
       const elapsed = timestamp - start;
-      const percentage = Math.min((elapsed / duration) * 100, 100);
+      const percentage = Math.min((elapsed / durationMs) * 100, 100);
       setProgress(percentage);
       if (percentage < 100) {
         frame = requestAnimationFrame(animate);
@@ -21,7 +21,7 @@ export default function LoadingOverlay({ onCancel }) {
 
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [duration]);
 
   return (
     <div
