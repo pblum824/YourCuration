@@ -4,6 +4,7 @@ import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
+import FullscreenImageViewer from './FullscreenImageViewer';
 
 export default function CuratedGalleryFinal({ setView }) {
   const {
@@ -18,6 +19,7 @@ export default function CuratedGalleryFinal({ setView }) {
 
   const [finalGallery, setFinalGallery] = useState([]);
   const [error, setError] = useState(null);
+  const [fullscreenImage, setFullscreenImage] = useState(null);
 
   useEffect(() => {
     async function hydrate() {
@@ -143,7 +145,9 @@ export default function CuratedGalleryFinal({ setView }) {
                   backgroundColor: '#f9fafb',
                   borderRadius: '0.5rem',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  cursor: 'zoom-in'
                 }}
+                onClick={() => setFullscreenImage(img.url)}
               />
             ) : (
               <div
@@ -170,6 +174,13 @@ export default function CuratedGalleryFinal({ setView }) {
           </div>
         ))}
       </div>
+
+      {fullscreenImage && (
+        <FullscreenImageViewer
+          imageUrl={fullscreenImage}
+          onClose={() => setFullscreenImage(null)}
+        />
+      )}
     </div>
   );
 }
