@@ -4,12 +4,12 @@ import { loadBlob } from './utils/dbCache';
 
 export default function FullscreenImageViewer({ image, onClose }) {
   const [fullUrl, setFullUrl] = useState(null);
-  const imgRef = useRef(null);
   const containerRef = useRef(null);
+  const imgRef = useRef(null);
   const [scale, setScale] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const isDragging = useRef(false);
-  const lastPosition = useRef({ x: 0, y: 0 });
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const lastOffset = useRef({ x: 0, y: 0 });
+  const lastTouch = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let objectUrl;
@@ -22,42 +22,45 @@ export default function FullscreenImageViewer({ image, onClose }) {
     }
     fetchFullImage();
 
-    const originalBodyOverflow = document.body.style.overflow;
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
-      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.overflow = originalOverflow;
     };
   }, [image]);
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const newScale = Math.min(Math.max(scale + e.deltaY * -0.001, 1), 4);
-    setScale(newScale);
-  };
-
   const handlePointerDown = (e) => {
-    isDragging.current = true;
-    lastPosition.current = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
+    const startX = e.clientX || e.touches?.[0]?.clientX;
+    const startY = e.clientY || e.touches?.[0]?.clientY;
+    lastTouch.current = { x: startX, y: startY };
     containerRef.current.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e) => {
-    if (!isDragging.current) return;
-    const dx = e.clientX - lastPosition.current.x;
-    const dy = e.clientY - lastPosition.current.y;
-    lastPosition.current = { x: e.clientX, y: e.clientY };
-    setTranslate((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+    if (!e.pressure || scale === 1) return;
+    const x = e.clientX;
+    const y = e.clientY;
+    const dx = x - lastTouch.current.x;
+    const dy = y - lastTouch.current.y;
+    lastTouch.current = { x, y };
+    setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
   };
 
-  const handlePointerUp = (e) => {
-    isDragging.current = false;
-    containerRef.current.releasePointerCapture(e.pointerId);
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+    setScale((prev) => Math.min(Math.max(prev + delta, 1), 4));
   };
 
-  const handleClick = () => {
-    if (scale === 1) onClose();
+  const handleDoubleClick = () => {
+    if (scale > 1) {
+      setScale(1);
+      setOffset({ x: 0, y: 0 });
+    } else {
+      setScale(2);
+    }
   };
 
   if (!fullUrl) return null;
@@ -65,11 +68,11 @@ export default function FullscreenImageViewer({ image, onClose }) {
   return (
     <div
       ref={containerRef}
-      onClick={handleClick}
-      onWheel={handleWheel}
+      onClick={onClose}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+      onWheel={handleWheel}
+      onDoubleClick={handleDoubleClick}
       style={{
         position: 'fixed',
         top: 0,
@@ -81,8 +84,8 @@ export default function FullscreenImageViewer({ image, onClose }) {
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
+        cursor: 'zoom-out',
         overflow: 'hidden',
-        cursor: scale > 1 ? 'grab' : 'zoom-out',
       }}
     >
       <img
@@ -90,16 +93,15 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
-          transition: isDragging.current ? 'none' : 'transform 0.2s ease-out',
+          transform: `scale(${scale}) translate(${offset.x / scale}px, ${offset.y / scale}px)`,
           maxWidth: '90vw',
           maxHeight: '90vh',
           objectFit: 'contain',
           borderRadius: '0.5rem',
           boxShadow: '0 0 20px rgba(0,0,0,0.5)',
+          transition: 'transform 0.2s ease-out',
           touchAction: 'none',
           userSelect: 'none',
-          pointerEvents: 'auto',
         }}
       />
     </div>
