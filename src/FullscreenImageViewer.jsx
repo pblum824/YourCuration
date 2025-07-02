@@ -7,9 +7,10 @@ export default function FullscreenImageViewer({ image, onClose }) {
   const containerRef = useRef(null);
   const imgRef = useRef(null);
   const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const lastOffset = useRef({ x: 0, y: 0 });
-  const lastTouch = useRef({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const lastTouchDist = useRef(null);
+  const lastTouchPos = useRef(null);
+  const isDragging = useRef(false);
 
   useEffect(() => {
     let objectUrl;
@@ -24,43 +25,68 @@ export default function FullscreenImageViewer({ image, onClose }) {
 
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       document.body.style.overflow = originalOverflow;
     };
   }, [image]);
 
-  const handlePointerDown = (e) => {
-    e.preventDefault();
-    const startX = e.clientX || e.touches?.[0]?.clientX;
-    const startY = e.clientY || e.touches?.[0]?.clientY;
-    lastTouch.current = { x: startX, y: startY };
-    containerRef.current.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e) => {
-    if (!e.pressure || scale === 1) return;
-    const x = e.clientX;
-    const y = e.clientY;
-    const dx = x - lastTouch.current.x;
-    const dy = y - lastTouch.current.y;
-    lastTouch.current = { x, y };
-    setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-  };
-
   const handleWheel = (e) => {
     e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    setScale((prev) => Math.min(Math.max(prev + delta, 1), 4));
+    const delta = Math.sign(e.deltaY);
+    setScale((prev) => Math.max(1, Math.min(prev - delta * 0.1, 5)));
   };
 
-  const handleDoubleClick = () => {
-    if (scale > 1) {
-      setScale(1);
-      setOffset({ x: 0, y: 0 });
-    } else {
-      setScale(2);
+  const handleMouseDown = (e) => {
+    isDragging.current = true;
+    lastTouchPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    const dx = e.clientX - lastTouchPos.current.x;
+    const dy = e.clientY - lastTouchPos.current.y;
+    lastTouchPos.current = { x: e.clientX, y: e.clientY };
+    setPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      const dist = getTouchDistance(e);
+      lastTouchDist.current = dist;
+    } else if (e.touches.length === 1) {
+      lastTouchPos.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
     }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2) {
+      const dist = getTouchDistance(e);
+      const delta = dist - lastTouchDist.current;
+      setScale((prev) => Math.max(1, Math.min(prev + delta / 200, 5)));
+      lastTouchDist.current = dist;
+    } else if (e.touches.length === 1 && lastTouchPos.current) {
+      const dx = e.touches[0].clientX - lastTouchPos.current.x;
+      const dy = e.touches[0].clientY - lastTouchPos.current.y;
+      lastTouchPos.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+      setPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+    }
+  };
+
+  const getTouchDistance = (e) => {
+    const [a, b] = e.touches;
+    return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
   };
 
   if (!fullUrl) return null;
@@ -69,10 +95,13 @@ export default function FullscreenImageViewer({ image, onClose }) {
     <div
       ref={containerRef}
       onClick={onClose}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
       onWheel={handleWheel}
-      onDoubleClick={handleDoubleClick}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       style={{
         position: 'fixed',
         top: 0,
@@ -86,6 +115,7 @@ export default function FullscreenImageViewer({ image, onClose }) {
         zIndex: 1000,
         cursor: 'zoom-out',
         overflow: 'hidden',
+        touchAction: 'none',
       }}
     >
       <img
@@ -93,15 +123,13 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          transform: `scale(${scale}) translate(${offset.x / scale}px, ${offset.y / scale}px)`,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
+          transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+          transformOrigin: 'center center',
+          maxWidth: 'none',
+          maxHeight: 'none',
           objectFit: 'contain',
           borderRadius: '0.5rem',
-          boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-          transition: 'transform 0.2s ease-out',
-          touchAction: 'none',
-          userSelect: 'none',
+          transition: 'transform 0.1s ease-out',
         }}
       />
     </div>
