@@ -5,6 +5,7 @@ import { loadBlob } from './utils/dbCache';
 export default function FullscreenImageViewer({ image, onClose }) {
   const [fullUrl, setFullUrl] = useState(null);
   const imgRef = useRef(null);
+  const containerRef = useRef(null);
   const scaleRef = useRef(1);
   const startDistRef = useRef(0);
 
@@ -50,7 +51,7 @@ export default function FullscreenImageViewer({ image, onClose }) {
   const handleTouchEnd = (e) => {
     if (e.touches.length < 2 && imgRef.current) {
       const transform = imgRef.current.style.transform;
-      const scaleMatch = /scale\(([\d.]+)\)/.exec(transform);
+      const scaleMatch = /scale\(([^)]+)\)/.exec(transform);
       scaleRef.current = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
     }
   };
@@ -59,6 +60,7 @@ export default function FullscreenImageViewer({ image, onClose }) {
 
   return (
     <div
+      ref={containerRef}
       onClick={onClose}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -70,12 +72,12 @@ export default function FullscreenImageViewer({ image, onClose }) {
         width: '100vw',
         height: '100vh',
         backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        zIndex: 1000,
+        cursor: 'zoom-out',
+        overflow: 'auto',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 1000,
-        cursor: 'zoom-out',
-        padding: '5vh 0',
       }}
     >
       <img
@@ -83,8 +85,8 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          maxWidth: '90vw',
-          maxHeight: '85vh',
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: 'contain',
           borderRadius: '0.5rem',
           boxShadow: '0 0 20px rgba(0,0,0,0.5)',
