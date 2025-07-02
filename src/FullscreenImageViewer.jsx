@@ -6,8 +6,10 @@ export default function FullscreenImageViewer({ image, onClose }) {
   const [fullUrl, setFullUrl] = useState(null);
   const imgRef = useRef(null);
   const containerRef = useRef(null);
-  const scaleRef = useRef(1);
-  const startDistRef = useRef(0);
+  const [scale, setScale] = useState(1);
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const lastPosition = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let objectUrl;
@@ -29,31 +31,33 @@ export default function FullscreenImageViewer({ image, onClose }) {
     };
   }, [image]);
 
-  function getDistance(e) {
-    const [a, b] = e.touches;
-    return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
-  }
-
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      startDistRef.current = getDistance(e);
-    }
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const newScale = Math.min(Math.max(scale + e.deltaY * -0.001, 1), 4);
+    setScale(newScale);
   };
 
-  const handleTouchMove = (e) => {
-    if (e.touches.length === 2 && imgRef.current) {
-      const newDist = getDistance(e);
-      const scale = Math.min(Math.max((newDist / startDistRef.current) * scaleRef.current, 1), 4);
-      imgRef.current.style.transform = `scale(${scale})`;
-    }
+  const handlePointerDown = (e) => {
+    isDragging.current = true;
+    lastPosition.current = { x: e.clientX, y: e.clientY };
+    containerRef.current.setPointerCapture(e.pointerId);
   };
 
-  const handleTouchEnd = (e) => {
-    if (e.touches.length < 2 && imgRef.current) {
-      const transform = imgRef.current.style.transform;
-      const scaleMatch = /scale\(([^)]+)\)/.exec(transform);
-      scaleRef.current = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-    }
+  const handlePointerMove = (e) => {
+    if (!isDragging.current) return;
+    const dx = e.clientX - lastPosition.current.x;
+    const dy = e.clientY - lastPosition.current.y;
+    lastPosition.current = { x: e.clientX, y: e.clientY };
+    setTranslate((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+  };
+
+  const handlePointerUp = (e) => {
+    isDragging.current = false;
+    containerRef.current.releasePointerCapture(e.pointerId);
+  };
+
+  const handleClick = () => {
+    if (scale === 1) onClose();
   };
 
   if (!fullUrl) return null;
@@ -61,10 +65,11 @@ export default function FullscreenImageViewer({ image, onClose }) {
   return (
     <div
       ref={containerRef}
-      onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+      onWheel={handleWheel}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       style={{
         position: 'fixed',
         top: 0,
@@ -72,12 +77,12 @@ export default function FullscreenImageViewer({ image, onClose }) {
         width: '100vw',
         height: '100vh',
         backgroundColor: 'rgba(0, 0, 0, 0.95)',
-        zIndex: 1000,
-        cursor: 'zoom-out',
-        overflow: 'auto',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 1000,
+        overflow: 'hidden',
+        cursor: scale > 1 ? 'grab' : 'zoom-out',
       }}
     >
       <img
@@ -85,13 +90,16 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          maxWidth: '100%',
-          maxHeight: '100%',
+          transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
+          transition: isDragging.current ? 'none' : 'transform 0.2s ease-out',
+          maxWidth: '90vw',
+          maxHeight: '90vh',
           objectFit: 'contain',
           borderRadius: '0.5rem',
           boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-          transition: 'transform 0.3s ease-out',
           touchAction: 'none',
+          userSelect: 'none',
+          pointerEvents: 'auto',
         }}
       />
     </div>
