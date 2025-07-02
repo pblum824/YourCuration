@@ -79,7 +79,8 @@ export default function CuratedGallery2({ setView }) {
                 style={{
                   width: '100%',
                   height: '200px',
-                  objectFit: 'cover',
+                  objectFit: 'contain',
+                  backgroundColor: '#f9fafb',
                   borderRadius: '0.5rem',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                 }}

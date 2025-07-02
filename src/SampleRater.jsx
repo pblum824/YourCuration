@@ -78,9 +78,10 @@ export default function SampleRater({ images, setView }) {
                 style={{
                   width: '100%',
                   height: '200px',
-                  objectFit: 'cover',
+                  objectFit: 'contain',
+                  backgroundColor: '#f9fafb',
                   borderRadius: '0.5rem',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                 }}
               />
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
