@@ -252,7 +252,7 @@ export default function ArtistDashboard({ setView }) {
 
       {isUploading && (
         <LoadingOverlay
-          duration={uploadCount * 0.5}
+          duration={uploadCount * 0.3}
           onCancel={() => {
             setCancelUpload(true);
             setIsUploading(false);
