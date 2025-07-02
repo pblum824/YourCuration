@@ -177,7 +177,7 @@ export default function CuratedGalleryFinal({ setView }) {
 
       {fullscreenImage && (
         <FullscreenImageViewer
-          imageUrl={fullscreenImage}
+          image={fullscreenImage}
           onClose={() => setFullscreenImage(null)}
         />
       )}
