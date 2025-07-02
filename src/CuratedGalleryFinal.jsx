@@ -31,7 +31,7 @@ export default function CuratedGalleryFinal({ setView }) {
           .filter((img) => img.galleryEligible)
           .map((img) => {
             const tags = extractAllTags(img.metadata);
-            const tagScore = Math.round(scoreImage(img, tagPools) * 6); // normalize to 0–6
+            const tagScore = Math.round(scoreImage(img, tagPools) * 6);
             const loveScore = ratings[img.id] === 'love' ? 3 : 0;
             const cg1Score = cg1Selections[img.id] === 2 ? 2 : 0;
             const cg2Score = cg2Selections[img.id] === 2 ? 2 : 0;
@@ -145,9 +145,9 @@ export default function CuratedGalleryFinal({ setView }) {
                   backgroundColor: '#f9fafb',
                   borderRadius: '0.5rem',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                  cursor: 'zoom-in'
+                  cursor: 'zoom-in',
                 }}
-                onClick={() => setFullscreenImage(img.url)}
+                onClick={() => setFullscreenImage(img)}
               />
             ) : (
               <div
