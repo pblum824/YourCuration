@@ -4,9 +4,11 @@ import { loadBlob } from './utils/dbCache';
 
 export default function FullscreenImageViewer({ image, onClose }) {
   const [fullUrl, setFullUrl] = useState(null);
+  const viewerRef = useRef(null);
   const imgRef = useRef(null);
   const scaleRef = useRef(1);
-  const startDistRef = useRef(0);
+  const positionRef = useRef({ x: 0, y: 0 });
+  const startRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let objectUrl;
@@ -28,30 +30,38 @@ export default function FullscreenImageViewer({ image, onClose }) {
     };
   }, [image]);
 
-  function getDistance(e) {
-    const [a, b] = e.touches;
-    return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
-  }
-
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      startDistRef.current = getDistance(e);
-    }
+  const handleMouseDown = (e) => {
+    startRef.current = { x: e.clientX, y: e.clientY };
+    viewerRef.current.style.cursor = 'grabbing';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const handleTouchMove = (e) => {
-    if (e.touches.length === 2 && imgRef.current) {
-      const newDist = getDistance(e);
-      const scale = Math.min(Math.max((newDist / startDistRef.current) * scaleRef.current, 1), 4);
-      imgRef.current.style.transform = `scale(${scale})`;
+  const handleMouseMove = (e) => {
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    positionRef.current = {
+      x: positionRef.current.x + dx,
+      y: positionRef.current.y + dy,
+    };
+    if (imgRef.current) {
+      imgRef.current.style.transform = `translate(${positionRef.current.x}px, ${positionRef.current.y}px) scale(${scaleRef.current})`;
     }
+    startRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleTouchEnd = (e) => {
-    if (e.touches.length < 2 && imgRef.current) {
-      const transform = imgRef.current.style.transform;
-      const scaleMatch = /scale\(([^)]+)\)/.exec(transform);
-      scaleRef.current = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+  const handleMouseUp = () => {
+    viewerRef.current.style.cursor = 'zoom-out';
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    scaleRef.current = Math.min(Math.max(1, scaleRef.current + delta), 5);
+    if (imgRef.current) {
+      imgRef.current.style.transform = `translate(${positionRef.current.x}px, ${positionRef.current.y}px) scale(${scaleRef.current})`;
     }
   };
 
@@ -59,17 +69,17 @@ export default function FullscreenImageViewer({ image, onClose }) {
 
   return (
     <div
+      ref={viewerRef}
       onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'black',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -83,15 +93,12 @@ export default function FullscreenImageViewer({ image, onClose }) {
         src={fullUrl}
         alt={image.name}
         style={{
-          maxWidth: '90vw',
-          maxHeight: '90vh',
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: 'contain',
           borderRadius: '0.5rem',
           boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-          transition: 'transform 0.3s ease-out',
-          touchAction: 'none',
-          margin: 'auto',
-          display: 'block'
+          transition: 'transform 0.2s ease-out',
         }}
       />
     </div>
