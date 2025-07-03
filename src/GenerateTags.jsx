@@ -210,9 +210,9 @@ export default function GenerateTags({ setView }) {
 
       {loading && (
         <LoadingOverlay
-          text="Generating MetaTags..."
+          duration={0.2 * uploadable.length + 10}
+          text={`Processing ${uploadable.length} image${uploadable.length !== 1 ? 's' : ''} for automated metadata tags...`}
           onCancel={() => setCancelRequested(true)}
-          duration={duration}
         />
       )}
     </div>

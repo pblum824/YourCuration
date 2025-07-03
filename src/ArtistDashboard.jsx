@@ -251,13 +251,16 @@ export default function ArtistDashboard({ setView }) {
       />
 
       {isUploading && (
-        <LoadingOverlay
-          duration={uploadCount * 0.3}
-          onCancel={() => {
-            setCancelUpload(true);
-            setIsUploading(false);
-          }}
-        />
+      <LoadingOverlay
+        duration={uploadCount * 0.3}
+        text={`Uploading ${uploadCount} image${uploadCount !== 1 ? 's' : ''}...`}
+        onCancel={() => {
+          setCancelUpload(true);
+          setIsUploading(false);
+        }}
+      />
+
+      // PATCHED:
       )}
 
       {showDuplicateModal && (
