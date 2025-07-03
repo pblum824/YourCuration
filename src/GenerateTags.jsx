@@ -17,6 +17,8 @@ export default function GenerateTags({ setView }) {
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [overlayKey, setOverlayKey] = useState(0);
+
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
@@ -115,6 +117,7 @@ export default function GenerateTags({ setView }) {
   }
 
   const handleGenerate = async () => {
+    setOverlayKey((prev) => prev + 1);
     setLoading(true);
     setCancelRequested(false);
     try {
@@ -178,7 +181,7 @@ export default function GenerateTags({ setView }) {
             opacity: loading ? 0.6 : 1,
           }}
         >
-          {loading ? 'Processing automated metadata tags...' : 'Generate MetaTags'}
+          {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
         </button>
       </div>
 
@@ -204,9 +207,10 @@ export default function GenerateTags({ setView }) {
 
       {loading && (
         <LoadingOverlay
-          duration={localGallery.filter(img => img.sampleEligible || img.galleryEligible).length * 200 + 10000}
-          text="Processing automated metadata tags..."
+          key={overlayKey}
           onCancel={() => setCancelRequested(true)}
+          imageCount={localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length}
+          mode="tag"
         />
       )}
     </div>

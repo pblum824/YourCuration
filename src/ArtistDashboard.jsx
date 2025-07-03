@@ -33,6 +33,7 @@ export default function ArtistDashboard({ setView }) {
   const [cancelUpload, setCancelUpload] = useState(false);
   const [duplicateFiles, setDuplicateFiles] = useState([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [overlayKey, setOverlayKey] = useState(0);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
@@ -72,15 +73,18 @@ export default function ArtistDashboard({ setView }) {
     const existingNames = new Set(artistGallery.map((img) => img.name));
     const valid = [];
     const duplicates = [];
+    const warnings = [];
 
     for (const file of accepted) {
       if (existingNames.has(file.name)) {
         duplicates.push(file);
+        warnings.push(`${file.name} is a duplicate.`);
       } else {
         valid.push(file);
       }
     }
 
+    setUploadWarnings(warnings);
     setDuplicateFiles(duplicates);
     setUploadCount((prev) => prev + valid.length);
 
@@ -108,6 +112,7 @@ export default function ArtistDashboard({ setView }) {
 
     setArtistGallery((prev) => [...prev, ...newImages]);
     setIsUploading(false);
+    setOverlayKey((prev) => prev + 1);
 
     if (duplicates.length > 0) {
       setShowDuplicateModal(true);
@@ -138,15 +143,9 @@ export default function ArtistDashboard({ setView }) {
 
     setArtistGallery((prev) => [...prev, ...newImages]);
     setUploadCount((prev) => prev + duplicateFiles.length);
-    setUploadWarnings(duplicateFiles.map((f) => `${f.name} was uploaded by user choice.`));
     setDuplicateFiles([]);
     setShowDuplicateModal(false);
-  };
-
-  const handleDuplicateCancel = () => {
-    setUploadWarnings(duplicateFiles.map((f) => `${f.name} upload was canceled.`));
-    setDuplicateFiles([]);
-    setShowDuplicateModal(false);
+    setOverlayKey((prev) => prev + 1);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -251,23 +250,23 @@ export default function ArtistDashboard({ setView }) {
       />
 
       {isUploading && (
-      <LoadingOverlay
-        duration={uploadCount * 0.3}
-        text={`Uploading ${uploadCount} image${uploadCount !== 1 ? 's' : ''}...`}
-        onCancel={() => {
-          setCancelUpload(true);
-          setIsUploading(false);
-        }}
-      />
-
-      // PATCHED:
+        <LoadingOverlay
+          key={overlayKey}
+          duration={uploadCount * 0.3}
+          text={`Uploading ${uploadCount} image${uploadCount === 1 ? '' : 's'}...`}
+          onCancel={() => {
+            setCancelUpload(true);
+            setIsUploading(false);
+            setOverlayKey((prev) => prev + 1);
+          }}
+        />
       )}
 
       {showDuplicateModal && (
         <DuplicateUploadModal
           duplicates={duplicateFiles}
           onConfirm={uploadDuplicates}
-          onCancel={handleDuplicateCancel}
+          onCancel={() => setShowDuplicateModal(false)}
         />
       )}
     </div>
