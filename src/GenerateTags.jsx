@@ -17,7 +17,6 @@ export default function GenerateTags({ setView }) {
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [logs, setLogs] = useState([]);
-  const [duration, setDuration] = useState(0);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
@@ -106,8 +105,7 @@ export default function GenerateTags({ setView }) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(
-          (blob) =>
-            resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+          (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
           'image/jpeg',
           quality
         );
@@ -117,16 +115,12 @@ export default function GenerateTags({ setView }) {
   }
 
   const handleGenerate = async () => {
-    const uploadable = localGallery.filter(
-      (img) => (img.sampleEligible || img.galleryEligible) && img.file
-    );
-    const computedDuration = 10000 + uploadable.length * 200; // 10s + 0.2s/img
-    setDuration(computedDuration);
-
     setLoading(true);
     setCancelRequested(false);
-
     try {
+      const uploadable = localGallery.filter(
+        (img) => (img.sampleEligible || img.galleryEligible) && img.file
+      );
       if (uploadable.length === 0) return;
 
       const formData = new FormData();
@@ -184,7 +178,7 @@ export default function GenerateTags({ setView }) {
             opacity: loading ? 0.6 : 1,
           }}
         >
-          {loading ? 'Generating Tags...' : 'Generate MetaTags'}
+          {loading ? 'Processing automated metadata tags...' : 'Generate MetaTags'}
         </button>
       </div>
 
@@ -210,8 +204,8 @@ export default function GenerateTags({ setView }) {
 
       {loading && (
         <LoadingOverlay
-          duration={0.2 * uploadable.length + 10}
-          text={`Processing ${uploadable.length} image${uploadable.length !== 1 ? 's' : ''} for automated metadata tags...`}
+          duration={localGallery.filter(img => img.sampleEligible || img.galleryEligible).length * 200 + 10000}
+          text="Processing automated metadata tags..."
           onCancel={() => setCancelRequested(true)}
         />
       )}
