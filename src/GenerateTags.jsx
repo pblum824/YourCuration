@@ -10,13 +10,14 @@ import { useDevMode } from './context/DevModeContext';
 
 export default function GenerateTags({ setView }) {
   const { artistGallery, setArtistGallery } = useCuration();
-    const { devMode, setDevMode } = useDevMode();
+  const { devMode } = useDevMode();
 
   const [localGallery, setLocalGallery] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sampleWarningId, setSampleWarningId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [duration, setDuration] = useState(0);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
@@ -116,12 +117,16 @@ export default function GenerateTags({ setView }) {
   }
 
   const handleGenerate = async () => {
+    const uploadable = localGallery.filter(
+      (img) => (img.sampleEligible || img.galleryEligible) && img.file
+    );
+    const computedDuration = 10000 + uploadable.length * 200; // 10s + 0.2s/img
+    setDuration(computedDuration);
+
     setLoading(true);
     setCancelRequested(false);
+
     try {
-      const uploadable = localGallery.filter(
-        (img) => (img.sampleEligible || img.galleryEligible) && img.file
-      );
       if (uploadable.length === 0) return;
 
       const formData = new FormData();
@@ -162,7 +167,7 @@ export default function GenerateTags({ setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <ControlBar setView={setView} devMode={devMode} setDevMode={setDevMode} />
+      <ControlBar setView={setView} devMode={devMode} />
 
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <button
@@ -207,6 +212,7 @@ export default function GenerateTags({ setView }) {
         <LoadingOverlay
           text="Generating MetaTags..."
           onCancel={() => setCancelRequested(true)}
+          duration={duration}
         />
       )}
     </div>
