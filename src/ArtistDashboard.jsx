@@ -33,7 +33,6 @@ export default function ArtistDashboard({ setView }) {
   const [cancelUpload, setCancelUpload] = useState(false);
   const [duplicateFiles, setDuplicateFiles] = useState([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
-  const [overlayKey, setOverlayKey] = useState(0);
 
   const fileInputRef = useRef(null);
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
@@ -112,7 +111,6 @@ export default function ArtistDashboard({ setView }) {
 
     setArtistGallery((prev) => [...prev, ...newImages]);
     setIsUploading(false);
-    setOverlayKey((prev) => prev + 1);
 
     if (duplicates.length > 0) {
       setShowDuplicateModal(true);
@@ -145,7 +143,6 @@ export default function ArtistDashboard({ setView }) {
     setUploadCount((prev) => prev + duplicateFiles.length);
     setDuplicateFiles([]);
     setShowDuplicateModal(false);
-    setOverlayKey((prev) => prev + 1);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -251,13 +248,10 @@ export default function ArtistDashboard({ setView }) {
 
       {isUploading && (
         <LoadingOverlay
-          key={overlayKey}
-          duration={uploadCount * 0.3}
-          text={`Uploading ${uploadCount} image${uploadCount === 1 ? '' : 's'}...`}
+          duration={uploadCount * 300}
           onCancel={() => {
             setCancelUpload(true);
             setIsUploading(false);
-            setOverlayKey((prev) => prev + 1);
           }}
         />
       )}

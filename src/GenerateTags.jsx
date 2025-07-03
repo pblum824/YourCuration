@@ -162,6 +162,8 @@ export default function GenerateTags({ setView }) {
     }
   };
 
+  const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length;
+
   return (
     <div style={{ padding: '2rem' }}>
       <ControlBar setView={setView} devMode={devMode} />
@@ -209,8 +211,9 @@ export default function GenerateTags({ setView }) {
         <LoadingOverlay
           key={overlayKey}
           onCancel={() => setCancelRequested(true)}
-          imageCount={localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length}
+          imageCount={imageCount}
           mode="tag"
+          duration={imageCount * 200 + 10000}
         />
       )}
     </div>

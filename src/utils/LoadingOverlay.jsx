@@ -1,18 +1,17 @@
 // File: src/utils/LoadingOverlay.jsx
 import React, { useEffect, useState } from 'react';
 
-export default function LoadingOverlay({ onCancel, duration = 120 }) {
+export default function LoadingOverlay({ duration = 120000, onCancel }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let frame;
     let start;
-    const durationMs = duration * 1000; // duration in seconds to milliseconds
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
       const elapsed = timestamp - start;
-      const percentage = Math.min((elapsed / durationMs) * 100, 100);
+      const percentage = Math.min((elapsed / duration) * 100, 100);
       setProgress(percentage);
       if (percentage < 100) {
         frame = requestAnimationFrame(animate);
@@ -48,7 +47,7 @@ export default function LoadingOverlay({ onCancel, duration = 120 }) {
           width: '300px',
         }}
       >
-        <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Uploading images...</p>
+        <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Processing automated metadata tags...</p>
         <div
           style={{
             height: '12px',
@@ -79,7 +78,7 @@ export default function LoadingOverlay({ onCancel, duration = 120 }) {
             cursor: 'pointer',
           }}
         >
-          Cancel Upload
+          Cancel
         </button>
       </div>
     </div>
