@@ -1,15 +1,14 @@
 // File: src/utils/LoadingOverlay.jsx
 import React, { useEffect, useState } from 'react';
 
-export default function LoadingOverlay({ onCancel, imageCount = 0, mode = 'upload', text }) {
+export default function LoadingOverlay({ onCancel, imageCount = 0, mode = 'upload' }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let frame;
     let start;
-    const duration = mode === 'tag'
-      ? imageCount * 300 + 10000
-      : imageCount * 300;
+    const estimatedTime = mode === 'tag' ? (imageCount * 300 + 10000) : (imageCount * 300);
+    const duration = Math.max(estimatedTime, 10000);
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
@@ -24,8 +23,6 @@ export default function LoadingOverlay({ onCancel, imageCount = 0, mode = 'uploa
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
   }, [imageCount, mode]);
-
-  const displayText = text || (mode === 'tag' ? 'Processing image metadata tags...' : 'Uploading photos...');
 
   return (
     <div
@@ -52,7 +49,9 @@ export default function LoadingOverlay({ onCancel, imageCount = 0, mode = 'uploa
           width: '300px',
         }}
       >
-        <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>{displayText}</p>
+        <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
+          {mode === 'tag' ? 'Processing image metadata tags...' : 'Uploading photos...'}
+        </p>
         <div
           style={{
             height: '12px',
