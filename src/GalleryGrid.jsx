@@ -1,9 +1,14 @@
 // File: src/GalleryGrid.jsx
 import React from 'react';
+import { FixedSizeGrid as Grid } from 'react-window';
 import { imageButton } from './utils/styles';
 import EditableTagSection from './EditableTagSection';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
+
+const COLUMN_COUNT = 5;
+const ITEM_WIDTH = 300;
+const ITEM_HEIGHT = 440;
 
 export default function GalleryGrid({
   images,
@@ -17,21 +22,16 @@ export default function GalleryGrid({
   showTags,
 }) {
   const { selectedFont } = useFontSettings();
+  const rowCount = Math.ceil(images.length / COLUMN_COUNT);
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '2rem',
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-        minHeight: '240px',
-      }}
-    >
-      {images.map((img) => (
+  const Cell = ({ columnIndex, rowIndex, style }) => {
+    const index = rowIndex * COLUMN_COUNT + columnIndex;
+    if (index >= images.length) return null;
+    const img = images[index];
+
+    return (
+      <div style={{ ...style, padding: '1rem' }}>
         <div
-          key={img.id}
           style={{
             width: '280px',
             display: 'flex',
@@ -183,7 +183,20 @@ export default function GalleryGrid({
             </pre>
           )}
         </div>
-      ))}
-    </div>
+      </div>
+    );
+  };
+
+  return (
+    <Grid
+      columnCount={COLUMN_COUNT}
+      columnWidth={ITEM_WIDTH}
+      height={800}
+      rowCount={rowCount}
+      rowHeight={ITEM_HEIGHT}
+      width={ITEM_WIDTH * COLUMN_COUNT}
+    >
+      {Cell}
+    </Grid>
   );
 }
