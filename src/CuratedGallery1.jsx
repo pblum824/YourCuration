@@ -1,11 +1,9 @@
 // File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
+import { extractAllTags, aggregateSampleTags } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
-
-// ✅ Font logic imports
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
@@ -15,22 +13,37 @@ export default function CuratedGallery1({ setView }) {
     ratings = {},
     setCG1Selections,
     devMode,
-    mode // ✅ ensure mode is pulled from context
+    mode
   } = useCuration();
 
-  const { selectedFont } = useFontSettings(); // ✅ font context
+  const { selectedFont } = useFontSettings();
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
   const [error, setError] = useState(null);
 
   useEffect(() => {
     try {
-      const result = curateGallery1({ artistGallery, ratings });
-      const all = [...(result.strong || []), ...(result.medium || []), ...(result.weak || [])].slice(0, 20);
+      const samples = artistGallery.filter((img) => ratings[img.id]);
+      const tagPools = aggregateSampleTags(samples, ratings);
+      const tagScoreMap = {};
+
+      tagPools.love.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 3));
+      tagPools.like.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 1));
+      tagPools.less.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) - 5));
+
+      const scored = artistGallery
+        .filter((img) => img.galleryEligible && !ratings[img.id])
+        .map((img) => {
+          const tags = extractAllTags(img.metadata || {}).slice(0, 30);
+          const score = tags.reduce((sum, tag) => sum + (tagScoreMap[tag] || 0), 0);
+          return { ...img, matchScore: score };
+        })
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, 20);
 
       async function hydrate() {
         const hydrated = await Promise.all(
-          all.map(async (img) => {
+          scored.map(async (img) => {
             try {
               const blob = await loadBlob(img.localRefId);
               const url = URL.createObjectURL(blob);
@@ -68,7 +81,6 @@ export default function CuratedGallery1({ setView }) {
     <div style={{ padding: '2rem' }}>
       <ControlBar view="curated1" setView={setView} />
 
-      {/* ✅ font logic applied to heading */}
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
@@ -116,7 +128,6 @@ export default function CuratedGallery1({ setView }) {
               )}
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
 
-              {/* ✅ font logic applied to button */}
               <button
                 onClick={() => approveImage(img.id)}
                 style={{
