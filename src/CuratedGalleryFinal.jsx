@@ -1,14 +1,14 @@
 // File: src/CuratedGalleryFinal.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
 import FullscreenImageViewer from './FullscreenImageViewer';
-
-// ✅ Font logic imports
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
+
+const MAX_TAGS = 30;
 
 export default function CuratedGalleryFinal({ setView }) {
   const {
@@ -21,34 +21,40 @@ export default function CuratedGalleryFinal({ setView }) {
     setDevMode,
   } = useCuration();
 
-  const { selectedFont } = useFontSettings(); // ✅ Font fallback context
-
+  const { selectedFont } = useFontSettings();
   const [finalGallery, setFinalGallery] = useState([]);
   const [error, setError] = useState(null);
   const [fullscreenImage, setFullscreenImage] = useState(null);
 
+  const scoredImages = useMemo(() => {
+    try {
+      const samples = artistGallery.filter((img) => ratings[img.id]);
+      const tagPools = aggregateSampleTags(samples, ratings);
+
+      return artistGallery
+        .filter((img) => img.galleryEligible)
+        .map((img) => {
+          const tags = extractAllTags(img.metadata).slice(0, MAX_TAGS);
+          const tagScore = Math.round(scoreImage({ metadata: { tags } }, tagPools) * 6);
+          const loveScore = ratings[img.id] === 'love' ? 3 : 0;
+          const cg1Score = cg1Selections[img.id] === 2 ? 2 : 0;
+          const cg2Score = cg2Selections[img.id] === 2 ? 2 : 0;
+          const totalScore = loveScore + cg1Score + cg2Score + tagScore;
+          return { ...img, score: totalScore, tagScore };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
+    } catch (err) {
+      setError('Failed to score images');
+      return [];
+    }
+  }, [artistGallery, ratings, cg1Selections, cg2Selections]);
+
   useEffect(() => {
     async function hydrate() {
       try {
-        const samples = artistGallery.filter((img) => ratings[img.id]);
-        const tagPools = aggregateSampleTags(samples, ratings);
-
-        const scored = artistGallery
-          .filter((img) => img.galleryEligible)
-          .map((img) => {
-            const tags = extractAllTags(img.metadata);
-            const tagScore = Math.round(scoreImage(img, tagPools) * 6);
-            const loveScore = ratings[img.id] === 'love' ? 3 : 0;
-            const cg1Score = cg1Selections[img.id] === 2 ? 2 : 0;
-            const cg2Score = cg2Selections[img.id] === 2 ? 2 : 0;
-            const totalScore = loveScore + cg1Score + cg2Score + tagScore;
-            return { ...img, score: totalScore, tagScore };
-          })
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 20);
-
         const hydrated = await Promise.all(
-          scored.map(async (img) => {
+          scoredImages.map(async (img) => {
             try {
               const blob = await loadBlob(img.localRefId);
               const url = URL.createObjectURL(blob);
@@ -58,15 +64,13 @@ export default function CuratedGalleryFinal({ setView }) {
             }
           })
         );
-
         setFinalGallery(hydrated);
       } catch (err) {
         setError(err.message || 'Failed to generate final gallery.');
       }
     }
-
     hydrate();
-  }, [artistGallery, ratings, cg1Selections, cg2Selections]);
+  }, [scoredImages]);
 
   const exportGallery = async () => {
     const images = await Promise.all(
@@ -112,7 +116,6 @@ export default function CuratedGalleryFinal({ setView }) {
     <div style={{ padding: '2rem', textAlign: 'center' }}>
       <ControlBar view="curatedFinal" setView={setView} devMode={devMode} setDevMode={setDevMode} />
 
-      {/* ✅ Apply conditional font style */}
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Final
       </h2>
