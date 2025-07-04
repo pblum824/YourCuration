@@ -1,26 +1,18 @@
 // File: src/CuratedGallery2.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { aggregateSampleTags, scoreImage, extractAllTags } from './utils/scoreImage';
+import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreImage';
 import { loadBlob } from './utils/dbCache';
 import ControlBar from './utils/ControlBar';
-
-// ✅ Font logic imports
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
+const MAX_TAGS = 30;
 
 export default function CuratedGallery2({ setView }) {
-  const {
-    artistGallery,
-    ratings,
-    devMode,
-    setCG2Selections,
-    mode // ✅ Ensure mode is pulled
-  } = useCuration();
-
-  const { selectedFont } = useFontSettings(); // ✅ Font context
+  const { artistGallery, ratings, devMode, setCG2Selections, mode } = useCuration();
+  const { selectedFont } = useFontSettings();
 
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
@@ -32,9 +24,9 @@ export default function CuratedGallery2({ setView }) {
 
     const scored = candidates
       .map((img) => {
-        const tags = extractAllTags(img.metadata);
+        const tags = extractAllTags(img.metadata).slice(0, MAX_TAGS);
         const hasLessMatch = tags.some((tag) => tagPools.less.has(tag));
-        const score = scoreImage(img, tagPools);
+        const score = scoreImage({ metadata: { ...img.metadata, _tags: tags } }, tagPools);
         return hasLessMatch ? null : { ...img, matchScore: score };
       })
       .filter(Boolean)
@@ -71,7 +63,6 @@ export default function CuratedGallery2({ setView }) {
     <div style={{ padding: '2rem' }}>
       <ControlBar view="curated2" setView={setView} />
 
-      {/* ✅ Apply font style to heading */}
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), fontSize: '2rem', marginBottom: '1rem', color: '#1e3a8a' }}>
         Still You — But More
       </h2>
