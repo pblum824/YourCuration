@@ -48,33 +48,32 @@ export default function ControlBar({
     flexWrap: 'wrap',
     gap: '0.5rem',
     justifyContent: 'center',
-    marginBottom: '1rem',
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* Tier 1: Navigation */}
-      <div style={rowStyle}>
-        {navButtons.map(({ key, label }) => (
+    <>
+      {/* Tier 1 + 2: Unified Container */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
+        <div style={rowStyle}>
+          {navButtons.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setView?.(key)}
+              style={navButtonStyle}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div style={rowStyle}>
           <button
-            key={key}
-            onClick={() => setView?.(key)}
-            style={navButtonStyle}
+            onClick={() => setView?.('client')}
+            style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
           >
-            {label}
+            🎬 Preview Client Mode
           </button>
-        ))}
-      </div>
-
-      {/* Tier 2: Mode Controls */}
-      <div style={rowStyle}>
-        <button
-          onClick={() => setView?.('client')}
-          style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
-        >
-          🎬 Preview Client Mode
-        </button>
-        {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
+          {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
+        </div>
       </div>
 
       {/* Tier 3: Image Controls */}
@@ -123,6 +122,6 @@ export default function ControlBar({
           </button>
         )}
       </div>
-    </div>
+    </>
   );
 }
