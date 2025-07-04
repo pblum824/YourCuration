@@ -11,14 +11,12 @@ import ArtClientLanding from './ArtClientLanding';
 import YourCuration from './YourCuration';
 import LandingPage from './LandingPage';
 import { DevModeProvider } from './context/DevModeContext';
-
-// ✅ Font-specific imports
+import { FontSettingsProvider, useFontSettings } from './FontSettingsContext';
 import { getFontStyle } from './utils/fontUtils';
-import { useFontSettings } from './FontSettingsContext';
 
 function InnerApp({ view, setView }) {
   const { artistGallery, mode } = useCuration();
-  const { selectedFont } = useFontSettings(); // ✅ context hook
+  const { selectedFont } = useFontSettings();
   const [error, setError] = useState(null);
 
   return (
@@ -52,9 +50,11 @@ export default function App() {
 
   return (
     <DevModeProvider>
-      <YourCurationProvider>
-        <InnerApp view={view} setView={setView} />
-      </YourCurationProvider>
+      <FontSettingsProvider>
+        <YourCurationProvider>
+          <InnerApp view={view} setView={setView} />
+        </YourCurationProvider>
+      </FontSettingsProvider>
     </DevModeProvider>
   );
 }
