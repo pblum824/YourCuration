@@ -38,8 +38,9 @@ export default function ControlBar({
     backgroundColor: '#f3f4f6',
     color: '#1e3a8a',
     cursor: 'pointer',
-    minWidth: '150px',
+    width: '160px',
     height: '42px',
+    textAlign: 'center',
     boxSizing: 'border-box',
   };
 
@@ -54,7 +55,7 @@ export default function ControlBar({
     <>
       {/* Tier 1 + 2: Unified Container */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={rowStyle}>
+        <div style={{ ...rowStyle, marginBottom: '1rem' }}>
           {navButtons.map(({ key, label }) => (
             <button
               key={key}
