@@ -43,18 +43,18 @@ export default function ControlBar({
     boxSizing: 'border-box',
   };
 
+  const rowStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    justifyContent: 'center',
+    marginBottom: '1rem',
+  };
+
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Tier 1: Navigation */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginBottom: '0.5rem',
-          justifyContent: 'center',
-        }}
-      >
+      <div style={rowStyle}>
         {navButtons.map(({ key, label }) => (
           <button
             key={key}
@@ -67,15 +67,7 @@ export default function ControlBar({
       </div>
 
       {/* Tier 2: Mode Controls */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginBottom: '2rem',
-          justifyContent: 'center',
-        }}
-      >
+      <div style={rowStyle}>
         <button
           onClick={() => setView?.('client')}
           style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
@@ -131,6 +123,6 @@ export default function ControlBar({
           </button>
         )}
       </div>
-    </>
+    </div>
   );
 }
