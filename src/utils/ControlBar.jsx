@@ -71,7 +71,7 @@ export default function ControlBar({
             onClick={() => setView?.('client')}
             style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
           >
-            🎬 Preview Client Mode
+            🎬 Preview Client
           </button>
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
         </div>
