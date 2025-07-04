@@ -7,8 +7,11 @@ import { toggleSampleWithLimit } from './utils/sampleUtils';
 import LoadingOverlay from './utils/LoadingOverlay';
 import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
 
 export default function GenerateTags({ setView }) {
+  const { selectedFont } = useFontSettings();
   const { artistGallery, setArtistGallery } = useCuration();
   const { devMode } = useDevMode();
 
@@ -165,7 +168,7 @@ export default function GenerateTags({ setView }) {
   const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length;
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', ...getFontStyle('artist', { selectedFont }) }}>
       <ControlBar setView={setView} devMode={devMode} />
 
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>

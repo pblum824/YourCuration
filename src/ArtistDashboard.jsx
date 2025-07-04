@@ -14,10 +14,13 @@ import LoadingOverlay from './utils/LoadingOverlay';
 import { useDevMode } from './context/DevModeContext';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
 import DuplicateUploadModal from './utils/DuplicateUploadModal';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function ArtistDashboard({ setView }) {
+  const { selectedFont, setSelectedFont } = useFontSettings();
   const { artistGallery, setArtistGallery } = useCuration();
   const { devMode, setDevMode } = useDevMode();
 
@@ -42,7 +45,15 @@ export default function ArtistDashboard({ setView }) {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-      const { heroImage, borderSkin, centerBackground, images } = await importGalleryData(file);
+      const {
+        heroImage,
+        borderSkin,
+        centerBackground,
+        images,
+        selectedFont: importedFont
+      } = await importGalleryData(file);
+
+      if (importedFont) setSelectedFont(importedFont);
       if (heroImage) setHeroImage(heroImage);
       if (borderSkin) setBorderSkin(borderSkin);
       if (centerBackground) setCenterBackground(centerBackground);

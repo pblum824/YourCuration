@@ -1,13 +1,17 @@
+// File: src/YourCuration.jsx
 import React, { useState } from 'react';
 import { useCuration } from './YourCurationContext';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
 
-export default function GenerateTags() {
+export default function YourCuration() {
   const {
     artistSamples,
     setArtistSamples,
     artistGallery,
     setArtistGallery
   } = useCuration();
+  const { selectedFont } = useFontSettings();
 
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -127,28 +131,9 @@ export default function GenerateTags() {
     color: color,
     cursor: 'pointer',
   });
-  {setArtistGallery && (
-    <button
-      onClick={() => setArtistGallery && setArtistGallery((prev) => { localStorage.setItem('yourcuration_view', 'artist'); window.location.reload(); return prev; })}
-      style={{
-        position: 'absolute',
-        top: '1rem',
-        left: '1rem',
-        padding: '0.5rem 1rem',
-        fontSize: '1rem',
-        borderRadius: '0.5rem',
-        backgroundColor: '#1e3a8a',
-        color: '#fff',
-        border: 'none',
-        cursor: 'pointer',
-        zIndex: 1000,
-      }}
-    >
-      Exit Client Presentation
-    </button>
-  )}
+
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', ...getFontStyle('artist', { selectedFont }) }}>
       <button onClick={handleGenerate} disabled={loading} style={{ padding: '0.75rem 1.25rem' }}>
         {loading ? 'Generating Tags...' : 'Generate MetaTags'}
       </button>

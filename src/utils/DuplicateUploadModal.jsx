@@ -1,12 +1,14 @@
-// File: src/utils/DuplicateUploadModal.jsx
 import React from 'react';
+import { getFontStyle } from '../utils/fontUtils';
+import { useFontSettings } from '../FontSettingsContext';
 
 export default function DuplicateUploadModal({ duplicates = [], onConfirm, onCancel }) {
+  const { selectedFont } = useFontSettings();
   if (!duplicates.length) return null;
 
   return (
     <div style={overlayStyle}>
-      <div style={modalStyle}>
+      <div style={{ ...modalStyle, ...getFontStyle('artist', { selectedFont }) }}>
         <h2 style={{ marginBottom: '1rem', color: '#1e3a8a' }}>Duplicate Files Detected</h2>
 
         <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>

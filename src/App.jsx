@@ -12,12 +12,18 @@ import YourCuration from './YourCuration';
 import LandingPage from './LandingPage';
 import { DevModeProvider } from './context/DevModeContext';
 
+// ✅ Font-specific imports
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+
 function InnerApp({ view, setView }) {
   const { artistGallery, mode } = useCuration();
+  const { selectedFont } = useFontSettings(); // ✅ context hook
   const [error, setError] = useState(null);
 
   return (
-        <div className="App" style={{ padding: '0.3rem 1rem 1rem', fontFamily: 'sans-serif' }}>      {error ? (
+    <div className="App" style={{ padding: '0.3rem 1rem 1rem', ...getFontStyle(mode, { selectedFont }) }}>
+      {error ? (
         <div style={{ color: 'red', background: '#fee', padding: '1rem', borderRadius: '0.5rem' }}>
           <strong>Runtime Error:</strong>
           <pre>{error.toString()}</pre>

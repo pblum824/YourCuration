@@ -1,6 +1,8 @@
 // File: src/components/EditableTagSection.jsx
 import React from 'react';
 import EditableTagList from './EditableTagList';
+import { getFontStyle } from './utils/fontUtils'; // ✅
+import { useFontSettings } from './FontSettingsContext'; // ✅
 
 const tagFields = [
   { key: 'imageTags', label: '[image]' },
@@ -12,12 +14,14 @@ const tagFields = [
 ];
 
 export default function EditableTagSection({ image, onUpdateTag }) {
+  const { selectedFont } = useFontSettings(); // ✅
+
   const handleChange = (field, updatedTags) => {
     onUpdateTag(image.id, field, updatedTags);
   };
 
   return (
-    <div style={{ marginTop: '0.5rem', fontFamily: 'sans-serif' }}>
+    <div style={{ marginTop: '0.5rem', ...getFontStyle('artist', { selectedFont }) }}>
       {tagFields.map(({ key, label }) => {
         const tags = image.metadata?.[key] || [];
         return (

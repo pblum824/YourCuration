@@ -2,6 +2,8 @@
 import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
 import DevToggle from '../DevToggle';
+import { getFontStyle } from '../utils/fontUtils';
+import { useFontSettings } from '../FontSettingsContext';
 
 const navButtons = [
   { key: 'artist', label: '🎨 Artist Dashboard' },
@@ -25,8 +27,23 @@ export default function ControlBar({
   setView,
 }) {
   const { mode } = useCuration();
+  const { selectedFont } = useFontSettings();
   const fileInputRef = useRef();
   if (mode !== 'artist') return null;
+
+  const navButtonStyle = {
+    ...getFontStyle('artist', { selectedFont }),
+    padding: '0.5rem 1rem',
+    fontSize: '0.9rem',
+    borderRadius: '0.5rem',
+    border: '1px solid #1e3a8a',
+    backgroundColor: '#f3f4f6',
+    color: '#1e3a8a',
+    cursor: 'pointer',
+    minWidth: '150px',
+    height: '42px',
+    boxSizing: 'border-box',
+  };
 
   return (
     <>
@@ -119,16 +136,3 @@ export default function ControlBar({
     </>
   );
 }
-
-const navButtonStyle = {
-  padding: '0.5rem 1rem',
-  fontSize: '0.9rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #1e3a8a',
-  backgroundColor: '#f3f4f6',
-  color: '#1e3a8a',
-  cursor: 'pointer',
-  minWidth: '150px',
-  height: '42px',
-  boxSizing: 'border-box',
-};

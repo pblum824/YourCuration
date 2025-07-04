@@ -2,6 +2,8 @@
 import React from 'react';
 import { imageButton } from './utils/styles';
 import EditableTagSection from './EditableTagSection';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
 
 export default function GalleryGrid({
   images,
@@ -14,6 +16,8 @@ export default function GalleryGrid({
   onUpdateTag,
   showTags,
 }) {
+  const { selectedFont } = useFontSettings();
+
   return (
     <div
       style={{
@@ -51,7 +55,7 @@ export default function GalleryGrid({
           <p
             style={{
               fontStyle: 'italic',
-              fontFamily: 'sans-serif',
+              ...getFontStyle('artist', { selectedFont }),
               marginTop: '0.5rem',
             }}
           >

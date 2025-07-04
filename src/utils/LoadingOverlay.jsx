@@ -1,8 +1,11 @@
 // File: src/utils/LoadingOverlay.jsx
 import React, { useEffect, useState } from 'react';
+import { getFontStyle } from './fontUtils';
+import { useFontSettings } from '../FontSettingsContext';
 
 export default function LoadingOverlay({ onCancel, imageCount = 0, mode = 'upload' }) {
   const [progress, setProgress] = useState(0);
+  const { selectedFont } = useFontSettings();
 
   useEffect(() => {
     let frame;
@@ -47,6 +50,7 @@ export default function LoadingOverlay({ onCancel, imageCount = 0, mode = 'uploa
           borderRadius: '1rem',
           textAlign: 'center',
           width: '300px',
+          ...getFontStyle('artist', { selectedFont })
         }}
       >
         <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>

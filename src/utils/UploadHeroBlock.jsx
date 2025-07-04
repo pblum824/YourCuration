@@ -1,6 +1,13 @@
+// File: src/UploadHeroBlock.jsx
 import React from 'react';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+import { useCuration } from './YourCurationContext';
 
 const UploadHeroBlock = ({ label, imageState, setImage, inputId, uploadButtonStyle, imageButton }) => {
+  const { selectedFont } = useFontSettings();
+  const { mode } = useCuration();
+
   const handleSingleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith('image/')) return;
@@ -21,7 +28,7 @@ const UploadHeroBlock = ({ label, imageState, setImage, inputId, uploadButtonSty
 
   return (
     <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-      <h3 style={{ fontSize: '1.5rem', fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
+      <h3 style={{ fontSize: '1.5rem', color: '#1e3a8a', ...getFontStyle(mode, { selectedFont }) }}>
         Upload Your {label}
       </h3>
       <label htmlFor={inputId} style={uploadButtonStyle}>

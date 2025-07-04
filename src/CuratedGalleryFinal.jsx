@@ -6,6 +6,10 @@ import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreIm
 import ControlBar from './utils/ControlBar';
 import FullscreenImageViewer from './FullscreenImageViewer';
 
+// ✅ Font logic imports
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+
 export default function CuratedGalleryFinal({ setView }) {
   const {
     artistGallery = [],
@@ -16,6 +20,8 @@ export default function CuratedGalleryFinal({ setView }) {
     devMode,
     setDevMode,
   } = useCuration();
+
+  const { selectedFont } = useFontSettings(); // ✅ Font fallback context
 
   const [finalGallery, setFinalGallery] = useState([]);
   const [error, setError] = useState(null);
@@ -106,7 +112,8 @@ export default function CuratedGalleryFinal({ setView }) {
     <div style={{ padding: '2rem', textAlign: 'center' }}>
       <ControlBar view="curatedFinal" setView={setView} devMode={devMode} setDevMode={setDevMode} />
 
-      <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
+      {/* ✅ Apply conditional font style */}
+      <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Final
       </h2>
 

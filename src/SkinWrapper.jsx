@@ -1,6 +1,12 @@
 import React from 'react';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+import { useCuration } from './YourCurationContext';
 
 export default function SkinWrapper({ children }) {
+  const { selectedFont } = useFontSettings();
+  const { mode } = useCuration();
+
   return (
     <div style={{ position: 'relative', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
       {/* Full-screen floral frame */}
@@ -32,6 +38,7 @@ export default function SkinWrapper({ children }) {
           borderRadius: '1rem',
           padding: 'clamp(2rem, 5vw, 5rem)',
           boxShadow: '0 0 30px rgba(0,0,0,0.05)',
+          ...getFontStyle(mode, { selectedFont }) // ✅ Apply font to inner wrapper
         }}
       >
         {children}

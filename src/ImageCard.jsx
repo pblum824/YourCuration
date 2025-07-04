@@ -1,6 +1,9 @@
 // File: src/ImageCard.jsx
 import React from 'react';
 import EditableTagList from './EditableTagList';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+import { useCuration } from './YourCurationContext';
 
 export default function ImageCard({
   image,
@@ -12,6 +15,8 @@ export default function ImageCard({
   devMode = false,
   onUpdateTag = () => {},
 }) {
+  const { selectedFont } = useFontSettings();
+  const { mode } = useCuration();
   const metadata = image.metadata || {};
 
   return (
@@ -32,7 +37,7 @@ export default function ImageCard({
       </div>
 
       <div style={{ paddingTop: '0.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-        <p style={{ fontStyle: 'italic', marginBottom: '0.5rem' }}>{image.name}</p>
+        <p style={{ fontStyle: 'italic', marginBottom: '0.5rem', ...getFontStyle(mode, { selectedFont }) }}>{image.name}</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', justifyContent: 'center' }}>
           <button onClick={() => onToggleScrape?.(image.id)} style={buttonStyle(image.scrapeEligible ? '#d1fae5' : '#fee2e2')}>Scrape</button>

@@ -11,7 +11,7 @@ export default function ArtClientLanding({ setView }) {
         alignItems: 'center',
         flexDirection: 'column',
         textAlign: 'center',
-        fontFamily: 'Parisienne, cursive',
+        fontFamily: mode === 'client' ? 'Parisienne, cursive' : 'inherit',
         color: '#1e3a8a',
         gap: '2rem',
       }}
@@ -35,7 +35,7 @@ export default function ArtClientLanding({ setView }) {
           borderRadius: '0.75rem',
           boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
           cursor: 'pointer',
-          fontFamily: 'Parisienne, cursive',
+          fontFamily: mode === 'client' ? 'Parisienne, cursive' : 'inherit',
         }}
       >
         Let’s do this!

@@ -1,7 +1,10 @@
 // File: src/EditableTagList.jsx
 import React, { useState } from 'react';
+import { getFontStyle } from './utils/fontUtils'; // ✅ font logic
+import { useFontSettings } from './FontSettingsContext'; // ✅ font source
 
 export default function EditableTagList({ tags, onChange }) {
+  const { selectedFont } = useFontSettings(); // ✅ grab font context
   const [inputValue, setInputValue] = useState('');
 
   const handleAdd = () => {
@@ -65,7 +68,7 @@ export default function EditableTagList({ tags, onChange }) {
           fontSize: '0.85rem',
           border: '1px solid #ccc',
           borderRadius: '0.5rem',
-          fontFamily: 'sans-serif',
+          ...getFontStyle('artist', { selectedFont }), // ✅ font logic here
           minWidth: '80px',
         }}
       />

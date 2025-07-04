@@ -5,14 +5,20 @@ import { curateGallery1 } from './utils/curateGallery1';
 import { loadBlob } from './utils/dbCache';
 import ControlBar from './utils/ControlBar';
 
+// ✅ Font logic imports
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+
 export default function CuratedGallery1({ setView }) {
   const {
     artistGallery = [],
     ratings = {},
     setCG1Selections,
-    devMode
+    devMode,
+    mode // ✅ ensure mode is pulled from context
   } = useCuration();
 
+  const { selectedFont } = useFontSettings(); // ✅ font context
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
   const [error, setError] = useState(null);
@@ -62,7 +68,8 @@ export default function CuratedGallery1({ setView }) {
     <div style={{ padding: '2rem' }}>
       <ControlBar view="curated1" setView={setView} />
 
-      <h2 style={{ fontFamily: 'Parisienne, cursive', color: '#1e3a8a' }}>
+      {/* ✅ font logic applied to heading */}
+      <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
 
@@ -108,12 +115,14 @@ export default function CuratedGallery1({ setView }) {
                 </div>
               )}
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+
+              {/* ✅ font logic applied to button */}
               <button
                 onClick={() => approveImage(img.id)}
                 style={{
                   marginTop: '0.75rem',
                   padding: '0.5rem 1.25rem',
-                  fontFamily: 'Parisienne, cursive',
+                  ...getFontStyle(mode, { selectedFont }),
                   fontSize: '1rem',
                   borderRadius: '0.5rem',
                   border: '1px solid #ccc',

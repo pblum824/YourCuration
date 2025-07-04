@@ -5,10 +5,23 @@ import { aggregateSampleTags, scoreImage, extractAllTags } from './utils/scoreIm
 import { loadBlob } from './utils/dbCache';
 import ControlBar from './utils/ControlBar';
 
+// ✅ Font logic imports
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+
 const LABELS = ['Less', 'Maybe', 'Yes!!'];
 
 export default function CuratedGallery2({ setView }) {
-  const { artistGallery, ratings, devMode, setCG2Selections } = useCuration();
+  const {
+    artistGallery,
+    ratings,
+    devMode,
+    setCG2Selections,
+    mode // ✅ Ensure mode is pulled
+  } = useCuration();
+
+  const { selectedFont } = useFontSettings(); // ✅ Font context
+
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
 
@@ -58,7 +71,8 @@ export default function CuratedGallery2({ setView }) {
     <div style={{ padding: '2rem' }}>
       <ControlBar view="curated2" setView={setView} />
 
-      <h2 style={{ fontFamily: 'Parisienne, cursive', fontSize: '2rem', marginBottom: '1rem', color: '#1e3a8a' }}>
+      {/* ✅ Apply font style to heading */}
+      <h2 style={{ ...getFontStyle(mode, { selectedFont }), fontSize: '2rem', marginBottom: '1rem', color: '#1e3a8a' }}>
         Still You — But More
       </h2>
 
@@ -112,7 +126,7 @@ export default function CuratedGallery2({ setView }) {
               style={{
                 marginTop: '0.75rem',
                 padding: '0.5rem 1.25rem',
-                fontFamily: 'Parisienne, cursive',
+                ...getFontStyle(mode, { selectedFont }),
                 borderRadius: '0.5rem',
                 border: '1px solid #ccc',
                 backgroundColor:

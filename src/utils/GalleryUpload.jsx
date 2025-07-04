@@ -1,14 +1,18 @@
+// File: src/GalleryUpload.jsx
 import React from 'react';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function GalleryUpload({ handleFiles, uploadCount, uploadWarnings }) {
   const [dragging, setDragging] = React.useState(false);
+  const { selectedFont } = useFontSettings();
 
   return (
     <>
       {uploadWarnings.length > 0 && (
-        <div style={{ color: '#b91c1c', textAlign: 'center', marginBottom: '1rem' }}>
+        <div style={{ color: '#b91c1c', textAlign: 'center', marginBottom: '1rem', ...getFontStyle('artist', { selectedFont }) }}>
           <p>Some files were not added:</p>
           <ul>
             {uploadWarnings.map((warn, i) => (
@@ -42,6 +46,7 @@ export default function GalleryUpload({ handleFiles, uploadCount, uploadWarnings
           marginLeft: 'auto',
           marginRight: 'auto',
           boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+          ...getFontStyle('artist', { selectedFont })
         }}
       >
         <p style={{ marginBottom: '0.5rem' }}>Drag and drop images here</p>
@@ -65,7 +70,7 @@ export default function GalleryUpload({ handleFiles, uploadCount, uploadWarnings
           borderRadius: '0.5rem',
           border: '1px solid #ccc',
           cursor: 'pointer',
-          fontFamily: 'sans-serif',
+          ...getFontStyle('artist', { selectedFont }),
           color: '#1e3a8a',
           backgroundColor: '#f9f9f9',
           boxShadow: '0 1px 4px rgba(0,0,0,0.05)',

@@ -1,25 +1,10 @@
+// File: src/GalleryDecor.jsx
 import React from 'react';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
+import { useCuration } from './YourCurationContext';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
-
-const sectionStyle = {
-  fontSize: '1.5rem',
-  textAlign: 'center',
-  marginBottom: '0.75rem',
-  fontFamily: 'Parisienne, cursive',
-  color: '#1e3a8a'
-};
-
-const uploadButtonStyle = {
-  padding: '0.75rem 1.25rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #ccc',
-  cursor: 'pointer',
-  fontFamily: 'sans-serif',
-  color: '#1e3a8a',
-  backgroundColor: '#f9f9f9',
-  boxShadow: '0 1px 4px rgba(0,0,0,0.05)'
-};
 
 const imageButton = (bg, color = '#1e3a8a') => ({
   marginTop: '0.5rem',
@@ -33,6 +18,28 @@ const imageButton = (bg, color = '#1e3a8a') => ({
 });
 
 export default function GalleryDecor({ heroImage, setHeroImage, borderSkin, setBorderSkin, centerBackground, setCenterBackground, handleSingleUpload }) {
+  const { selectedFont } = useFontSettings();
+  const { mode } = useCuration();
+
+  const sectionStyle = {
+    fontSize: '1.5rem',
+    textAlign: 'center',
+    marginBottom: '0.75rem',
+    ...getFontStyle(mode, { selectedFont }),
+    color: '#1e3a8a'
+  };
+
+  const uploadButtonStyle = {
+    padding: '0.75rem 1.25rem',
+    borderRadius: '0.5rem',
+    border: '1px solid #ccc',
+    cursor: 'pointer',
+    ...getFontStyle(mode, { selectedFont }),
+    color: '#1e3a8a',
+    backgroundColor: '#f9f9f9',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.05)'
+  };
+
   const blocks = [
     ['Hero Image', heroImage, setHeroImage, 'hero-upload'],
     ['Border Skin', borderSkin, setBorderSkin, 'border-upload'],

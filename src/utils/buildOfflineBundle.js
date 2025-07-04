@@ -1,3 +1,5 @@
+// File: src/utils/buildOfflineBundle.js
+
 export default function buildOfflineBundle({
   heroImage,
   borderSkin,
@@ -5,6 +7,7 @@ export default function buildOfflineBundle({
   images,
   layoutChoice = 'grid',
   clientSessions = [],
+  selectedFont = 'Times New Roman, serif' // ✅ added default font fallback
 }) {
   const bundle = {
     timestamp: new Date().toISOString(),
@@ -12,6 +15,7 @@ export default function buildOfflineBundle({
     borderSkin,
     centerBackground,
     layoutChoice,
+    selectedFont, // ✅ included in output
     images: images
       .filter(img => img.scrapeEligible)
       .map(({ id, name, url, scrapeEligible, metadata }) => ({

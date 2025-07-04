@@ -1,6 +1,10 @@
 import React from 'react';
+import { getFontStyle } from './utils/fontUtils';
+import { useFontSettings } from './FontSettingsContext';
 
 export default function MultiFilePicker({ onChange, uploadCount, acceptedFormats }) {
+  const { selectedFont } = useFontSettings();
+
   return (
     <div
       style={{
@@ -18,7 +22,7 @@ export default function MultiFilePicker({ onChange, uploadCount, acceptedFormats
           borderRadius: '0.5rem',
           border: '1px solid #ccc',
           cursor: 'pointer',
-          fontFamily: 'sans-serif',
+          ...getFontStyle('artist', { selectedFont }),
           color: '#1e3a8a',
           backgroundColor: '#f9f9f9',
           boxShadow: '0 1px 4px rgba(0,0,0,0.05)'
