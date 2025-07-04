@@ -19,8 +19,6 @@ export default function ControlBar({
   onExport,
   onGenerate,
   onReset,
-  devMode,
-  setDevMode,
   showImport = true,
   showExport = true,
   showDevToggle = true,
@@ -84,7 +82,7 @@ export default function ControlBar({
         >
           🎬 Preview Client Mode
         </button>
-        {showDevToggle && <DevToggle devMode={devMode} setDevMode={setDevMode} buttonStyle={navButtonStyle} />}
+        {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
       </div>
 
       {/* Tier 3: Image Controls */}
