@@ -50,7 +50,7 @@ export default function ArtistDashboard({ setView }) {
         borderSkin,
         centerBackground,
         images,
-        selectedFont: importedFont
+        selectedFont: importedFont,
       } = await importGalleryData(file);
 
       if (importedFont) setSelectedFont(importedFont);
@@ -65,11 +65,18 @@ export default function ArtistDashboard({ setView }) {
   };
 
   const handleExportGallery = async () => {
-    const blob = await exportGalleryData({ heroImage, borderSkin, centerBackground, artistGallery });
+    const blob = await exportGalleryData({
+      heroImage,
+      borderSkin,
+      centerBackground,
+      artistGallery,
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `YourCuration-Gallery-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    link.download = `YourCuration-Gallery-${new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')}.json`;
     link.click();
     logToScreen('✅ Gallery exported');
   };
@@ -78,7 +85,9 @@ export default function ArtistDashboard({ setView }) {
     setIsUploading(true);
     setCancelUpload(false);
     const files = Array.from(fileList);
-    const accepted = files.filter((file) => file.type && ACCEPTED_FORMATS.includes(file.type));
+    const accepted = files.filter(
+      (file) => file.type && ACCEPTED_FORMATS.includes(file.type)
+    );
 
     const existingNames = new Set(artistGallery.map((img) => img.name));
     const valid = [];
@@ -129,6 +138,7 @@ export default function ArtistDashboard({ setView }) {
   };
 
   const uploadDuplicates = async () => {
+    setShowDuplicateModal(false);
     const newImages = [];
     for (const file of duplicateFiles) {
       const compressed = await compressImage(file);
@@ -153,7 +163,6 @@ export default function ArtistDashboard({ setView }) {
     setArtistGallery((prev) => [...prev, ...newImages]);
     setUploadCount((prev) => prev + duplicateFiles.length);
     setDuplicateFiles([]);
-    setShowDuplicateModal(false);
   };
 
   const handleSingleUpload = async (e, setter) => {
@@ -176,13 +185,17 @@ export default function ArtistDashboard({ setView }) {
 
   const toggleImageGallery = (id) => {
     setArtistGallery((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img))
+      prev.map((img) =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
     );
   };
 
   const toggleImageScrape = (id) => {
     setArtistGallery((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img))
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
     );
   };
 
@@ -226,13 +239,36 @@ export default function ArtistDashboard({ setView }) {
         showExport
       />
 
-      <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
-      <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
-      <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
+      <HeroSection
+        label="Hero Image"
+        imageState={heroImage}
+        setImageState={setHeroImage}
+        handleSingleUpload={handleSingleUpload}
+      />
+      <HeroSection
+        label="Border Skin"
+        imageState={borderSkin}
+        setImageState={setBorderSkin}
+        handleSingleUpload={handleSingleUpload}
+      />
+      <HeroSection
+        label="Center Background"
+        imageState={centerBackground}
+        setImageState={setCenterBackground}
+        handleSingleUpload={handleSingleUpload}
+      />
 
       <UploadWarnings warnings={uploadWarnings} />
-      <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
-      <MultiFilePicker onChange={(files) => handleFiles(files)} uploadCount={uploadCount} acceptedFormats={ACCEPTED_FORMATS} />
+      <DragDropUpload
+        dragging={dragging}
+        setDragging={setDragging}
+        handleFiles={handleFiles}
+      />
+      <MultiFilePicker
+        onChange={(files) => handleFiles(files)}
+        uploadCount={uploadCount}
+        acceptedFormats={ACCEPTED_FORMATS}
+      />
 
       {devMode && (
         <>
@@ -259,7 +295,7 @@ export default function ArtistDashboard({ setView }) {
 
       {isUploading && (
         <LoadingOverlay
-          duration={uploadCount * 300}
+          imageCount={uploadCount}
           onCancel={() => {
             setCancelUpload(true);
             setIsUploading(false);
@@ -277,14 +313,3 @@ export default function ArtistDashboard({ setView }) {
     </div>
   );
 }
-
-const buttonStyle = {
-  padding: '0.5rem 1rem',
-  fontSize: '0.9rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #ccc',
-  backgroundColor: '#f3f4f6',
-  color: '#1e3a8a',
-  cursor: 'pointer',
-  marginRight: '0.5rem',
-};

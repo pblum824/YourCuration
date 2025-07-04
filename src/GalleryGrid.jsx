@@ -6,9 +6,9 @@ import EditableTagSection from './EditableTagSection';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
-const COLUMN_COUNT = 5;
-const ITEM_WIDTH = 300;
-const ITEM_HEIGHT = 440;
+const CELL_WIDTH = 300;
+const CELL_HEIGHT = 460;
+const GRID_PADDING = 16;
 
 export default function GalleryGrid({
   images,
@@ -22,15 +22,18 @@ export default function GalleryGrid({
   showTags,
 }) {
   const { selectedFont } = useFontSettings();
-  const rowCount = Math.ceil(images.length / COLUMN_COUNT);
+  const columnCount = Math.floor(window.innerWidth / (CELL_WIDTH + GRID_PADDING));
+  const rowCount = Math.ceil(images.length / columnCount);
+  const width = window.innerWidth;
+  const height = window.innerHeight * 0.7;
 
   const Cell = ({ columnIndex, rowIndex, style }) => {
-    const index = rowIndex * COLUMN_COUNT + columnIndex;
+    const index = rowIndex * columnCount + columnIndex;
     if (index >= images.length) return null;
     const img = images[index];
 
     return (
-      <div style={{ ...style, padding: '1rem' }}>
+      <div style={{ ...style, padding: '0.5rem' }}>
         <div
           style={{
             width: '280px',
@@ -39,6 +42,7 @@ export default function GalleryGrid({
             justifyContent: 'flex-end',
             alignItems: 'center',
             position: 'relative',
+            margin: 'auto',
           }}
         >
           <img
@@ -188,15 +192,24 @@ export default function GalleryGrid({
   };
 
   return (
-    <Grid
-      columnCount={COLUMN_COUNT}
-      columnWidth={ITEM_WIDTH}
-      height={800}
-      rowCount={rowCount}
-      rowHeight={ITEM_HEIGHT}
-      width={ITEM_WIDTH * COLUMN_COUNT}
+    <div
+      style={{
+        width: '100%',
+        overflow: 'auto',
+        maxWidth: '100vw',
+        margin: '0 auto',
+      }}
     >
-      {Cell}
-    </Grid>
+      <Grid
+        columnCount={columnCount}
+        columnWidth={CELL_WIDTH}
+        height={height}
+        rowCount={rowCount}
+        rowHeight={CELL_HEIGHT}
+        width={width}
+      >
+        {Cell}
+      </Grid>
+    </div>
   );
 }
