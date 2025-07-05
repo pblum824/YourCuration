@@ -24,7 +24,7 @@ export async function saveImage(id, blob) {
     case 'filesystem':
       return fsStore.saveImageToFS(id, blob);
     case 'zip':
-      return zipStore.cacheImageToZip(id, blob);
+      return zipStore.saveImageToZip(id, blob);
     default:
       throw new Error(`Unsupported saveImage strategy: ${strategy}`);
   }
@@ -46,7 +46,7 @@ export async function loadImage(id) {
 export async function deleteImage(id) {
   switch (strategy) {
     case 'indexeddb':
-      return clearBlobs(id);
+      return clearBlobs(id); // currently clears all blobs
     case 'filesystem':
       return fsStore.deleteImageFromFS(id);
     case 'zip':

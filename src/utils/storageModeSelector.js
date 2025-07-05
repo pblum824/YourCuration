@@ -1,17 +1,27 @@
 // File: src/utils/storageModeSelector.js
-
 import { setImageStorageMode } from './imageStore';
 
-const IMAGE_LIMIT = 500;
+const SIZE_THRESHOLD_MB = 450;
+const FALLBACK_MODE = 'zip';
 
 /**
- * Selects and sets an image storage strategy based on gallery size.
- * Defaults to 'indexeddb' but escalates to 'filesystem' when needed.
- * @param {number} totalImages - Number of images uploaded or present.
- * @returns {string} selected strategy
+ * Accepts current total size in bytes and returns the appropriate storage strategy.
  */
-export function storageModeSelector(totalImages) {
-  const mode = totalImages > IMAGE_LIMIT ? 'filesystem' : 'indexeddb';
-  setImageStorageMode(mode);
+export function storageModeSelector(galleryTotalSize, force = false) {
+  const sizeMB = galleryTotalSize / (1024 * 1024);
+  const mode = sizeMB > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
+
+  if (force || mode !== getCurrentMode()) {
+    setImageStorageMode(mode);
+  }
+
   return mode;
+}
+
+function getCurrentMode() {
+  try {
+    return localStorage.getItem('yourcuration_image_strategy') || 'indexeddb';
+  } catch {
+    return 'indexeddb';
+  }
 }

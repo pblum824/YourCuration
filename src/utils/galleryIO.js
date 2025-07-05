@@ -1,12 +1,8 @@
 // File: src/utils/galleryIO.js
 
 import { imageToBase64, toUrl } from './imageHelpers';
-import {
-  saveImage,
-  loadImage,
-  setImageStorageMode,
-  getImageStorageMode,
-} from './imageStore';
+import { saveImage, loadImage, setImageStorageMode, getImageStorageMode } from './imageStore';
+import { useCuration } from '../YourCurationContext';
 
 // EXPORT FUNCTION
 export const exportGalleryData = async ({ heroImage, borderSkin, centerBackground, artistGallery }) => {
@@ -22,9 +18,9 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
 
     return {
       id: img.id,
-      localRefId: img.localRefId || img.id, // ✅ ensure it's passed along
       name: img.name,
-      data: base64,
+      localRefId: img.localRefId,
+      data: base64, // Only embedded for indexeddb
       scrapeEligible: img.scrapeEligible,
       galleryEligible: img.galleryEligible,
       sampleEligible: img.sampleEligible,
@@ -33,7 +29,6 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
   };
 
   const bundle = {
-    version: '2.0.0',
     timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
     strategy,
     heroImage: await exportImage(heroImage),
@@ -73,13 +68,9 @@ export const importGalleryData = async (file) => {
             img.sampleEligible
           );
 
-          const blob = await fetch(hydrated.url).then((r) => r.blob());
-          await saveImage(hydrated.id, blob);
+          await saveImage(hydrated.id, await fetch(hydrated.url).then((r) => r.blob()));
 
-          return {
-            ...hydrated,
-            localRefId: hydrated.id,
-          };
+          return { ...hydrated, localRefId: hydrated.id };
         };
 
         const heroImage = await restoreImage(bundle.heroImage);
@@ -87,7 +78,13 @@ export const importGalleryData = async (file) => {
         const centerBackground = await restoreImage(bundle.centerBackground);
         const images = (await Promise.all((bundle.images || []).map(restoreImage))).filter(Boolean);
 
-        resolve({ heroImage, borderSkin, centerBackground, images, selectedFont: bundle.selectedFont });
+        resolve({
+          heroImage,
+          borderSkin,
+          centerBackground,
+          images,
+          selectedFont: bundle.selectedFont,
+        });
       } catch (err) {
         reject(err);
       }
