@@ -40,6 +40,7 @@ export default function CuratedGallery1({ setView }) {
           candidates.map(async (img) => {
             try {
               const blob = await loadImage(img.localRefId);
+              if (!blob) throw new Error('Missing blob');
               const url = URL.createObjectURL(blob);
               return { ...img, url };
             } catch {
