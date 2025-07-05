@@ -1,13 +1,12 @@
 // File: src/utils/storageModeSelector.js
-
 import { setImageStorageMode } from './imageStore';
 
 const SIZE_THRESHOLD_MB = 450;
 const FALLBACK_MODE = 'zip';
 
 export function storageModeSelector(galleryTotalSize, force = false) {
-  const galleryTotalSizeMB = galleryTotalSize / (1024 * 1024); // ✅ convert to MB
-  const mode = galleryTotalSizeMB > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
+  // galleryTotalSize is already in MB — no conversion needed
+  const mode = galleryTotalSize > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
 
   if (force || mode !== getCurrentMode()) {
     try {
