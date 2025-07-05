@@ -5,9 +5,10 @@ const SIZE_THRESHOLD_MB = 450;
 const FALLBACK_MODE = 'zip';
 
 export function storageModeSelector(galleryTotalSize, force = false) {
+  const current = getCurrentMode();
   const mode = galleryTotalSize > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
 
-  if (force || mode !== getCurrentMode()) {
+  if (force || mode !== current) {
     try {
       localStorage.setItem('yourcuration_image_strategy', mode);
     } catch (err) {
