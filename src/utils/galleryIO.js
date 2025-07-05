@@ -1,22 +1,37 @@
 // File: src/utils/galleryIO.js
-import { imageToBase64, toUrl } from './imageHelpers';
 
-// EXPORT FUNCTION — unchanged
+import { imageToBase64, toUrl } from './imageHelpers';
+import { saveImage, loadImage, setImageStorageMode, getImageStorageMode } from './imageStore';
+
+// EXPORT FUNCTION
 export const exportGalleryData = async ({ heroImage, borderSkin, centerBackground, artistGallery }) => {
-  const exportImage = async (img) => ({
-    name: img.name,
-    data: img.base64 || await imageToBase64(img.url),
-    scrapeEligible: img.scrapeEligible,
-    galleryEligible: img.galleryEligible,
-    sampleEligible: img.sampleEligible,
-    metadata: img.metadata || {},
-  });
+  const strategy = getImageStorageMode();
+
+  const exportImage = async (img) => {
+    if (!img) return null;
+
+    let base64 = null;
+    if (strategy === 'indexeddb') {
+      base64 = img.base64 || (await imageToBase64(img.url));
+    }
+
+    return {
+      id: img.id,
+      name: img.name,
+      data: base64, // Only embedded for indexeddb
+      scrapeEligible: img.scrapeEligible,
+      galleryEligible: img.galleryEligible,
+      sampleEligible: img.sampleEligible,
+      metadata: img.metadata || {},
+    };
+  };
 
   const bundle = {
     timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
-    heroImage: heroImage ? await exportImage(heroImage) : null,
-    borderSkin: borderSkin ? await exportImage(borderSkin) : null,
-    centerBackground: centerBackground ? await exportImage(centerBackground) : null,
+    strategy,
+    heroImage: await exportImage(heroImage),
+    borderSkin: await exportImage(borderSkin),
+    centerBackground: await exportImage(centerBackground),
     images: await Promise.all(artistGallery.map(exportImage)),
   };
 
@@ -25,33 +40,7 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
   });
 };
 
-// HELPER — convert data URL to Blob safely (iPad/Netlify-safe)
-function dataURLtoBlob(dataURL) {
-  const [header, base64] = dataURL.split(',');
-  const mimeMatch = header.match(/:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-  const byteChars = atob(base64);
-  const byteNumbers = new Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) {
-    byteNumbers[i] = byteChars.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: mime });
-}
-
-// TEXT LOGGER — prints to screen, fallback if logToScreen() unavailable
-function screenLog(msg) {
-  const existing = document.getElementById('import-logger');
-  const el = document.createElement('div');
-  el.textContent = `📥 ${msg}`;
-  el.style.fontFamily = 'monospace';
-  el.style.fontSize = '0.85rem';
-  el.style.color = '#333';
-  if (existing) existing.appendChild(el);
-  else console.log(msg);
-}
-
-// IMPORT FUNCTION — now uses safe blob parsing
+// IMPORT FUNCTION
 export const importGalleryData = async (file) => {
   const reader = new FileReader();
 
@@ -60,48 +49,40 @@ export const importGalleryData = async (file) => {
       try {
         const bundle = JSON.parse(reader.result);
 
+        // Apply storage strategy if present
+        if (bundle.strategy) {
+          setImageStorageMode(bundle.strategy);
+        }
+
         const restoreImage = async (img) => {
           if (!img || !img.data) return null;
-          try {
-            const blob = dataURLtoBlob(img.data);
-            const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-            const url = URL.createObjectURL(blob);
-            const saved = await import('./dbCache').then(m => m.saveBlob(id, blob));
-            return {
-              id,
-              name: img.name,
-              url,
-              localRefId: id,
-              scrapeEligible: img.scrapeEligible,
-              galleryEligible: img.galleryEligible,
-              sampleEligible: img.sampleEligible,
-              metadata: img.metadata || {},
-            };
-          } catch {
-            return null;
-          }
+
+          const hydrated = await toUrl(
+            img.data,
+            img.name,
+            img.metadata,
+            img.scrapeEligible,
+            img.galleryEligible,
+            img.sampleEligible
+          );
+
+          await saveImage(hydrated.id, await fetch(hydrated.url).then((r) => r.blob()));
+
+          return hydrated;
         };
 
         const heroImage = await restoreImage(bundle.heroImage);
         const borderSkin = await restoreImage(bundle.borderSkin);
         const centerBackground = await restoreImage(bundle.centerBackground);
-        const images = await Promise.all((bundle.images || []).map(restoreImage));
+        const images = (await Promise.all((bundle.images || []).map(restoreImage))).filter(Boolean);
 
-        screenLog(`Imported ${images.filter(Boolean).length} image(s)`);
-        if (images[0]) screenLog(`First: ${images[0].name}`);
-
-        resolve({ heroImage, borderSkin, centerBackground, images });
+        resolve({ heroImage, borderSkin, centerBackground, images, selectedFont: bundle.selectedFont });
       } catch (err) {
-        screenLog(`❌ Import failed: ${err.message}`);
         reject(err);
       }
     };
 
-    reader.onerror = () => {
-      screenLog(`❌ Read error: ${reader.error?.message || 'unknown error'}`);
-      reject(reader.error);
-    };
-
+    reader.onerror = () => reject(reader.error);
     reader.readAsText(file);
   });
 };

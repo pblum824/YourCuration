@@ -16,6 +16,7 @@ import { toggleSampleWithLimit } from './utils/sampleUtils';
 import DuplicateUploadModal from './utils/DuplicateUploadModal';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
+import { storageModeSelector } from './utils/storageModeSelector';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -106,6 +107,10 @@ export default function ArtistDashboard({ setView }) {
     setUploadWarnings(warnings);
     setDuplicateFiles(duplicates);
     setUploadCount((prev) => prev + valid.length);
+
+    const totalProjected = artistGallery.length + valid.length;
+    const strategy = storageModeSelector(totalProjected);
+    logToScreen(`🧠 Storage mode: ${strategy}`);
 
     const newImages = [];
     for (const file of valid) {
