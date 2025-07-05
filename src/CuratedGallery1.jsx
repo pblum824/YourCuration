@@ -1,11 +1,11 @@
 // File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { extractAllTags, aggregateSampleTags } from './utils/scoreImage';
+import { loadImage } from './utils/imageStore';
 import ControlBar from './utils/ControlBar';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
-import { loadImage } from './utils/imageStore';
+import { aggregateSampleTags, scoreImage } from './utils/scoreImage';
 
 export default function CuratedGallery1({ setView }) {
   const {
@@ -25,32 +25,25 @@ export default function CuratedGallery1({ setView }) {
     try {
       const samples = artistGallery.filter((img) => ratings[img.id]);
       const tagPools = aggregateSampleTags(samples, ratings);
-      const tagScoreMap = {};
-      tagPools.love.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 3));
-      tagPools.like.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 1));
-      tagPools.less.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) - 5));
 
-      const candidates = artistGallery.filter((img) => !ratings[img.id] && img.galleryEligible);
-      const scored = candidates.map((img) => {
-        const tags = new Set(extractAllTags(img.metadata));
-        let score = 0;
-        tags.forEach((tag) => {
-          if (tagScoreMap[tag]) score += tagScoreMap[tag];
-        });
-        return { ...img, score };
-      });
-
-      const top20 = scored.sort((a, b) => b.score - a.score).slice(0, 20);
+      const candidates = artistGallery
+        .filter((img) => img.galleryEligible && !ratings[img.id])
+        .map((img) => ({
+          ...img,
+          matchScore: scoreImage(img, tagPools)
+        }))
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, 20);
 
       async function hydrate() {
         const hydrated = await Promise.all(
-          top20.map(async (img) => {
+          candidates.map(async (img) => {
             try {
               const blob = await loadImage(img.localRefId);
               const url = URL.createObjectURL(blob);
-              return { id: img.id, name: img.name, url };
+              return { ...img, url };
             } catch {
-              return { id: img.id, name: img.name, url: '' };
+              return { ...img, url: '' };
             }
           })
         );
@@ -81,6 +74,7 @@ export default function CuratedGallery1({ setView }) {
   return (
     <div style={{ padding: '2rem' }}>
       <ControlBar view="curated1" setView={setView} />
+
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
@@ -90,7 +84,7 @@ export default function CuratedGallery1({ setView }) {
           display: 'grid',
           gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '2rem',
-          justifyItems: 'center',
+          justifyItems: 'center'
         }}
       >
         {hydrated.map((img) => {
@@ -107,7 +101,7 @@ export default function CuratedGallery1({ setView }) {
                     objectFit: 'contain',
                     backgroundColor: '#f9fafb',
                     borderRadius: '0.5rem',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
                   }}
                 />
               ) : (
@@ -120,7 +114,7 @@ export default function CuratedGallery1({ setView }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#999',
-                    fontStyle: 'italic',
+                    fontStyle: 'italic'
                   }}
                 >
                   image not loaded
@@ -139,7 +133,7 @@ export default function CuratedGallery1({ setView }) {
                   backgroundColor: isSelected ? '#86efac' : '#d1fae5',
                   boxShadow: isSelected ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
                   color: '#065f46',
-                  cursor: 'pointer',
+                  cursor: 'pointer'
                 }}
               >
                 More Like This
@@ -162,7 +156,7 @@ export default function CuratedGallery1({ setView }) {
             color: '#fff',
             borderRadius: '0.5rem',
             border: 'none',
-            cursor: 'pointer',
+            cursor: 'pointer'
           }}
         >
           ➕ Show Me More Like These
