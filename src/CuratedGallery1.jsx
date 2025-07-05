@@ -1,7 +1,7 @@
 // File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadImage } from './utils/imageStore';
+import { loadImage, getImageStorageMode } from './utils/imageStore';
 import ControlBar from './utils/ControlBar';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
@@ -40,7 +40,6 @@ export default function CuratedGallery1({ setView }) {
           candidates.map(async (img) => {
             try {
               const blob = await loadImage(img.localRefId);
-              if (!blob) throw new Error('Missing blob');
               const url = URL.createObjectURL(blob);
               return { ...img, url };
             } catch {
@@ -79,6 +78,9 @@ export default function CuratedGallery1({ setView }) {
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
+      <p style={{ fontSize: '0.85rem', fontFamily: 'monospace', color: '#666' }}>
+        Storage Mode: {getImageStorageMode()}
+      </p>
 
       <div
         style={{
