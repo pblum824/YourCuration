@@ -1,7 +1,12 @@
 // File: src/utils/galleryIO.js
 
 import { imageToBase64, toUrl } from './imageHelpers';
-import { saveImage, loadImage, setImageStorageMode, getImageStorageMode } from './imageStore';
+import {
+  saveImage,
+  loadImage,
+  setImageStorageMode,
+  getImageStorageMode,
+} from './imageStore';
 
 // EXPORT FUNCTION
 export const exportGalleryData = async ({ heroImage, borderSkin, centerBackground, artistGallery }) => {
@@ -17,8 +22,9 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
 
     return {
       id: img.id,
+      localRefId: img.localRefId || img.id, // ✅ ensure it's passed along
       name: img.name,
-      data: base64, // Only embedded for indexeddb
+      data: base64,
       scrapeEligible: img.scrapeEligible,
       galleryEligible: img.galleryEligible,
       sampleEligible: img.sampleEligible,
@@ -27,6 +33,7 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
   };
 
   const bundle = {
+    version: '2.0.0',
     timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
     strategy,
     heroImage: await exportImage(heroImage),
@@ -66,9 +73,13 @@ export const importGalleryData = async (file) => {
             img.sampleEligible
           );
 
-          await saveImage(hydrated.id, await fetch(hydrated.url).then((r) => r.blob()));
+          const blob = await fetch(hydrated.url).then((r) => r.blob());
+          await saveImage(hydrated.id, blob);
 
-          return hydrated;
+          return {
+            ...hydrated,
+            localRefId: hydrated.id,
+          };
         };
 
         const heroImage = await restoreImage(bundle.heroImage);
