@@ -1,8 +1,12 @@
 // File: src/utils/galleryIO.js
 
 import { imageToBase64, toUrl } from './imageHelpers';
-import { saveImage, loadImage, setImageStorageMode, getImageStorageMode } from './imageStore';
-import { useFontSettings } from '../FontSettingsContext';
+import {
+  saveImage,
+  loadImage,
+  setImageStorageMode,
+  getImageStorageMode
+} from './imageStore';
 
 // EXPORT FUNCTION
 export const exportGalleryData = async ({
@@ -10,10 +14,9 @@ export const exportGalleryData = async ({
   borderSkin,
   centerBackground,
   artistGallery,
+  selectedFont, // ✅ passed in explicitly
 }) => {
   const strategy = getImageStorageMode();
-  const { selectedFont } = useFontSettings();
-
   let galleryTotalSize = 0;
 
   const exportImage = async (img) => {
