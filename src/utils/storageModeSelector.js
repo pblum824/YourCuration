@@ -5,7 +5,6 @@ const SIZE_THRESHOLD_MB = 450;
 const FALLBACK_MODE = 'zip';
 
 export function storageModeSelector(galleryTotalSize, force = false) {
-  // galleryTotalSize is already in MB — no conversion needed
   const mode = galleryTotalSize > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
 
   if (force || mode !== getCurrentMode()) {
