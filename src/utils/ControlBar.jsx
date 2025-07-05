@@ -91,7 +91,7 @@ export default function ControlBar({
           <>
             <input
               type="file"
-              accept=".json"
+              accept=".json, .zip"
               ref={fileInputRef}
               onChange={onImport}
               style={{ display: 'none' }}
