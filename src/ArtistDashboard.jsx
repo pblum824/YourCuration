@@ -223,6 +223,7 @@ export default function ArtistDashboard({ setView }) {
     id: img.id,
     name: img.name,
     url: img.url,
+    localRefId: img.localRefId,
     sampleEligible: img.sampleEligible,
     galleryEligible: img.galleryEligible,
     scrapeEligible: img.scrapeEligible,

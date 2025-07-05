@@ -1,19 +1,19 @@
 // File: src/utils/zipStore.js
+const imageCache = new Map();
 
 export async function cacheImageToZip(id, blob) {
-  console.warn('[zipStore] Not implemented: cacheImageToZip');
+  imageCache.set(id, blob);
+  return id; // ✅ explicitly return the ID used
 }
 
 export async function loadImageFromZip(id) {
-  console.warn('[zipStore] Not implemented: loadImageFromZip');
-  return null;
+  return imageCache.get(id) || null;
 }
 
 export async function deleteImageFromZip(id) {
-  console.warn('[zipStore] Not implemented: deleteImageFromZip');
+  imageCache.delete(id);
 }
 
 export async function listZipKeys() {
-  console.warn('[zipStore] Not implemented: listZipKeys');
-  return [];
+  return Array.from(imageCache.keys());
 }
