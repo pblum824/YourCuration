@@ -4,7 +4,14 @@ const DB_NAME = 'yourcuration-images';
 const STORE_NAME = 'blobs';
 const VERSION = 1;
 
+let showLogs = false;
+
+export function setDbDebugMode(on) {
+  showLogs = !!on;
+}
+
 function screenLog(msg) {
+  if (!showLogs) return;
   let div = document.getElementById('storage-logger');
   if (!div) {
     div = document.createElement('div');
