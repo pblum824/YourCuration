@@ -1,5 +1,5 @@
 // File: src/App.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState /*, useEffect */ } from 'react';
 import ArtistDashboard from './ArtistDashboard';
 import GenerateTags from './GenerateTags';
 import SampleRater from './SampleRater';
@@ -13,13 +13,15 @@ import LandingPage from './LandingPage';
 import { DevModeProvider } from './context/DevModeContext';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
-import { setImageStorageMode } from './utils/imageStore';
+// import { setImageStorageMode } from './utils/imageStore'; // 🔒 Temporarily disabled
 
 function InnerApp({ view, setView }) {
   const { artistGallery, mode } = useCuration();
   const { selectedFont } = useFontSettings();
   const [error, setError] = useState(null);
 
+  // 🔒 Disable dynamic strategy until stable
+  /*
   useEffect(() => {
     try {
       const bundle = JSON.parse(localStorage.getItem('yourcuration_readyBundle'));
@@ -30,6 +32,7 @@ function InnerApp({ view, setView }) {
       console.warn('Could not apply storage strategy from bundle:', err);
     }
   }, []);
+  */
 
   return (
     <div
