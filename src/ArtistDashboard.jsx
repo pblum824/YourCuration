@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
-import { saveBlob, loadBlob } from './utils/dbCache';
+import { saveBlob } from './utils/dbCache';
 import { importGalleryData, exportGalleryData } from './utils/galleryIO';
 import GalleryGrid from './GalleryGrid';
 import HeroSection from './HeroSection';
@@ -59,9 +59,9 @@ export default function ArtistDashboard({ setView }) {
       if (borderSkin) setBorderSkin(borderSkin);
       if (centerBackground) setCenterBackground(centerBackground);
       setArtistGallery((prev) => [...prev, ...images]);
-      if (devMode) logToScreen(`✅ Imported ${images.length} image(s)`);
+      logToScreen(`✅ Imported ${images.length} image(s)`);
     } catch (err) {
-      if (devMode) logToScreen(`❌ Import failed: ${err.message}`);
+      logToScreen(`❌ Import failed: ${err.message}`);
     }
   };
 
@@ -79,7 +79,7 @@ export default function ArtistDashboard({ setView }) {
       .toISOString()
       .replace(/[:.]/g, '-')}.json`;
     link.click();
-    if (devMode) logToScreen('✅ Gallery exported');
+    logToScreen('✅ Gallery exported');
   };
 
   const handleFiles = async (fileList) => {
@@ -110,7 +110,7 @@ export default function ArtistDashboard({ setView }) {
 
     const totalProjected = artistGallery.length + valid.length;
     const strategy = storageModeSelector(totalProjected);
-    if (devMode) logToScreen(`🧠 Storage mode: ${strategy}`);
+    logToScreen(`🧐 Storage mode: ${strategy}`);
 
     const newImages = [];
     for (const file of valid) {
@@ -120,7 +120,7 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      if (devMode) logToScreen(`🧼 Saved to IndexedDB: ${id}`);
+      logToScreen(`🧼 Saved to IndexedDB: ${id}`);
 
       newImages.push({
         id,
@@ -151,7 +151,7 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      if (devMode) logToScreen(`🧼 Duplicate uploaded: ${file.name}`);
+      logToScreen(`🧼 Duplicate uploaded: ${file.name}`);
 
       newImages.push({
         id,
@@ -245,13 +245,32 @@ export default function ArtistDashboard({ setView }) {
         showExport
       />
 
-      <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
-      <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
-      <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
+      <HeroSection
+        label="Hero Image"
+        imageState={heroImage}
+        setImageState={setHeroImage}
+        handleSingleUpload={handleSingleUpload}
+      />
+      <HeroSection
+        label="Border Skin"
+        imageState={borderSkin}
+        setImageState={setBorderSkin}
+        handleSingleUpload={handleSingleUpload}
+      />
+      <HeroSection
+        label="Center Background"
+        imageState={centerBackground}
+        setImageState={setCenterBackground}
+        handleSingleUpload={handleSingleUpload}
+      />
 
       <UploadWarnings warnings={uploadWarnings} />
       <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
-      <MultiFilePicker onChange={(files) => handleFiles(files)} uploadCount={uploadCount} acceptedFormats={ACCEPTED_FORMATS} />
+      <MultiFilePicker
+        onChange={(files) => handleFiles(files)}
+        uploadCount={uploadCount}
+        acceptedFormats={ACCEPTED_FORMATS}
+      />
 
       {devMode && (
         <>
