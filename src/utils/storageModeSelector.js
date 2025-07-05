@@ -4,9 +4,10 @@ import { setImageStorageMode } from './imageStore';
 const SIZE_THRESHOLD_MB = 450;
 const FALLBACK_MODE = 'zip';
 
-export function storageModeSelector(galleryTotalSize, force = false) {
+export function storageModeSelector(galleryTotalSizeBytes, force = false) {
+  const sizeMB = galleryTotalSizeBytes / (1024 * 1024);
   const current = getCurrentMode();
-  const mode = galleryTotalSize > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
+  const mode = sizeMB > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
 
   if (force || mode !== current) {
     try {
