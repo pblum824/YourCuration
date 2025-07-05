@@ -85,7 +85,7 @@
 
       const handleExportGallery = async () => {
         try {
-          const strategy = getImageStorageMode();
+          const strategy = storageModeSelector(galleryTotalSize, true); // ✅ force recalculation based on size
           logToScreen(`📦 Export strategy: ${strategy}`);
 
           let blob;
