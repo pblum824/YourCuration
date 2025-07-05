@@ -59,9 +59,9 @@ export default function ArtistDashboard({ setView }) {
       if (borderSkin) setBorderSkin(borderSkin);
       if (centerBackground) setCenterBackground(centerBackground);
       setArtistGallery((prev) => [...prev, ...images]);
-      logToScreen(`✅ Imported ${images.length} image(s)`);
+      if (devMode) logToScreen(`✅ Imported ${images.length} image(s)`);
     } catch (err) {
-      logToScreen(`❌ Import failed: ${err.message}`);
+      if (devMode) logToScreen(`❌ Import failed: ${err.message}`);
     }
   };
 
@@ -79,7 +79,7 @@ export default function ArtistDashboard({ setView }) {
       .toISOString()
       .replace(/[:.]/g, '-')}.json`;
     link.click();
-    logToScreen('✅ Gallery exported');
+    if (devMode) logToScreen('✅ Gallery exported');
   };
 
   const handleFiles = async (fileList) => {
@@ -110,7 +110,7 @@ export default function ArtistDashboard({ setView }) {
 
     const totalProjected = artistGallery.length + valid.length;
     const strategy = storageModeSelector(totalProjected);
-    logToScreen(`🧠 Storage mode: ${strategy}`);
+    if (devMode) logToScreen(`🧠 Storage mode: ${strategy}`);
 
     const newImages = [];
     for (const file of valid) {
@@ -120,7 +120,7 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🧼 Saved to IndexedDB: ${id}`);
+      if (devMode) logToScreen(`🧼 Saved to IndexedDB: ${id}`);
 
       newImages.push({
         id,
@@ -151,7 +151,7 @@ export default function ArtistDashboard({ setView }) {
       const url = URL.createObjectURL(compressed);
 
       await saveBlob(id, compressed);
-      logToScreen(`🧼 Duplicate uploaded: ${file.name}`);
+      if (devMode) logToScreen(`🧼 Duplicate uploaded: ${file.name}`);
 
       newImages.push({
         id,
@@ -223,11 +223,11 @@ export default function ArtistDashboard({ setView }) {
     id: img.id,
     name: img.name,
     url: img.url,
-    localRefId: img.localRefId,
     sampleEligible: img.sampleEligible,
     galleryEligible: img.galleryEligible,
     scrapeEligible: img.scrapeEligible,
     metadata: img.metadata,
+    localRefId: img.localRefId,
   }));
 
   return (
@@ -245,36 +245,13 @@ export default function ArtistDashboard({ setView }) {
         showExport
       />
 
-      <HeroSection
-        label="Hero Image"
-        imageState={heroImage}
-        setImageState={setHeroImage}
-        handleSingleUpload={handleSingleUpload}
-      />
-      <HeroSection
-        label="Border Skin"
-        imageState={borderSkin}
-        setImageState={setBorderSkin}
-        handleSingleUpload={handleSingleUpload}
-      />
-      <HeroSection
-        label="Center Background"
-        imageState={centerBackground}
-        setImageState={setCenterBackground}
-        handleSingleUpload={handleSingleUpload}
-      />
+      <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
+      <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
+      <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
 
       <UploadWarnings warnings={uploadWarnings} />
-      <DragDropUpload
-        dragging={dragging}
-        setDragging={setDragging}
-        handleFiles={handleFiles}
-      />
-      <MultiFilePicker
-        onChange={(files) => handleFiles(files)}
-        uploadCount={uploadCount}
-        acceptedFormats={ACCEPTED_FORMATS}
-      />
+      <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
+      <MultiFilePicker onChange={(files) => handleFiles(files)} uploadCount={uploadCount} acceptedFormats={ACCEPTED_FORMATS} />
 
       {devMode && (
         <>
