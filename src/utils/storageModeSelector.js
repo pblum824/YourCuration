@@ -4,14 +4,15 @@ import { setImageStorageMode } from './imageStore';
 const SIZE_THRESHOLD_MB = 450;
 const FALLBACK_MODE = 'zip';
 
-/**
- * Accepts current total size in bytes and returns the appropriate storage strategy.
- */
 export function storageModeSelector(galleryTotalSize, force = false) {
-  const sizeMB = galleryTotalSize / (1024 * 1024);
-  const mode = sizeMB > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
+  const mode = galleryTotalSize > SIZE_THRESHOLD_MB ? FALLBACK_MODE : 'indexeddb';
 
   if (force || mode !== getCurrentMode()) {
+    try {
+      localStorage.setItem('yourcuration_image_strategy', mode);
+    } catch (err) {
+      console.warn('Could not persist image storage mode:', err);
+    }
     setImageStorageMode(mode);
   }
 

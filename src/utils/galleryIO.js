@@ -2,25 +2,38 @@
 
 import { imageToBase64, toUrl } from './imageHelpers';
 import { saveImage, loadImage, setImageStorageMode, getImageStorageMode } from './imageStore';
-import { useCuration } from '../YourCurationContext';
+import { useFontSettings } from '../FontSettingsContext';
 
 // EXPORT FUNCTION
-export const exportGalleryData = async ({ heroImage, borderSkin, centerBackground, artistGallery }) => {
+export const exportGalleryData = async ({
+  heroImage,
+  borderSkin,
+  centerBackground,
+  artistGallery,
+}) => {
   const strategy = getImageStorageMode();
+  const { selectedFont } = useFontSettings();
+
+  let galleryTotalSize = 0;
 
   const exportImage = async (img) => {
     if (!img) return null;
 
     let base64 = null;
+    let size = 0;
+
     if (strategy === 'indexeddb') {
       base64 = img.base64 || (await imageToBase64(img.url));
+      const blob = await fetch(img.url).then((r) => r.blob());
+      size = blob.size;
+      galleryTotalSize += size;
     }
 
     return {
       id: img.id,
       name: img.name,
       localRefId: img.localRefId,
-      data: base64, // Only embedded for indexeddb
+      data: base64,
       scrapeEligible: img.scrapeEligible,
       galleryEligible: img.galleryEligible,
       sampleEligible: img.sampleEligible,
@@ -31,6 +44,8 @@ export const exportGalleryData = async ({ heroImage, borderSkin, centerBackgroun
   const bundle = {
     timestamp: new Date().toISOString().replace(/[:.]/g, '-'),
     strategy,
+    selectedFont,
+    galleryTotalSize,
     heroImage: await exportImage(heroImage),
     borderSkin: await exportImage(borderSkin),
     centerBackground: await exportImage(centerBackground),
@@ -51,7 +66,6 @@ export const importGalleryData = async (file) => {
       try {
         const bundle = JSON.parse(reader.result);
 
-        // Apply storage strategy if present
         if (bundle.strategy) {
           setImageStorageMode(bundle.strategy);
         }
@@ -83,7 +97,8 @@ export const importGalleryData = async (file) => {
           borderSkin,
           centerBackground,
           images,
-          selectedFont: bundle.selectedFont,
+          selectedFont: bundle.selectedFont || 'system-ui',
+          galleryTotalSize: bundle.galleryTotalSize || 0,
         });
       } catch (err) {
         reject(err);

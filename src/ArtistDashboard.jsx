@@ -88,6 +88,8 @@
       borderSkin,
       centerBackground,
       artistGallery,
+      galleryTotalSize,
+      selectedFont,
     });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
