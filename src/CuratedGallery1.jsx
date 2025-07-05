@@ -1,11 +1,11 @@
 // File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadBlob } from './utils/dbCache';
 import { extractAllTags, aggregateSampleTags } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
+import { loadImage } from './utils/imageStore';
 
 export default function CuratedGallery1({ setView }) {
   const {
@@ -26,26 +26,27 @@ export default function CuratedGallery1({ setView }) {
       const samples = artistGallery.filter((img) => ratings[img.id]);
       const tagPools = aggregateSampleTags(samples, ratings);
       const tagScoreMap = {};
-
       tagPools.love.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 3));
       tagPools.like.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 1));
       tagPools.less.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) - 5));
 
-      const scored = artistGallery
-        .filter((img) => img.galleryEligible && !ratings[img.id])
-        .map((img) => {
-          const tags = extractAllTags(img.metadata || {}).slice(0, 30);
-          const score = tags.reduce((sum, tag) => sum + (tagScoreMap[tag] || 0), 0);
-          return { ...img, matchScore: score };
-        })
-        .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 20);
+      const candidates = artistGallery.filter((img) => !ratings[img.id] && img.galleryEligible);
+      const scored = candidates.map((img) => {
+        const tags = new Set(extractAllTags(img.metadata));
+        let score = 0;
+        tags.forEach((tag) => {
+          if (tagScoreMap[tag]) score += tagScoreMap[tag];
+        });
+        return { ...img, score };
+      });
+
+      const top20 = scored.sort((a, b) => b.score - a.score).slice(0, 20);
 
       async function hydrate() {
         const hydrated = await Promise.all(
-          scored.map(async (img) => {
+          top20.map(async (img) => {
             try {
-              const blob = await loadBlob(img.localRefId);
+              const blob = await loadImage(img.localRefId);
               const url = URL.createObjectURL(blob);
               return { id: img.id, name: img.name, url };
             } catch {
@@ -80,7 +81,6 @@ export default function CuratedGallery1({ setView }) {
   return (
     <div style={{ padding: '2rem' }}>
       <ControlBar view="curated1" setView={setView} />
-
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Preview
       </h2>
@@ -127,7 +127,6 @@ export default function CuratedGallery1({ setView }) {
                 </div>
               )}
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-
               <button
                 onClick={() => approveImage(img.id)}
                 style={{

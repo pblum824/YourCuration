@@ -1,12 +1,12 @@
 // File: src/CuratedGalleryFinal.jsx
 import React, { useEffect, useState, useMemo } from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadBlob } from './utils/dbCache';
 import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
 import FullscreenImageViewer from './FullscreenImageViewer';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
+import { loadImage } from './utils/imageStore';
 
 const MAX_TAGS = 30;
 
@@ -56,7 +56,7 @@ export default function CuratedGalleryFinal({ setView }) {
         const hydrated = await Promise.all(
           scoredImages.map(async (img) => {
             try {
-              const blob = await loadBlob(img.localRefId);
+              const blob = await loadImage(img.localRefId);
               const url = URL.createObjectURL(blob);
               return { ...img, url };
             } catch {
@@ -75,7 +75,7 @@ export default function CuratedGalleryFinal({ setView }) {
   const exportGallery = async () => {
     const images = await Promise.all(
       finalGallery.map(async (img) => {
-        const blob = await loadBlob(img.localRefId);
+        const blob = await loadImage(img.localRefId);
         const base64 = await blobToBase64(blob);
         return {
           name: img.name,

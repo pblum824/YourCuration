@@ -1,70 +1,88 @@
-// File: src/CuratedGallery2.jsx
+// File: src/CuratedGallery1.jsx
 import React, { useEffect, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { aggregateSampleTags, extractAllTags, scoreImage } from './utils/scoreImage';
-import { loadBlob } from './utils/dbCache';
+import { extractAllTags, aggregateSampleTags } from './utils/scoreImage';
 import ControlBar from './utils/ControlBar';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
+import { loadImage } from './utils/imageStore';
 
-const LABELS = ['Less', 'Maybe', 'Yes!!'];
-const MAX_TAGS = 30;
+export default function CuratedGallery1({ setView }) {
+  const {
+    artistGallery = [],
+    ratings = {},
+    setCG1Selections,
+    devMode,
+    mode
+  } = useCuration();
 
-export default function CuratedGallery2({ setView }) {
-  const { artistGallery, ratings, devMode, setCG2Selections, mode } = useCuration();
   const { selectedFont } = useFontSettings();
-
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const samples = artistGallery.filter((img) => ratings[img.id]);
-    const candidates = artistGallery.filter((img) => img.galleryEligible && !ratings[img.id]);
-    const tagPools = aggregateSampleTags(samples, ratings);
+    try {
+      const samples = artistGallery.filter((img) => ratings[img.id]);
+      const tagPools = aggregateSampleTags(samples, ratings);
+      const tagScoreMap = {};
+      tagPools.love.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 3));
+      tagPools.like.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 1));
+      tagPools.less.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) - 5));
 
-    const scored = candidates
-      .map((img) => {
-        const tags = extractAllTags(img.metadata).slice(0, MAX_TAGS);
-        const hasLessMatch = tags.some((tag) => tagPools.less.has(tag));
-        const score = scoreImage({ metadata: { ...img.metadata, _tags: tags } }, tagPools);
-        return hasLessMatch ? null : { ...img, matchScore: score };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 20);
+      const candidates = artistGallery.filter((img) => !ratings[img.id] && img.galleryEligible);
+      const scored = candidates.map((img) => {
+        const tags = new Set(extractAllTags(img.metadata));
+        let score = 0;
+        tags.forEach((tag) => {
+          if (tagScoreMap[tag]) score += tagScoreMap[tag];
+        });
+        return { ...img, score };
+      });
 
-    async function hydrate() {
-      const hydrated = await Promise.all(
-        scored.map(async (img) => {
-          try {
-            const blob = await loadBlob(img.localRefId);
-            const url = URL.createObjectURL(blob);
-            return { ...img, url };
-          } catch {
-            return { ...img, url: '' };
-          }
-        })
-      );
-      setHydrated(hydrated);
+      const top20 = scored.sort((a, b) => b.score - a.score).slice(0, 20);
+
+      async function hydrate() {
+        const hydrated = await Promise.all(
+          top20.map(async (img) => {
+            try {
+              const blob = await loadImage(img.localRefId);
+              const url = URL.createObjectURL(blob);
+              return { id: img.id, name: img.name, url };
+            } catch {
+              return { id: img.id, name: img.name, url: '' };
+            }
+          })
+        );
+        setHydrated(hydrated);
+      }
+
+      hydrate();
+    } catch (err) {
+      setError(err.message || 'CG1 failed to process.');
     }
-
-    hydrate();
   }, [artistGallery, ratings]);
 
-  const toggleSelection = (id) => {
-    setSelections((prev) => {
-      const current = prev[id] || 1;
-      const next = (current + 1) % 3;
-      return { ...prev, [id]: next };
-    });
+  const approveImage = (id) => {
+    setSelections((prev) => ({
+      ...prev,
+      [id]: prev[id] === 2 ? undefined : 2
+    }));
   };
+
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', color: 'red', fontFamily: 'monospace' }}>
+        ❌ CG1 Error: {error}
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '2rem' }}>
-      <ControlBar view="curated2" setView={setView} />
-
-      <h2 style={{ ...getFontStyle(mode, { selectedFont }), fontSize: '2rem', marginBottom: '1rem', color: '#1e3a8a' }}>
-        Still You — But More
+      <ControlBar view="curated1" setView={setView} />
+      <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
+        Curated Gallery Preview
       </h2>
 
       <div
@@ -75,72 +93,67 @@ export default function CuratedGallery2({ setView }) {
           justifyItems: 'center',
         }}
       >
-        {hydrated.map((img) => (
-          <div key={img.id} style={{ textAlign: 'center' }}>
-            {img.url ? (
-              <img
-                src={img.url}
-                alt={img.name}
+        {hydrated.map((img) => {
+          const isSelected = selections[img.id] === 2;
+          return (
+            <div key={img.id} style={{ textAlign: 'center' }}>
+              {img.url ? (
+                <img
+                  src={img.url}
+                  alt={img.name}
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'contain',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    backgroundColor: '#f3f4f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#999',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  image not loaded
+                </div>
+              )}
+              <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
+              <button
+                onClick={() => approveImage(img.id)}
                 style={{
-                  width: '100%',
-                  height: '200px',
-                  objectFit: 'contain',
-                  backgroundColor: '#f9fafb',
+                  marginTop: '0.75rem',
+                  padding: '0.5rem 1.25rem',
+                  ...getFontStyle(mode, { selectedFont }),
+                  fontSize: '1rem',
                   borderRadius: '0.5rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: '200px',
-                  backgroundColor: '#f3f4f6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#999',
-                  fontStyle: 'italic',
+                  border: '1px solid #ccc',
+                  backgroundColor: isSelected ? '#86efac' : '#d1fae5',
+                  boxShadow: isSelected ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  color: '#065f46',
+                  cursor: 'pointer',
                 }}
               >
-                image not loaded
-              </div>
-            )}
-            <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-            {devMode && (
-              <p style={{ fontSize: '0.75rem', color: '#666' }}>
-                Score: {img.matchScore}
-              </p>
-            )}
-            <button
-              onClick={() => toggleSelection(img.id)}
-              style={{
-                marginTop: '0.75rem',
-                padding: '0.5rem 1.25rem',
-                ...getFontStyle(mode, { selectedFont }),
-                borderRadius: '0.5rem',
-                border: '1px solid #ccc',
-                backgroundColor:
-                  selections[img.id] === 2
-                    ? '#d1fae5'
-                    : selections[img.id] === 1
-                    ? '#fef9c3'
-                    : '#fee2e2',
-                color: '#1e3a8a',
-                cursor: 'pointer',
-              }}
-            >
-              {LABELS[selections[img.id] || 1]}
-            </button>
-          </div>
-        ))}
+                More Like This
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
           onClick={() => {
-            setCG2Selections(selections);
-            setView('curatedFinal');
+            setCG1Selections(selections);
+            setView('curated2');
           }}
           style={{
             padding: '1rem 2rem',
@@ -152,7 +165,7 @@ export default function CuratedGallery2({ setView }) {
             cursor: 'pointer',
           }}
         >
-          ✅ Build Final Gallery
+          ➕ Show Me More Like These
         </button>
       </div>
     </div>
