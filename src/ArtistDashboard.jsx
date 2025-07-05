@@ -1,87 +1,83 @@
-    // PATCHED File: src/ArtistDashboard.jsx
-    import React, { useState, useRef } from 'react';
-    import { useCuration } from './YourCurationContext';
-    import { compressImage } from './utils/imageHelpers';
-    import { saveBlob } from './utils/dbCache';
-    import { importGalleryData, exportGalleryData } from './utils/galleryIO';
-    import { getImageStorageMode } from './utils/imageStore';
-    import { exportZipBundle, cacheImageToZip } from './utils/zipStore';
-    import GalleryGrid from './GalleryGrid';
-    import HeroSection from './HeroSection';
-    import UploadWarnings from './UploadWarnings';
-    import DragDropUpload from './DragDropUpload';
-    import MultiFilePicker from './MultiFilePicker';
-    import ControlBar from './utils/ControlBar';
-    import LoadingOverlay from './utils/LoadingOverlay';
-    import { useDevMode } from './context/DevModeContext';
-    import { toggleSampleWithLimit } from './utils/sampleUtils';
-    import DuplicateUploadModal from './utils/DuplicateUploadModal';
-    import { getFontStyle } from './utils/fontUtils';
-    import { useFontSettings } from './FontSettingsContext';
-    import { storageModeSelector } from './utils/storageModeSelector';
+      // PATCHED File: src/ArtistDashboard.jsx
+      import React, { useState, useRef } from 'react';
+      import { useCuration } from './YourCurationContext';
+      import { compressImage } from './utils/imageHelpers';
+      import { saveBlob } from './utils/dbCache';
+      import { importGalleryData, exportGalleryData } from './utils/galleryIO';
+      import { importZipBundle, exportZipBundle, cacheImageToZip } from './utils/zipStore';
+      import { getImageStorageMode } from './utils/imageStore';
+      import GalleryGrid from './GalleryGrid';
+      import HeroSection from './HeroSection';
+      import UploadWarnings from './UploadWarnings';
+      import DragDropUpload from './DragDropUpload';
+      import MultiFilePicker from './MultiFilePicker';
+      import ControlBar from './utils/ControlBar';
+      import LoadingOverlay from './utils/LoadingOverlay';
+      import { useDevMode } from './context/DevModeContext';
+      import { toggleSampleWithLimit } from './utils/sampleUtils';
+      import DuplicateUploadModal from './utils/DuplicateUploadModal';
+      import { getFontStyle } from './utils/fontUtils';
+      import { useFontSettings } from './FontSettingsContext';
+      import { storageModeSelector } from './utils/storageModeSelector';
 
-    const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
+      const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
-    export default function ArtistDashboard({ setView }) {
-      const { selectedFont, setSelectedFont } = useFontSettings();
-      const {
-        artistGallery,
-        setArtistGallery,
-        galleryTotalSize,
-        setGalleryTotalSize
-      } = useCuration();
-      const { devMode, setDevMode } = useDevMode();
+      export default function ArtistDashboard({ setView }) {
+        const { selectedFont, setSelectedFont } = useFontSettings();
+        const {
+          artistGallery,
+          setArtistGallery,
+          galleryTotalSize,
+          setGalleryTotalSize
+        } = useCuration();
+        const { devMode, setDevMode } = useDevMode();
 
-      const [heroImage, setHeroImage] = useState(null);
-      const [borderSkin, setBorderSkin] = useState(null);
-      const [centerBackground, setCenterBackground] = useState(null);
-      const [dragging, setDragging] = useState(false);
-      const [uploadCount, setUploadCount] = useState(0);
-      const [uploadWarnings, setUploadWarnings] = useState([]);
-      const [logs, setLogs] = useState([]);
-      const [sampleWarningId, setSampleWarningId] = useState(null);
-      const [isUploading, setIsUploading] = useState(false);
-      const [cancelUpload, setCancelUpload] = useState(false);
-      const [duplicateFiles, setDuplicateFiles] = useState([]);
-      const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+        const [heroImage, setHeroImage] = useState(null);
+        const [borderSkin, setBorderSkin] = useState(null);
+        const [centerBackground, setCenterBackground] = useState(null);
+        const [dragging, setDragging] = useState(false);
+        const [uploadCount, setUploadCount] = useState(0);
+        const [uploadWarnings, setUploadWarnings] = useState([]);
+        const [logs, setLogs] = useState([]);
+        const [sampleWarningId, setSampleWarningId] = useState(null);
+        const [isUploading, setIsUploading] = useState(false);
+        const [cancelUpload, setCancelUpload] = useState(false);
+        const [duplicateFiles, setDuplicateFiles] = useState([]);
+        const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
-      const fileInputRef = useRef(null);
-      const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
-      const isValidImage = (img) => img?.id && img?.url && img?.name;
+        const fileInputRef = useRef(null);
+        const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
+        const isValidImage = (img) => img?.id && img?.url && img?.name;
 
-      const handleImportGallery = async (event) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        try {
-          const {
-            heroImage,
-            borderSkin,
-            centerBackground,
-            images,
-            selectedFont: importedFont,
-          } = await importGalleryData(file);
-
-          if (importedFont) setSelectedFont(importedFont);
-          if (heroImage) setHeroImage(heroImage);
-          if (borderSkin) setBorderSkin(borderSkin);
-          if (centerBackground) setCenterBackground(centerBackground);
-
-          setArtistGallery((prev) => [...prev, ...images]);
-
+        const handleImportGallery = async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
           try {
-            const sizePromises = images.map((img) => fetch(img.url).then((res) => res.blob()));
-            const blobs = await Promise.all(sizePromises);
-            const totalBytes = blobs.reduce((acc, blob) => acc + blob.size, 0);
-            setGalleryTotalSize((prev) => prev + totalBytes);
-          } catch (e) {
-            logToScreen('⚠️ Failed to estimate imported image sizes');
-          }
+            const isZip = file.name.endsWith('.zip') || file.type === 'application/zip';
+            const {
+              heroImage,
+              borderSkin,
+              centerBackground,
+              images,
+              selectedFont: importedFont,
+              galleryTotalSize: importedSize = 0,
+            } = isZip
+              ? await importZipBundle(file)
+              : await importGalleryData(file);
 
-          logToScreen(`✅ Imported ${images.length} image(s)`);
-        } catch (err) {
-          logToScreen(`❌ Import failed: ${err.message}`);
-        }
-      };
+            if (importedFont) setSelectedFont(importedFont);
+            if (heroImage) setHeroImage(heroImage);
+            if (borderSkin) setBorderSkin(borderSkin);
+            if (centerBackground) setCenterBackground(centerBackground);
+
+            setArtistGallery((prev) => [...prev, ...images]);
+            setGalleryTotalSize((prev) => prev + importedSize);
+
+            logToScreen(`✅ Imported ${images.length} image(s) from ${isZip ? 'ZIP' : 'JSON'}`);
+          } catch (err) {
+            logToScreen(`❌ Import failed: ${err.message}`);
+          }
+        };
 
       const handleExportGallery = async () => {
         try {
