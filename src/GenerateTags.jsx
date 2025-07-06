@@ -145,17 +145,29 @@ export default function GenerateTags({ setView }) {
 
       const result = await res.json();
 
-      const tagged = result.results.map((r, i) => ({
-        ...uploadable[i],
-        metadata: {
-          ...uploadable[i].metadata,
-          ...r.metadata,
-        },
-      }));
+      const tagged = result.results.map((r, i) => {
+        const img = uploadable[i];
+        return {
+          ...img,
+          metadata: {
+            ...img.metadata,
+            ...r.metadata,
+            metaTagGenerated: true,
+          },
+        };
+      });
 
-      setArtistGallery((prev) =>
-        prev.map((img) => tagged.find((t) => t.id === img.id) || img)
-      );
+      setArtistGallery((prev) => {
+        const seen = new Set();
+        let tagIndex = 0;
+        return prev.map((img) => {
+          if (tagIndex < tagged.length && img === uploadable[tagIndex]) {
+            return tagged[tagIndex++];
+          }
+          return img;
+        });
+      });
+
       logToScreen(`✅ Tagged ${tagged.length} images.`);
     } catch (err) {
       console.error(`[GenerateTags] Batch error: ${err.message}`);
