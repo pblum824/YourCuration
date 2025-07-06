@@ -50,7 +50,7 @@ export default function GalleryUpload({ handleFiles, uploadCount, uploadWarnings
         }}
       >
         <p style={{ marginBottom: '0.5rem' }}>Drag and drop images here</p>
-        <p style={{ fontSize: '0.85rem', color: '#555' }}>(JPEG, PNG, or WebP only)</p>
+        <p style={{ fontSize: '0.85rem', color: '#555' }}>(JPEG, PNG, HEIC, or WebP only)</p>
         <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#666' }}>
           YourCuration automatically optimizes uploaded images for preview.
         </p>

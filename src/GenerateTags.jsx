@@ -234,7 +234,6 @@ export default function GenerateTags({ setView }) {
           onCancel={() => setCancelRequested(true)}
           imageCount={imageCount}
           mode="tag"
-          duration={imageCount * 200 + 10000}
         />
       )}
     </div>
