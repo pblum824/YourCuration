@@ -158,15 +158,21 @@ export default function GenerateTags({ setView }) {
       });
 
       setArtistGallery((prev) => {
-        const seen = new Set();
-        let tagIndex = 0;
-        return prev.map((img) => {
-          if (tagIndex < tagged.length && img === uploadable[tagIndex]) {
-            return tagged[tagIndex++];
-          }
-          return img;
-        });
-      });
+  const updated = [...prev];
+  const used = new Array(tagged.length).fill(false);
+
+  for (let i = 0; i < updated.length; i++) {
+    for (let j = 0; j < tagged.length; j++) {
+      if (!used[j] && updated[i].id === tagged[j].id) {
+        updated[i] = tagged[j];
+        used[j] = true;
+        break;
+      }
+    }
+  }
+
+  return updated;
+});
 
       logToScreen(`✅ Tagged ${tagged.length} images.`);
     } catch (err) {
