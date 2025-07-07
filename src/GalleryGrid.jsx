@@ -123,17 +123,20 @@ export default function GalleryGrid({
             </div>
           )}
 
-          {showTags && (
-            <div
-              style={{
-                fontSize: '0.85rem',
-                marginTop: '0.5rem',
-                maxHeight: '120px',
-                overflowY: 'auto',
-                width: '100%',
-                padding: '0.25rem',
-              }}
-            >
+              {showTags && (
+                <div
+                  style={{
+                    fontSize: '0.85rem',
+                    marginTop: '0.5rem',
+                    maxHeight: '120px',
+                    overflowY: 'auto',
+                    width: '100%',
+                    padding: '0.5rem',
+                    minHeight: '5rem',
+                    backgroundColor: '#f9f9f9',
+                    borderRadius: '0.25rem',
+                  }}
+                >
               {img.metadata?.imageTags?.length > 0 && (
                 <div>
                   <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
