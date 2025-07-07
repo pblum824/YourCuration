@@ -7,7 +7,7 @@ import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
 const CELL_WIDTH = 300;
-const CELL_HEIGHT = 560;
+const CELL_HEIGHT = 530;
 const GRID_PADDING = 16;
 
 export default function GalleryGrid({
