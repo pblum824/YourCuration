@@ -207,7 +207,7 @@ export default function GenerateTags({ setView }) {
           {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
         </button>
       </div>
-
+      <div style={{ marginTop: '2rem' }}>
       <GalleryGrid
         images={localGallery}
         onToggleSample={toggleSample}
@@ -219,7 +219,7 @@ export default function GenerateTags({ setView }) {
         showTags
         devMode={devMode}
       />
-
+        </div>
       {devMode && logs.length > 0 && (
         <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
           {logs.map((log, i) => (
