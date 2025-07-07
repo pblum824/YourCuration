@@ -37,7 +37,20 @@ export default function ImageCard({
       </div>
 
       <div style={{ paddingTop: '0.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-        <p style={{ fontStyle: 'italic', marginBottom: '0.5rem', ...getFontStyle(mode, { selectedFont }) }}>{image.name}</p>
+        <p
+          style={{
+            fontStyle: 'italic',
+            ...getFontStyle('artist', { selectedFont }),
+            marginTop: '0.5rem',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%',
+          }}
+          title={img.name}
+        >
+          {img.name}
+        </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', justifyContent: 'center' }}>
           <button onClick={() => onToggleScrape?.(image.id)} style={buttonStyle(image.scrapeEligible ? '#d1fae5' : '#fee2e2')}>Scrape</button>
