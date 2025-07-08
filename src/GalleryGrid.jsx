@@ -61,10 +61,10 @@ export default function GalleryGrid({
             style={{
               fontStyle: 'italic',
               ...getFontStyle('artist', { selectedFont }),
-              marginTop: '0.5rem',
+              marginTop: '0.2rem',
             }}
           >
-            {img.name.length > 13 ? img.name.slice(0, 10) + '…' : img.name}
+            {img.name.length > 13 ? img.name.slice(0, 15) + '…' : img.name}
           </p>
           
           <div
