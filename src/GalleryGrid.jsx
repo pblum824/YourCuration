@@ -72,7 +72,7 @@ export default function GalleryGrid({
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem',
+              gap: '0.15rem',
               marginTop: '0.15rem',
             }}
           >
