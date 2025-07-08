@@ -73,7 +73,7 @@ export default function GalleryGrid({
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '0.5rem',
-              marginTop: '0.5rem',
+              marginTop: '0.15rem',
             }}
           >
             <button
