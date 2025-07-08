@@ -7,7 +7,7 @@ import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
 const CELL_WIDTH = 300;
-const CELL_HEIGHT = 530;
+const CELL_HEIGHT = 510; // Reduced height to tighten layout
 const GRID_PADDING = 16;
 
 export default function GalleryGrid({
@@ -39,9 +39,7 @@ export default function GalleryGrid({
             width: '280px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'flex-end',
             alignItems: 'center',
-            position: 'relative',
             margin: 'auto',
           }}
         >
@@ -62,18 +60,18 @@ export default function GalleryGrid({
             style={{
               fontStyle: 'italic',
               ...getFontStyle('artist', { selectedFont }),
-              marginTop: '0.25rem',
+              margin: '0.25rem 0 0.15rem', // tighter spacing
             }}
           >
             {img.name.length > 18 ? img.name.slice(0, 15) + '…' : img.name}
           </p>
-          
+
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '0.15rem',
-              marginTop: '0.15rem',
+              marginBottom: '0.25rem',
             }}
           >
             <button
@@ -125,20 +123,20 @@ export default function GalleryGrid({
             </div>
           )}
 
-              {showTags && (
-                <div
-                  style={{
-                    fontSize: '0.85rem',
-                    marginTop: '0.5rem',
-                    maxHeight: '120px',
-                    overflowY: 'auto',
-                    width: '100%',
-                    padding: '0.5rem',
-                    minHeight: '5rem',
-                    backgroundColor: '#f9f9f9',
-                    borderRadius: '0.25rem',
-                  }}
-                >
+          {showTags && (
+            <div
+              style={{
+                fontSize: '0.85rem',
+                marginTop: '0.4rem',
+                maxHeight: '120px',
+                overflowY: 'auto',
+                width: '100%',
+                padding: '0.5rem',
+                minHeight: '5rem',
+                backgroundColor: '#f9f9f9',
+                borderRadius: '0.25rem',
+              }}
+            >
               {img.metadata?.imageTags?.length > 0 && (
                 <div>
                   <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
