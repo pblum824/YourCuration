@@ -56,15 +56,16 @@ export default function GalleryGrid({
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
             }}
           />
+
           <p
             title={img.name}
             style={{
               fontStyle: 'italic',
               ...getFontStyle('artist', { selectedFont }),
-              marginTop: '0.2rem',
+              marginTop: '0.25rem',
             }}
           >
-            {img.name.length > 13 ? img.name.slice(0, 15) + '…' : img.name}
+            {img.name.length > 18 ? img.name.slice(0, 15) + '…' : img.name}
           </p>
           
           <div
