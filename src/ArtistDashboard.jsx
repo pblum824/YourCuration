@@ -1,4 +1,4 @@
-// PATCHED File: src/ArtistDashboard.jsx
+// File: src/ArtistDashboard.jsx
 import React, { useState, useRef } from 'react';
 import { useCuration } from './YourCurationContext';
 import { compressImage } from './utils/imageHelpers';
@@ -153,8 +153,13 @@ export default function ArtistDashboard({ setView }) {
       }
     }
 
+    setUploadWarnings(warnings);
     setDuplicateFiles(duplicates);
     setUploadCount((prev) => prev + valid.length);
+
+    const totalProjected = artistGallery.length + valid.length;
+    const strategy = storageModeSelector(totalProjected);
+    logToScreen(`🧐 Storage mode: ${strategy}`);
 
     let newSize = 0;
     const newImages = [];
@@ -168,12 +173,21 @@ export default function ArtistDashboard({ setView }) {
 
       await saveBlob(id, compressed);
       newSize += compressed.size;
+      logToScreen(`🧼 Saved to IndexedDB: ${id}`);
+
       newImages.push({
         id,
         name: file.name,
         url,
         scrapeEligible: true,
-        metadata: { original: { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified } },
+        metadata: {
+          original: {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified,
+          },
+        },
         galleryEligible: true,
         sampleEligible: false,
         localRefId: id,
@@ -184,7 +198,6 @@ export default function ArtistDashboard({ setView }) {
     setGalleryTotalSize((prev) => prev + newSize);
     setIsUploading(false);
 
-    // Fix: Only show warning if nothing new added and duplicates exist
     if (duplicates.length > 0 && newImages.length === 0) {
       setUploadWarnings(warnings);
     } else {
@@ -200,7 +213,6 @@ export default function ArtistDashboard({ setView }) {
     setShowDuplicateModal(false);
     let newSize = 0;
     const newImages = [];
-
     for (let file of duplicateFiles) {
       file = await autoConvertToSupportedFormat(file, logToScreen);
       if (!file) continue;
@@ -217,7 +229,14 @@ export default function ArtistDashboard({ setView }) {
         name: file.name,
         url,
         scrapeEligible: true,
-        metadata: { original: { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified } },
+        metadata: {
+          original: {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified,
+          },
+        },
         galleryEligible: true,
         sampleEligible: false,
         localRefId: id,
@@ -242,15 +261,37 @@ export default function ArtistDashboard({ setView }) {
       url,
       scrapeEligible: true,
       metadata: {
-        original: { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified },
+        original: {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified,
+        },
       },
     });
     setGalleryTotalSize((prev) => prev + compressed.size);
   };
 
-  const toggleImageSample = (id) => toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
-  const toggleImageGallery = (id) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img));
-  const toggleImageScrape = (id) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img));
+  const toggleImageSample = (id) => {
+    toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
+  };
+
+  const toggleImageGallery = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
+  };
+
+  const toggleImageScrape = (id) => {
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
+  };
+
   const removeImage = (id) => {
     setArtistGallery((prev) => prev.filter((img) => img.id !== id));
     setUploadCount((prev) => Math.max(0, prev - 1));
@@ -293,13 +334,32 @@ export default function ArtistDashboard({ setView }) {
         showExport
       />
 
-      <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
-      <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
-      <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
+      <HeroSection
+        label="Hero Image"
+        imageState={heroImage}
+        setImageState={setHeroImage}
+        handleSingleUpload={handleSingleUpload}
+      />
+      <HeroSection
+        label="Border Skin"
+        imageState={borderSkin}
+        setImageState={setBorderSkin}
+        handleSingleUpload={handleSingleUpload}
+      />
+      <HeroSection
+        label="Center Background"
+        imageState={centerBackground}
+        setImageState={setCenterBackground}
+        handleSingleUpload={handleSingleUpload}
+      />
 
       <UploadWarnings warnings={uploadWarnings} />
       <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
-      <MultiFilePicker onChange={(files) => handleFiles(files)} uploadCount={uploadCount} acceptedFormats={ACCEPTED_FORMATS} />
+      <MultiFilePicker
+        onChange={(files) => handleFiles(files)}
+        uploadCount={uploadCount}
+        acceptedFormats={ACCEPTED_FORMATS}
+      />
 
       {devMode && (
         <>
@@ -328,7 +388,13 @@ export default function ArtistDashboard({ setView }) {
       />
 
       {isUploading && (
-        <LoadingOverlay imageCount={uploadCount} onCancel={() => { setCancelUpload(true); setIsUploading(false); }} />
+        <LoadingOverlay
+          imageCount={uploadCount}
+          onCancel={() => {
+            setCancelUpload(true);
+            setIsUploading(false);
+          }}
+        />
       )}
 
       {showDuplicateModal && (
