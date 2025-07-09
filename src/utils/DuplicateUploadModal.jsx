@@ -70,6 +70,7 @@ const cancelBtnStyle = {
   color: '#991b1b',
   borderRadius: '0.5rem',
   cursor: 'pointer',
+  fontFamily: 'system-ui, sans-serif',
 };
 
 const confirmBtnStyle = {
@@ -79,4 +80,5 @@ const confirmBtnStyle = {
   color: '#075985',
   borderRadius: '0.5rem',
   cursor: 'pointer',
+  fontFamily: 'system-ui, sans-serif',
 };
