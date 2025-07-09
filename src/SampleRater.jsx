@@ -10,7 +10,7 @@ import { useFontSettings } from './FontSettingsContext';
 
 const SAMPLE_OPTIONS = ['love', 'like', 'less'];
 
-export default function SampleRater({ images, setView }) {
+export default function SampleRater({ images, setView, isClientView = false }) {
   const { ratings, setRatings, mode } = useCuration();
   const { devMode, setDevMode } = useDevMode();
   const { selectedFont } = useFontSettings();
@@ -48,7 +48,9 @@ export default function SampleRater({ images, setView }) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <ControlBar view="rate" setView={setView} devMode={devMode} setDevMode={setDevMode} />
+      {!isClientView && (
+        <ControlBar view="rate" setView={setView} devMode={devMode} setDevMode={setDevMode} />
+      )}
 
       <h2
         style={{
@@ -104,25 +106,26 @@ export default function SampleRater({ images, setView }) {
         })}
       </div>
 
-      {/* Forward button */}
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <button
-          onClick={() => setView('curated1')}
-          disabled={isDisabled}
-          style={{
-            padding: '1rem 2rem',
-            fontSize: '1.1rem',
-            backgroundColor: isDisabled ? '#d1d5db' : '#1e3a8a',
-            color: isDisabled ? '#666' : '#fff',
-            borderRadius: '0.5rem',
-            border: 'none',
-            cursor: isDisabled ? 'not-allowed' : 'pointer',
-            opacity: isDisabled ? 0.6 : 1,
-          }}
-        >
-          ➡️ Generate Gallery Preview 
-        </button>
-      </div>
+      {!isClientView && (
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <button
+            onClick={() => setView('curated1')}
+            disabled={isDisabled}
+            style={{
+              padding: '1rem 2rem',
+              fontSize: '1.1rem',
+              backgroundColor: isDisabled ? '#d1d5db' : '#1e3a8a',
+              color: isDisabled ? '#666' : '#fff',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              opacity: isDisabled ? 0.6 : 1,
+            }}
+          >
+            ➡️ Generate Gallery Preview
+          </button>
+        </div>
+      )}
     </div>
   );
 }
