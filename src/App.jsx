@@ -130,14 +130,7 @@ function InnerApp({ view, setView }) {
 }
 
 export default function App() {
-  const [view, setViewState] = useState(() => {
-    return localStorage.getItem('yourcuration_lastView') || 'landing';
-  });
-
-  const setView = (nextView) => {
-    localStorage.setItem('yourcuration_lastView', nextView);
-    setViewState(nextView);
-  };
+  const [view, setView] = useState('landing');
 
   return (
     <DevModeProvider>
