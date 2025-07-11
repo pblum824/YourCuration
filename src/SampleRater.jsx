@@ -128,39 +128,22 @@ export default function SampleRater({ images, setView, isClientView = false, pre
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        {previewMode ? (
-          <button
-            onClick={() => setView('curated1')}
-            style={{
-              padding: '1rem 2rem',
-              fontSize: '1.1rem',
-              backgroundColor: '#1e3a8a',
-              color: '#fff',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            ➡️ Start Curated Preview
-          </button>
-        ) : (
-          <button
-            onClick={() => setView('curated1')}
-            disabled={isDisabled}
-            style={{
-              padding: '1rem 2rem',
-              fontSize: '1.1rem',
-              backgroundColor: isDisabled ? '#d1d5db' : '#1e3a8a',
-              color: isDisabled ? '#666' : '#fff',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: isDisabled ? 'not-allowed' : 'pointer',
-              opacity: isDisabled ? 0.6 : 1,
-            }}
-          >
-            ➡️ Generate Gallery Preview
-          </button>
-        )}
+        <button
+          onClick={() => setView('curated1')}
+          disabled={isDisabled}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            backgroundColor: isDisabled ? '#d1d5db' : '#1e3a8a',
+            color: isDisabled ? '#666' : '#fff',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
+            opacity: isDisabled ? 0.6 : 1,
+          }}
+        >
+          ➡️ {previewMode ? 'Start Curated Preview' : 'Generate Gallery Preview'}
+        </button>
       </div>
     </div>
   );
