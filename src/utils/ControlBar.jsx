@@ -1,5 +1,5 @@
 // File: src/utils/ControlBar.jsx
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useCuration } from '../YourCurationContext';
 import DevToggle from '../DevToggle';
 import { getFontStyle } from '../utils/fontUtils';
@@ -28,6 +28,13 @@ export default function ControlBar({
   const { mode } = useCuration();
   const { selectedFont } = useFontSettings();
   const fileInputRef = useRef();
+  const [canPresent, setCanPresent] = useState(false);
+
+  useEffect(() => {
+    const hasBundle = !!localStorage.getItem('yourcuration_readyBundle');
+    setCanPresent(hasBundle);
+  }, []);
+
   if (mode !== 'artist') return null;
 
   const navButtonStyle = {
@@ -75,7 +82,7 @@ export default function ControlBar({
             🎬 Preview Client
           </button>
 
-          {typeof window !== 'undefined' && localStorage.getItem('yourcuration_readyBundle') && (
+          {canPresent && (
             <button
               onClick={() => setView('landing')}
               style={{ ...navButtonStyle, backgroundColor: '#dcfce7', color: '#166534' }}
