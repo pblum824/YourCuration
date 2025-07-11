@@ -147,6 +147,25 @@ export default function SampleRater({ images, setView, isClientView = false, pre
           </button>
         </div>
       )}
+
+      {previewMode && (
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <button
+            onClick={() => setView('curated1')}
+            style={{
+              padding: '1rem 2rem',
+              fontSize: '1.1rem',
+              backgroundColor: '#1e3a8a',
+              color: '#fff',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            ➡️ Start Curated Preview
+          </button>
+        </div>
+      )}
     </div>
   );
 }
