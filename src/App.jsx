@@ -129,6 +129,15 @@ function InnerApp({ view, setView }) {
   );
 }
 
+function ErrorCatcher({ onError, children }) {
+  try {
+    return children;
+  } catch (err) {
+    onError(err);
+    return null;
+  }
+}
+
 export default function App() {
   const [view, setView] = useState('landing');
 
