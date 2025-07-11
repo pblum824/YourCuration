@@ -61,7 +61,6 @@ export default function ControlBar({
 
   return (
     <>
-      {/* Tier 1 + 2: Unified Container */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ ...rowStyle, marginBottom: '1rem' }}>
           {navButtons.map(({ key, label }) => (
@@ -95,7 +94,6 @@ export default function ControlBar({
         </div>
       </div>
 
-      {/* Tier 3: Image Controls */}
       <div
         style={{
           display: 'flex',
