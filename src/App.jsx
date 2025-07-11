@@ -32,9 +32,14 @@ function InnerApp({ view, setView }) {
     }
   }, []);
 
-  const enterPreviewClient = () => {
-    setPreviewMode(true);
+  const goToClient = () => {
+    setPreviewMode(false);
     setView('client');
+  };
+
+  const enterPreview = () => {
+    setPreviewMode(true);
+    setView('rate');
   };
 
   const exitPreview = () => {
@@ -61,42 +66,59 @@ function InnerApp({ view, setView }) {
         </div>
       ) : (
         <ErrorCatcher onError={setError}>
-          {view === 'landing' && <LandingPage setView={setView} />}
-          {view === 'artist' && <ArtistDashboard setView={setView} onClientPreview={enterPreviewClient} />}
+          {view === 'landing' && (
+            <LandingPage
+              setView={setView}
+              onClientClick={goToClient}
+              onArtistClick={() => setView('artist')}
+            />
+          )}
+
+          {view === 'artist' && (
+            <ArtistDashboard setView={setView} onPreviewClient={enterPreview} />
+          )}
+
           {view === 'generate' && <GenerateTags setView={setView} />}
+
           {view === 'rate' && (
             <SampleRater
               images={artistGallery.filter((img) => img.sampleEligible)}
               setView={setView}
-              isClientView={false}
+              isClientView={previewMode || view === 'client'}
+              previewMode={previewMode}
             />
           )}
+
           {view === 'curated1' && (
             <CuratedGallery1
               setView={setView}
-              isClientView={previewMode}
-              onReturn={exitPreview}
+              isClientView={previewMode || view === 'client'}
+              onReturn={previewMode ? exitPreview : null}
             />
           )}
+
           {view === 'curated2' && (
             <CuratedGallery2
               setView={setView}
-              isClientView={previewMode}
-              onReturn={exitPreview}
+              isClientView={previewMode || view === 'client'}
+              onReturn={previewMode ? exitPreview : null}
             />
           )}
+
           {view === 'curatedFinal' && (
             <CuratedGalleryFinal
               setView={setView}
-              isClientView={previewMode}
-              onReturn={exitPreview}
+              isClientView={previewMode || view === 'client'}
+              onReturn={previewMode ? exitPreview : null}
             />
           )}
+
           {view === 'curated' && <YourCuration setView={setView} />}
+
           {view === 'client' && (
             <SampleRater
               isClientView={true}
-              previewMode={previewMode}
+              previewMode={false}
               setView={setView}
               images={artistGallery.filter((img) => img.sampleEligible)}
             />

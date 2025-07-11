@@ -23,7 +23,7 @@ import { autoConvertToSupportedFormat } from './utils/imageFormatHandlers';
 
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 
-export default function ArtistDashboard({ setView }) {
+export default function ArtistDashboard({ setView, onPreviewClient }) {
   const { selectedFont, setSelectedFont } = useFontSettings();
   const {
     artistGallery,
@@ -332,6 +332,7 @@ export default function ArtistDashboard({ setView }) {
         showDevToggle
         showImport
         showExport
+        onPreviewClient={onPreviewClient}
       />
 
       <HeroSection
