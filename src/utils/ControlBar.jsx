@@ -1,5 +1,5 @@
 // File: src/utils/ControlBar.jsx
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import { useCuration } from '../YourCurationContext';
 import DevToggle from '../DevToggle';
 import { getFontStyle } from '../utils/fontUtils';
@@ -28,13 +28,6 @@ export default function ControlBar({
   const { mode } = useCuration();
   const { selectedFont } = useFontSettings();
   const fileInputRef = useRef();
-  const [canPresent, setCanPresent] = useState(false);
-
-  useEffect(() => {
-    const hasBundle = !!localStorage.getItem('yourcuration_readyBundle');
-    setCanPresent(hasBundle);
-  }, []);
-
   if (mode !== 'artist') return null;
 
   const navButtonStyle = {
@@ -61,6 +54,7 @@ export default function ControlBar({
 
   return (
     <>
+      {/* Tier 1 + 2: Unified Container */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ ...rowStyle, marginBottom: '1rem' }}>
           {navButtons.map(({ key, label }) => (
@@ -80,20 +74,11 @@ export default function ControlBar({
           >
             🎬 Preview Client
           </button>
-
-          {canPresent && (
-            <button
-              onClick={() => setView('landing')}
-              style={{ ...navButtonStyle, backgroundColor: '#dcfce7', color: '#166534' }}
-            >
-              🎯 Launch Client Mode
-            </button>
-          )}
-
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
         </div>
       </div>
 
+      {/* Tier 3: Image Controls */}
       <div
         style={{
           display: 'flex',
