@@ -74,6 +74,16 @@ export default function ControlBar({
           >
             🎬 Preview Client
           </button>
+
+          {typeof window !== 'undefined' && localStorage.getItem('yourcuration_readyBundle') && (
+            <button
+              onClick={() => setView('landing')}
+              style={{ ...navButtonStyle, backgroundColor: '#dcfce7', color: '#166534' }}
+            >
+              🎯 Launch Client Mode
+            </button>
+          )}
+
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
         </div>
       </div>
