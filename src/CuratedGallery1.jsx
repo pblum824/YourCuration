@@ -7,7 +7,7 @@ import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 import { aggregateSampleTags, scoreImage } from './utils/scoreImage';
 
-export default function CuratedGallery1({ setView }) {
+export default function CuratedGallery1({ setView, isClientView = false, onReturn }) {
   const {
     artistGallery = [],
     ratings = {},
@@ -72,8 +72,29 @@ export default function CuratedGallery1({ setView }) {
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <ControlBar view="curated1" setView={setView} />
+    <div style={{ padding: '2rem', position: 'relative' }}>
+      {!isClientView && <ControlBar view="curated1" setView={setView} />}
+
+      {isClientView && onReturn && (
+        <button
+          onClick={onReturn}
+          style={{
+            position: 'fixed',
+            top: '0.75rem',
+            right: '0.75rem',
+            background: 'rgba(255,255,255,0.5)',
+            border: '1px solid #ccc',
+            borderRadius: '0.5rem',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+            zIndex: 999,
+            cursor: 'pointer',
+            color: '#333'
+          }}
+        >
+          Return to Artist Dashboard
+        </button>
+      )}
 
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Preview

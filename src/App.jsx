@@ -19,6 +19,7 @@ function InnerApp({ view, setView }) {
   const { artistGallery, mode } = useCuration();
   const { selectedFont } = useFontSettings();
   const [error, setError] = useState(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     try {
@@ -30,6 +31,16 @@ function InnerApp({ view, setView }) {
       console.warn('Could not apply storage strategy from bundle:', err);
     }
   }, []);
+
+  const enterPreviewClient = () => {
+    setPreviewMode(true);
+    setView('client');
+  };
+
+  const exitPreview = () => {
+    setPreviewMode(false);
+    setView('artist');
+  };
 
   return (
     <div
@@ -51,21 +62,42 @@ function InnerApp({ view, setView }) {
       ) : (
         <ErrorCatcher onError={setError}>
           {view === 'landing' && <LandingPage setView={setView} />}
-          {view === 'artist' && <ArtistDashboard setView={setView} />}
+          {view === 'artist' && <ArtistDashboard setView={setView} onClientPreview={enterPreviewClient} />}
           {view === 'generate' && <GenerateTags setView={setView} />}
           {view === 'rate' && (
             <SampleRater
               images={artistGallery.filter((img) => img.sampleEligible)}
               setView={setView}
+              isClientView={false}
             />
           )}
-          {view === 'curated1' && <CuratedGallery1 setView={setView} />}
-          {view === 'curated2' && <CuratedGallery2 setView={setView} />}
-          {view === 'curatedFinal' && <CuratedGalleryFinal setView={setView} />}
+          {view === 'curated1' && (
+            <CuratedGallery1
+              setView={setView}
+              isClientView={previewMode}
+              onReturn={exitPreview}
+            />
+          )}
+          {view === 'curated2' && (
+            <CuratedGallery2
+              setView={setView}
+              isClientView={previewMode}
+              onReturn={exitPreview}
+            />
+          )}
+          {view === 'curatedFinal' && (
+            <CuratedGalleryFinal
+              setView={setView}
+              isClientView={previewMode}
+              onReturn={exitPreview}
+            />
+          )}
           {view === 'curated' && <YourCuration setView={setView} />}
           {view === 'client' && (
             <SampleRater
               isClientView={true}
+              previewMode={previewMode}
+              setView={setView}
               images={artistGallery.filter((img) => img.sampleEligible)}
             />
           )}

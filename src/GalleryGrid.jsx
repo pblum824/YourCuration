@@ -7,7 +7,7 @@ import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
 const CELL_WIDTH = 300;
-const CELL_HEIGHT = 510; // Reduced height to tighten layout
+const CELL_HEIGHT = 510;
 const GRID_PADDING = 16;
 
 export default function GalleryGrid({
@@ -20,6 +20,8 @@ export default function GalleryGrid({
   sampleWarningId,
   onUpdateTag,
   showTags,
+  isClientView = false,
+  setView,
 }) {
   const { selectedFont } = useFontSettings();
   const columnCount = Math.floor(window.innerWidth / (CELL_WIDTH + GRID_PADDING));
@@ -60,45 +62,47 @@ export default function GalleryGrid({
             style={{
               fontStyle: 'italic',
               ...getFontStyle('artist', { selectedFont }),
-              margin: '0.25rem 0 0.15rem', // tighter spacing
+              margin: '0.25rem 0 0.15rem',
             }}
           >
             {img.name.length > 18 ? img.name.slice(0, 15) + '…' : img.name}
           </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.15rem',
-              marginBottom: '0.25rem',
-            }}
-          >
-            <button
-              onClick={() => onToggleScrape?.(img.id)}
-              style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+          {!isClientView && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.15rem',
+                marginBottom: '0.25rem',
+              }}
             >
-              {img.scrapeEligible ? 'Accepted' : 'Excluded'}
-            </button>
-            <button
-              onClick={() => onRemove?.(img.id)}
-              style={imageButton('#fee2e2', '#991b1b')}
-            >
-              Remove
-            </button>
-            <button
-              onClick={() => onToggleGallery?.(img.id)}
-              style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
-            >
-              Gallery
-            </button>
-            <button
-              onClick={() => onToggleSample?.(img.id)}
-              style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
-            >
-              Sample
-            </button>
-          </div>
+              <button
+                onClick={() => onToggleScrape?.(img.id)}
+                style={imageButton(img.scrapeEligible ? '#d1fae5' : '#fee2e2')}
+              >
+                {img.scrapeEligible ? 'Accepted' : 'Excluded'}
+              </button>
+              <button
+                onClick={() => onRemove?.(img.id)}
+                style={imageButton('#fee2e2', '#991b1b')}
+              >
+                Remove
+              </button>
+              <button
+                onClick={() => onToggleGallery?.(img.id)}
+                style={imageButton(img.galleryEligible ? '#dbeafe' : '#f3f4f6')}
+              >
+                Gallery
+              </button>
+              <button
+                onClick={() => onToggleSample?.(img.id)}
+                style={imageButton(img.sampleEligible ? '#fef9c3' : '#f3f4f6')}
+              >
+                Sample
+              </button>
+            </div>
+          )}
 
           {sampleWarningId === img.id && (
             <div
@@ -201,8 +205,30 @@ export default function GalleryGrid({
         overflow: 'auto',
         maxWidth: '100vw',
         margin: '0 auto',
+        position: 'relative',
       }}
     >
+      {isClientView && (
+        <button
+          onClick={() => setView?.('artist')}
+          style={{
+            position: 'fixed',
+            top: '0.75rem',
+            right: '0.75rem',
+            background: 'rgba(255, 255, 255, 0.5)',
+            border: '1px solid #ccc',
+            borderRadius: '0.5rem',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+            zIndex: 9999,
+            cursor: 'pointer',
+            color: '#333',
+          }}
+        >
+          Return to Artist Dashboard
+        </button>
+      )}
+
       <Grid
         columnCount={columnCount}
         columnWidth={CELL_WIDTH}

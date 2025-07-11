@@ -10,7 +10,7 @@ import { useFontSettings } from './FontSettingsContext';
 
 const SAMPLE_OPTIONS = ['love', 'like', 'less'];
 
-export default function SampleRater({ images, setView, isClientView = false }) {
+export default function SampleRater({ images, setView, isClientView = false, previewMode = false }) {
   const { ratings, setRatings, mode } = useCuration();
   const { devMode, setDevMode } = useDevMode();
   const { selectedFont } = useFontSettings();
@@ -47,9 +47,30 @@ export default function SampleRater({ images, setView, isClientView = false }) {
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', position: 'relative' }}>
       {!isClientView && (
         <ControlBar view="rate" setView={setView} devMode={devMode} setDevMode={setDevMode} />
+      )}
+
+      {isClientView && previewMode && (
+        <button
+          onClick={() => setView('artist')}
+          style={{
+            position: 'fixed',
+            top: '0.75rem',
+            right: '0.75rem',
+            background: 'rgba(255,255,255,0.5)',
+            border: '1px solid #ccc',
+            borderRadius: '0.5rem',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+            zIndex: 999,
+            cursor: 'pointer',
+            color: '#333',
+          }}
+        >
+          Return to Artist Dashboard
+        </button>
       )}
 
       <h2

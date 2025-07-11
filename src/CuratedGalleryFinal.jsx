@@ -10,7 +10,7 @@ import { loadImage } from './utils/imageStore';
 
 const MAX_TAGS = 30;
 
-export default function CuratedGalleryFinal({ setView }) {
+export default function CuratedGalleryFinal({ setView, isClientView = false, onReturn }) {
   const {
     artistGallery = [],
     ratings = {},
@@ -113,8 +113,31 @@ export default function CuratedGalleryFinal({ setView }) {
   }
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <ControlBar view="curatedFinal" setView={setView} devMode={devMode} setDevMode={setDevMode} />
+    <div style={{ padding: '2rem', textAlign: 'center', position: 'relative' }}>
+      {!isClientView && (
+        <ControlBar view="curatedFinal" setView={setView} devMode={devMode} setDevMode={setDevMode} />
+      )}
+
+      {isClientView && onReturn && (
+        <button
+          onClick={onReturn}
+          style={{
+            position: 'fixed',
+            top: '0.75rem',
+            right: '0.75rem',
+            background: 'rgba(255,255,255,0.5)',
+            border: '1px solid #ccc',
+            borderRadius: '0.5rem',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+            zIndex: 999,
+            cursor: 'pointer',
+            color: '#333',
+          }}
+        >
+          Return to Artist Dashboard
+        </button>
+      )}
 
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
         Curated Gallery Final
