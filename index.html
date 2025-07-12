@@ -11,19 +11,26 @@
       rel="stylesheet"
     />
 
-    <!-- Zoom Reset Script (Safari-compatible) -->
+    <!-- Full-force Safari Zoom Reset -->
     <script>
       window.addEventListener('load', () => {
-        const meta = document.querySelector('meta[name="viewport"]');
-        if (meta) {
-          const original = meta.getAttribute('content');
-          meta.setAttribute('content', 'width=device-width, initial-scale=1.01, maximum-scale=10.0, user-scalable=yes');
+        const oldMeta = document.querySelector('meta[name="viewport"]');
+        if (oldMeta) {
+          const newMeta = document.createElement('meta');
+          newMeta.name = 'viewport';
+          newMeta.content = 'width=device-width, initial-scale=1.01, maximum-scale=10.0, user-scalable=yes';
+          oldMeta.parentNode.replaceChild(newMeta, oldMeta);
+
+          // Delay and restore
           setTimeout(() => {
-            meta.setAttribute('content', original || 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes');
+            const resetMeta = document.createElement('meta');
+            resetMeta.name = 'viewport';
+            resetMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes';
+            newMeta.parentNode.replaceChild(resetMeta, newMeta);
           }, 100);
         }
 
-        // Safari: force reflow to apply zoom reset
+        // Safari layout reflow
         document.body.style.transform = 'scale(1.0001)';
         setTimeout(() => {
           document.body.style.transform = '';
