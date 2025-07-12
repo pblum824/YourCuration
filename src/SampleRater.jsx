@@ -98,7 +98,7 @@ export default function SampleRater({ images, setView, previewMode = false }) {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1.5rem',
+          gap: '1rem',
           paddingBottom: '2rem'
         }}
       >
@@ -119,14 +119,24 @@ export default function SampleRater({ images, setView, previewMode = false }) {
                 alt={img.name}
                 style={{
                   width: '100%',
-                  height: '180px',
+                  height: '150px',
                   objectFit: 'contain',
                   backgroundColor: '#f9fafb',
                   borderRadius: '0.5rem',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                 }}
               />
-              <p style={{ fontStyle: 'italic', marginTop: '0.5rem', ...getFontStyle(mode, { selectedFont }) }}>{img.name}</p>
+              <p
+                style={{
+                  height: isClientView ? 0 : 'auto',
+                  overflow: 'hidden',
+                  fontStyle: 'italic',
+                  marginTop: isClientView ? 0 : '0.5rem',
+                  ...getFontStyle(mode, { selectedFont })
+                }}
+              >
+                {img.name}
+              </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
                 {SAMPLE_OPTIONS.map((option) => (
                   <button
