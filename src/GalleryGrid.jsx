@@ -24,10 +24,11 @@ export default function GalleryGrid({
   setView,
 }) {
   const { selectedFont } = useFontSettings();
+
   const usableWidth = window.innerWidth - GRID_PADDING * 2;
-  const columnCount = Math.max(1, Math.floor(usableWidth / (CELL_WIDTH + GRID_PADDING)));
+  const columnCount = Math.max(1, Math.floor(usableWidth / CELL_WIDTH));
   const rowCount = Math.ceil(images.length / columnCount);
-  const width = window.innerWidth;
+  const width = columnCount * CELL_WIDTH;
   const height = window.innerHeight * 0.7;
 
   const Cell = ({ columnIndex, rowIndex, style }) => {
