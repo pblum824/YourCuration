@@ -17,6 +17,8 @@ export default function SampleRater({ images, setView, isClientView = false, pre
   const [hydratedImages, setHydratedImages] = useState([]);
 
   useEffect(() => {
+    let urlsToRevoke = [];
+
     async function hydrate() {
       const hydrated = await Promise.all(
         images.map(async (img) => {
@@ -24,6 +26,7 @@ export default function SampleRater({ images, setView, isClientView = false, pre
           try {
             const blob = await loadBlob(img.localRefId);
             const url = URL.createObjectURL(blob);
+            urlsToRevoke.push(url);
             return { id: img.id, name: img.name, url };
           } catch {
             return { id: img.id, name: img.name, url: '' };
@@ -32,7 +35,12 @@ export default function SampleRater({ images, setView, isClientView = false, pre
       );
       setHydratedImages(hydrated);
     }
+
     hydrate();
+
+    return () => {
+      urlsToRevoke.forEach(URL.revokeObjectURL);
+    };
   }, [images]);
 
   const setRating = (id, value) => {
