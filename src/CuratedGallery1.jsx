@@ -170,8 +170,8 @@ export default function CuratedGallery1({ setView, onReturn }) {
         })}
       </div>
 
-      {!isClientView && (
-        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        {!isClientView && (
           <button
             onClick={() => {
               setCG1Selections(selections);
@@ -189,8 +189,8 @@ export default function CuratedGallery1({ setView, onReturn }) {
           >
             ➕ Show Me More Like These
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
