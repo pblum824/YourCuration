@@ -69,7 +69,7 @@ export default function ControlBar({
         </div>
         <div style={rowStyle}>
           <button
-            onClick={() => {}}
+            onClick={() => setView('landing')}
             style={{ ...navButtonStyle, backgroundColor: '#fef9c3', color: '#92400e' }}
           >
             🎯 Client Mode
