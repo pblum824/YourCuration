@@ -23,7 +23,6 @@ export default function ControlBar({
   showExport = true,
   showDevToggle = true,
   setView,
-  onPreviewClient,
 }) {
   const { mode } = useCuration();
   const { selectedFont } = useFontSettings();
@@ -73,13 +72,6 @@ export default function ControlBar({
             style={{ ...navButtonStyle, backgroundColor: '#fef9c3', color: '#92400e' }}
           >
             🎯 Client Mode
-          </button>
-
-          <button
-            onClick={onPreviewClient}
-            style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
-          >
-            🎬 Preview Client
           </button>
 
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
