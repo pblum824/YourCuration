@@ -15,13 +15,25 @@ const dropZoneStyle = {
   boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
 };
 
-export default function DragDropUpload({ onDrop, dragging, setDragging }) {
+export default function DragDropUpload({ handleFiles, dragging, setDragging }) {
   return (
     <div
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
-        onDrop(e.dataTransfer.files);
+        const items = e.dataTransfer.items;
+        if (items) {
+          const files = [];
+          for (const item of items) {
+            if (item.kind === 'file') {
+              const file = item.getAsFile();
+              if (file) files.push(file);
+            }
+          }
+          handleFiles(files);
+        } else {
+          handleFiles(Array.from(e.dataTransfer.files));
+        }
       }}
       onDragOver={(e) => {
         e.preventDefault();

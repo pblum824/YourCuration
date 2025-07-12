@@ -338,8 +338,14 @@
         <DragDropUpload dragging={dragging} setDragging={setDragging} handleFiles={handleFiles} />
         <MultiFilePicker onChange={(files) => handleFiles(files)} acceptedFormats={ACCEPTED_FORMATS} />
 
-        <div style={{ marginTop: 10, fontWeight: 'bold' }}>
-          {artistGallery.length === 0 ? 'No files uploaded' : `${artistGallery.length} files uploaded`}
+        <div style={{
+          marginTop: 10,
+          fontWeight: 'bold',
+          textAlign: 'center'
+        }}>
+          {artistGallery.length === 0
+            ? 'No files uploaded'
+            : `${artistGallery.length} files uploaded`}
         </div>
 
         {devMode && (
