@@ -6,12 +6,12 @@ import { getFontStyle } from '../utils/fontUtils';
 import { useFontSettings } from '../FontSettingsContext';
 
 const navButtons = [
-  { key: 'artist', label: '🎨 Artist Dashboard' },
-  { key: 'generate', label: '🛠️ Generate Tags' },
-  { key: 'rate', label: '🧪 Sample Rater' },
-  { key: 'curated1', label: '🖼️ Gallery 1' },
-  { key: 'curated2', label: '🔍 Gallery 2' },
-  { key: 'curatedFinal', label: '🏁 Final Gallery' },
+  { key: 'artist', label: 'Artist Dashboard' },
+  { key: 'generate', label: 'Generate Tags' },
+  { key: 'rate', label: 'Sample Rater' },
+  { key: 'curated1', label: 'Gallery 1' },
+  { key: 'curated2', label: 'Gallery 2' },
+  { key: 'curatedFinal', label: 'Final Gallery' },
 ];
 
 export default function ControlBar({
@@ -39,7 +39,7 @@ export default function ControlBar({
     color: '#1e3a8a',
     cursor: 'pointer',
     width: '160px',
-    height: '42px',
+    minHeight: '42px',
     textAlign: 'center',
     boxSizing: 'border-box',
   };
@@ -53,7 +53,6 @@ export default function ControlBar({
 
   return (
     <>
-      {/* Tier 1 + 2: Unified Container */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ ...rowStyle, marginBottom: '1rem' }}>
           {navButtons.map(({ key, label }) => (
@@ -71,14 +70,13 @@ export default function ControlBar({
             onClick={() => setView('landing')}
             style={{ ...navButtonStyle, backgroundColor: '#fef9c3', color: '#92400e' }}
           >
-            🎯 Client Mode
+            Client Mode
           </button>
 
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
         </div>
       </div>
 
-      {/* Tier 3: Image Controls */}
       <div
         style={{
           display: 'flex',
@@ -98,20 +96,20 @@ export default function ControlBar({
               style={{ display: 'none' }}
             />
             <button onClick={() => fileInputRef.current?.click()} style={navButtonStyle}>
-              📥 Import Gallery
+              Import Gallery
             </button>
           </>
         )}
 
         {showExport && (
           <button onClick={onExport} style={navButtonStyle}>
-            📤 Export Gallery
+            Export Gallery
           </button>
         )}
 
         {onGenerate && (
           <button onClick={onGenerate} style={navButtonStyle}>
-            🛠️ Generate Tags
+            Generate Tags
           </button>
         )}
 
@@ -120,7 +118,7 @@ export default function ControlBar({
             onClick={onReset}
             style={{ ...navButtonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}
           >
-            🔄 Reset Dashboard
+            Reset Dashboard
           </button>
         )}
       </div>
