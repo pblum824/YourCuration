@@ -97,8 +97,9 @@ export default function SampleRater({ images, setView, previewMode = false }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '1rem',
+          justifyItems: 'center',
           paddingBottom: '2rem'
         }}
       >
@@ -111,7 +112,8 @@ export default function SampleRater({ images, setView, previewMode = false }) {
                 textAlign: 'center',
                 border: rating ? 'none' : '3px solid #facc15',
                 borderRadius: '0.75rem',
-                padding: '0.5rem'
+                padding: '0.5rem',
+                width: '220px'
               }}
             >
               <img
@@ -137,7 +139,15 @@ export default function SampleRater({ images, setView, previewMode = false }) {
               >
                 {img.name}
               </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  marginTop: '0.5rem',
+                  flexWrap: 'wrap'
+                }}
+              >
                 {SAMPLE_OPTIONS.map((option) => (
                   <button
                     key={option}
