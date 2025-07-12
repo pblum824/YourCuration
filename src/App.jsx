@@ -35,26 +35,13 @@ function InnerApp({ view, setView }) {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
-    const meta = document.querySelector('meta[name="viewport"]');
-    if (meta) {
-      const original = meta.getAttribute('content');
-
-      // Safari-compatible "wiggle"
-      meta.setAttribute(
-        'content',
-        'width=device-width, initial-scale=1.01, maximum-scale=10.0, user-scalable=yes'
-      );
-
+    const root = document.getElementById('root');
+    if (root) {
+      root.classList.add('zoom-reset-hack');
       setTimeout(() => {
-        meta.setAttribute('content', original || 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes');
-      }, 100); // 100ms delay for Safari to register the change
+        root.classList.remove('zoom-reset-hack');
+      }, 50);
     }
-
-    // Safari forces reflow for zoom if body is touched
-    document.body.style.transform = 'scale(1.0001)';
-    setTimeout(() => {
-      document.body.style.transform = '';
-    }, 0);
   }, [view]);
 
   const goToClient = () => {

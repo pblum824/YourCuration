@@ -5,3 +5,7 @@ body {
 button {
   font-family: 'Parisienne', cursive;
 }
+/* Safari zoom reset reflow class */
+.zoom-reset-hack {
+  transform: scale(1.0001);
+}
