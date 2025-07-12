@@ -2,14 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes" />
     <title>YourCuration</title>
-    
+
     <!-- Google Font -->
     <link
       href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Zoom Reset Script -->
+    <script>
+      window.addEventListener('load', () => {
+        const meta = document.querySelector('meta[name="viewport"]');
+        if (meta) {
+          meta.setAttribute('content', 'width=device-width, initial-scale=1.01');
+          setTimeout(() => {
+            meta.setAttribute('content', 'width=device-width, initial-scale=1.0');
+          }, 0);
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

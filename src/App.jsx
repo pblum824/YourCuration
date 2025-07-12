@@ -33,11 +33,14 @@ function InnerApp({ view, setView }) {
   }, []);
 
   useEffect(() => {
-    // Reset zoom/scroll position on view change
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
     const meta = document.querySelector('meta[name="viewport"]');
     if (meta) {
-      meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=10.0');
+      meta.setAttribute('content', 'width=device-width, initial-scale=1.01');
+      setTimeout(() => {
+        meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes');
+      }, 0);
     }
   }, [view]);
 
