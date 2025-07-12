@@ -110,7 +110,7 @@ export default function SampleRater({ images, setView, previewMode = false }) {
               key={img.id}
               style={{
                 textAlign: 'center',
-                border: rating ? 'none' : '3px solid #facc15',
+                border: rating ? 'none' : '3px solid #1e3a8a',
                 borderRadius: '0.75rem',
                 padding: '0.5rem',
                 width: '220px'

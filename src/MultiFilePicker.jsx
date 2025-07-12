@@ -2,7 +2,7 @@ import React from 'react';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
-export default function MultiFilePicker({ onChange, uploadCount, acceptedFormats }) {
+export default function MultiFilePicker({ onChange, acceptedFormats }) {
   const { selectedFont } = useFontSettings();
 
   return (
@@ -38,11 +38,6 @@ export default function MultiFilePicker({ onChange, uploadCount, acceptedFormats
           style={{ display: 'none' }}
         />
       </label>
-      <span style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-        {uploadCount === 0
-          ? 'No files selected'
-          : `${uploadCount} file${uploadCount > 1 ? 's' : ''} selected`}
-      </span>
     </div>
   );
 }
