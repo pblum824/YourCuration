@@ -33,15 +33,24 @@ function InnerApp({ view, setView }) {
   }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    window.scrollTo(0, 0);
+    console.log('[Zoom Reset] View Changed:', view);
 
-    const root = document.getElementById('root');
-    if (root) {
-      root.classList.add('zoom-reset-hack');
-      setTimeout(() => {
-        root.classList.remove('zoom-reset-hack');
-      }, 50);
-    }
+    const zoomOut = document.createElement('style');
+    zoomOut.innerHTML = `
+      @keyframes safari-zoom-reset {
+        from { transform: scale(1.0001); }
+        to { transform: scale(1); }
+      }
+      #root {
+        animation: safari-zoom-reset 0.05s linear;
+      }
+    `;
+    document.head.appendChild(zoomOut);
+
+    return () => {
+      document.head.removeChild(zoomOut);
+    };
   }, [view]);
 
   const goToClient = () => {
