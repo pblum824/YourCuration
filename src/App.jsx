@@ -33,25 +33,17 @@ function InnerApp({ view, setView }) {
   }, []);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    console.log('[Zoom Reset] View Changed:', view);
-
-    const zoomOut = document.createElement('style');
-    zoomOut.innerHTML = `
-      @keyframes safari-zoom-reset {
-        from { transform: scale(1.0001); }
-        to { transform: scale(1); }
+    const handleKey = (e) => {
+      if (view === 'client' && e.shiftKey && e.key.toLowerCase() === 'a') {
+        switchToArtistMode();
+        setPreviewMode(false);
+        setView('artist');
       }
-      #root {
-        animation: safari-zoom-reset 0.05s linear;
-      }
-    `;
-    document.head.appendChild(zoomOut);
-
-    return () => {
-      document.head.removeChild(zoomOut);
     };
-  }, [view]);
+
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [view, setView, switchToArtistMode]);
 
   const goToClient = () => {
     switchToClientMode();
