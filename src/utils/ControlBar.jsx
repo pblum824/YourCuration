@@ -73,7 +73,7 @@ export default function ControlBar({
             Client Mode
           </button>
 
-          {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
+          {showDevToggle && <DevToggle buttonStyle={navButtonStyle} label="Dev Mode" />}
         </div>
       </div>
 
