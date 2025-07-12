@@ -37,11 +37,24 @@ function InnerApp({ view, setView }) {
 
     const meta = document.querySelector('meta[name="viewport"]');
     if (meta) {
-      meta.setAttribute('content', 'width=device-width, initial-scale=1.01');
+      const original = meta.getAttribute('content');
+
+      // Safari-compatible "wiggle"
+      meta.setAttribute(
+        'content',
+        'width=device-width, initial-scale=1.01, maximum-scale=10.0, user-scalable=yes'
+      );
+
       setTimeout(() => {
-        meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes');
-      }, 0);
+        meta.setAttribute('content', original || 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes');
+      }, 100); // 100ms delay for Safari to register the change
     }
+
+    // Safari forces reflow for zoom if body is touched
+    document.body.style.transform = 'scale(1.0001)';
+    setTimeout(() => {
+      document.body.style.transform = '';
+    }, 0);
   }, [view]);
 
   const goToClient = () => {
