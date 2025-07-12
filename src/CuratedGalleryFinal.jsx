@@ -144,21 +144,19 @@ export default function CuratedGalleryFinal({ setView, onReturn }) {
         Curated Gallery Final
       </h2>
 
-      {!isClientView && (
-        <button
-          onClick={exportGallery}
-          style={{
-            padding: '0.75rem 1.5rem',
-            fontSize: '1rem',
-            borderRadius: '0.5rem',
-            border: '1px solid #ccc',
-            backgroundColor: '#f0fdfa',
-            cursor: 'pointer',
-          }}
-        >
-          Export Final Gallery
-        </button>
-      )}
+      <button
+        onClick={exportGallery}
+        style={{
+          padding: '0.75rem 1.5rem',
+          fontSize: '1rem',
+          borderRadius: '0.5rem',
+          border: '1px solid #ccc',
+          backgroundColor: '#f0fdfa',
+          cursor: 'pointer',
+        }}
+      >
+        Export Final Gallery
+      </button>
 
       <div
         style={{

@@ -150,51 +150,47 @@ export default function CuratedGallery2({ setView, onReturn }) {
                 </div>
               )}
               <p style={{ fontStyle: 'italic', marginTop: '0.5rem' }}>{img.name}</p>
-              {!isClientView && (
-                <button
-                  onClick={() => approveImage(img.id)}
-                  style={{
-                    marginTop: '0.75rem',
-                    padding: '0.5rem 1.25rem',
-                    ...getFontStyle(mode, { selectedFont }),
-                    fontSize: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #ccc',
-                    backgroundColor: isSelected ? '#86efac' : '#d1fae5',
-                    boxShadow: isSelected ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                    color: '#065f46',
-                    cursor: 'pointer',
-                  }}
-                >
-                  More Like This
-                </button>
-              )}
+              <button
+                onClick={() => approveImage(img.id)}
+                style={{
+                  marginTop: '0.75rem',
+                  padding: '0.5rem 1.25rem',
+                  ...getFontStyle(mode, { selectedFont }),
+                  fontSize: '1rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #ccc',
+                  backgroundColor: isSelected ? '#86efac' : '#d1fae5',
+                  boxShadow: isSelected ? 'inset 0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  color: '#065f46',
+                  cursor: 'pointer',
+                }}
+              >
+                More Like This
+              </button>
             </div>
           );
         })}
       </div>
 
-      {!isClientView && (
-        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <button
-            onClick={() => {
-              setCG1Selections(selections);
-              setView('curatedFinal');
-            }}
-            style={{
-              padding: '1rem 2rem',
-              fontSize: '1.1rem',
-              backgroundColor: '#1e3a8a',
-              color: '#fff',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            🖼️ Finish the Gallery
-          </button>
-        </div>
-      )}
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <button
+          onClick={() => {
+            setCG1Selections(selections);
+            setView('curatedFinal');
+          }}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            backgroundColor: '#1e3a8a',
+            color: '#fff',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          🖼️ Finish the Gallery
+        </button>
+      </div>
     </div>
   );
 }
