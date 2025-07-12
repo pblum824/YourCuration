@@ -9,8 +9,11 @@ export function YourCurationProvider({ children }) {
   const [ratings, setRatings] = useState({});
   const [cg1Selections, setCG1Selections] = useState({});
   const [cg2Selections, setCG2Selections] = useState({});
-  const [mode, setMode] = useState('artist'); // 'artist' or 'client'
-  const [galleryTotalSize, setGalleryTotalSize] = useState(0); // ⬅️ new line
+  const [mode, setMode] = useState('artist');
+  const [galleryTotalSize, setGalleryTotalSize] = useState(0);
+
+  const switchToClientMode = () => setMode('client');
+  const switchToArtistMode = () => setMode('artist');
 
   return (
     <YourCurationContext.Provider
@@ -27,8 +30,10 @@ export function YourCurationProvider({ children }) {
         setCG2Selections,
         mode,
         setMode,
-        galleryTotalSize,         // ⬅️ new context export
-        setGalleryTotalSize       // ⬅️ new updater
+        switchToClientMode,
+        switchToArtistMode,
+        galleryTotalSize,
+        setGalleryTotalSize
       }}
     >
       {children}

@@ -10,7 +10,7 @@ import { loadImage } from './utils/imageStore';
 
 const MAX_TAGS = 30;
 
-export default function CuratedGalleryFinal({ setView, isClientView = false, onReturn }) {
+export default function CuratedGalleryFinal({ setView, onReturn }) {
   const {
     artistGallery = [],
     ratings = {},
@@ -25,6 +25,7 @@ export default function CuratedGalleryFinal({ setView, isClientView = false, onR
   const [finalGallery, setFinalGallery] = useState([]);
   const [error, setError] = useState(null);
   const [fullscreenImage, setFullscreenImage] = useState(null);
+  const isClientView = mode === 'client';
 
   const scoredImages = useMemo(() => {
     try {
@@ -143,19 +144,21 @@ export default function CuratedGalleryFinal({ setView, isClientView = false, onR
         Curated Gallery Final
       </h2>
 
-      <button
-        onClick={exportGallery}
-        style={{
-          padding: '0.75rem 1.5rem',
-          fontSize: '1rem',
-          borderRadius: '0.5rem',
-          border: '1px solid #ccc',
-          backgroundColor: '#f0fdfa',
-          cursor: 'pointer',
-        }}
-      >
-        Export Final Gallery
-      </button>
+      {!isClientView && (
+        <button
+          onClick={exportGallery}
+          style={{
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            borderRadius: '0.5rem',
+            border: '1px solid #ccc',
+            backgroundColor: '#f0fdfa',
+            cursor: 'pointer',
+          }}
+        >
+          Export Final Gallery
+        </button>
+      )}
 
       <div
         style={{

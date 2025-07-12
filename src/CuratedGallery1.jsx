@@ -7,7 +7,7 @@ import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 import { aggregateSampleTags, scoreImage } from './utils/scoreImage';
 
-export default function CuratedGallery1({ setView, isClientView = false, onReturn }) {
+export default function CuratedGallery1({ setView, onReturn }) {
   const {
     artistGallery = [],
     ratings = {},
@@ -20,6 +20,7 @@ export default function CuratedGallery1({ setView, isClientView = false, onRetur
   const [hydrated, setHydrated] = useState([]);
   const [selections, setSelections] = useState({});
   const [error, setError] = useState(null);
+  const isClientView = mode === 'client';
 
   useEffect(() => {
     try {

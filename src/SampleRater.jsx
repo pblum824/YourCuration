@@ -10,7 +10,7 @@ import { useFontSettings } from './FontSettingsContext';
 
 const SAMPLE_OPTIONS = ['love', 'like', 'less'];
 
-export default function SampleRater({ images, setView, isClientView = false, previewMode = false }) {
+export default function SampleRater({ images, setView, previewMode = false }) {
   const { ratings, setRatings, mode } = useCuration();
   const { devMode, setDevMode } = useDevMode();
   const { selectedFont } = useFontSettings();
@@ -49,6 +49,7 @@ export default function SampleRater({ images, setView, isClientView = false, pre
 
   const ratedCount = Object.keys(ratings).length;
   const isDisabled = ratedCount !== 15;
+  const isClientView = mode === 'client';
 
   if (!hydratedImages || hydratedImages.length === 0) {
     return <p style={{ textAlign: 'center', marginTop: '2rem', color: '#999' }}>No images to rate.</p>;

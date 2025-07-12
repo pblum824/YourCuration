@@ -16,7 +16,7 @@ import { getFontStyle } from './utils/fontUtils';
 import { setImageStorageMode } from './utils/imageStore';
 
 function InnerApp({ view, setView }) {
-  const { artistGallery, mode } = useCuration();
+  const { artistGallery, mode, switchToClientMode, switchToArtistMode } = useCuration();
   const { selectedFont } = useFontSettings();
   const [error, setError] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
@@ -33,6 +33,7 @@ function InnerApp({ view, setView }) {
   }, []);
 
   const goToClient = () => {
+    switchToClientMode();
     setPreviewMode(false);
     setView('client');
   };
@@ -43,6 +44,7 @@ function InnerApp({ view, setView }) {
   };
 
   const exitPreview = () => {
+    switchToArtistMode();
     setPreviewMode(false);
     setView('artist');
   };
@@ -70,7 +72,10 @@ function InnerApp({ view, setView }) {
             <LandingPage
               setView={setView}
               onClientClick={goToClient}
-              onArtistClick={() => setView('artist')}
+              onArtistClick={() => {
+                switchToArtistMode();
+                setView('artist');
+              }}
             />
           )}
 
@@ -84,7 +89,7 @@ function InnerApp({ view, setView }) {
             <SampleRater
               images={artistGallery.filter((img) => img.sampleEligible)}
               setView={setView}
-              isClientView={previewMode || view === 'client'}
+
               previewMode={previewMode}
             />
           )}
@@ -117,7 +122,7 @@ function InnerApp({ view, setView }) {
 
           {view === 'client' && (
             <SampleRater
-              isClientView={true}
+
               previewMode={false}
               setView={setView}
               images={artistGallery.filter((img) => img.sampleEligible)}
