@@ -69,11 +69,19 @@ export default function ControlBar({
         </div>
         <div style={rowStyle}>
           <button
+            onClick={() => {}}
+            style={{ ...navButtonStyle, backgroundColor: '#fef9c3', color: '#92400e' }}
+          >
+            🎯 Client Mode
+          </button>
+
+          <button
             onClick={onPreviewClient}
             style={{ ...navButtonStyle, backgroundColor: '#e0e7ff' }}
           >
             🎬 Preview Client
           </button>
+
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} />}
         </div>
       </div>
