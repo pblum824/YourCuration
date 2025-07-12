@@ -56,7 +56,7 @@ export default function SampleRater({ images, setView, previewMode = false }) {
   }
 
   return (
-    <div style={{ padding: '2rem', position: 'relative' }}>
+    <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       {!isClientView && (
         <ControlBar view="rate" setView={setView} devMode={devMode} setDevMode={setDevMode} />
       )}
@@ -86,33 +86,40 @@ export default function SampleRater({ images, setView, previewMode = false }) {
         style={{
           ...getFontStyle(mode, { selectedFont }),
           fontSize: '2rem',
-          marginBottom: '0.25rem',
-          color: '#1e3a8a'
+          marginBottom: '1rem',
+          color: '#1e3a8a',
+          textAlign: 'center'
         }}
       >
         Please Rate These Artist Samples
       </h2>
-      <p style={{ fontSize: '0.95rem', color: '#555', marginBottom: '1.5rem' }}>
-        (The curation works best if you rate all 15.)
-      </p>
 
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '2rem'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1.5rem',
+          paddingBottom: '2rem'
         }}
       >
         {hydratedImages.map((img) => {
           const rating = ratings[img.id];
           return (
-            <div key={img.id} style={{ textAlign: 'center' }}>
+            <div
+              key={img.id}
+              style={{
+                textAlign: 'center',
+                border: rating ? 'none' : '3px solid #facc15',
+                borderRadius: '0.75rem',
+                padding: '0.5rem'
+              }}
+            >
               <img
                 src={img.url}
                 alt={img.name}
                 style={{
                   width: '100%',
-                  height: '200px',
+                  height: '180px',
                   objectFit: 'contain',
                   backgroundColor: '#f9fafb',
                   borderRadius: '0.5rem',
@@ -136,7 +143,7 @@ export default function SampleRater({ images, setView, previewMode = false }) {
         })}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button
           onClick={() => setView('curated1')}
           disabled={isDisabled}
