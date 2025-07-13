@@ -66,6 +66,27 @@ export default function ControlBar({
           ))}
         </div>
         <div style={rowStyle}>
+          {showImport && (
+            <>
+              <input
+                type="file"
+                accept=".json, .zip"
+                ref={fileInputRef}
+                onChange={onImport}
+                style={{ display: 'none' }}
+              />
+              <button onClick={() => fileInputRef.current?.click()} style={navButtonStyle}>
+                Import Gallery
+              </button>
+            </>
+          )}
+
+          {showExport && (
+            <button onClick={onExport} style={navButtonStyle}>
+              Export Gallery
+            </button>
+          )}
+
           <button
             onClick={() => setView('landing')}
             style={{ ...navButtonStyle, backgroundColor: '#fef9c3', color: '#92400e' }}
@@ -74,53 +95,16 @@ export default function ControlBar({
           </button>
 
           {showDevToggle && <DevToggle buttonStyle={navButtonStyle} label="Dev Mode" />}
-        </div>
-      </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.75rem',
-          marginBottom: '1.5rem',
-          justifyContent: 'center',
-        }}
-      >
-        {showImport && (
-          <>
-            <input
-              type="file"
-              accept=".json, .zip"
-              ref={fileInputRef}
-              onChange={onImport}
-              style={{ display: 'none' }}
-            />
-            <button onClick={() => fileInputRef.current?.click()} style={navButtonStyle}>
-              Import Gallery
+          {onReset && (
+            <button
+              onClick={onReset}
+              style={{ ...navButtonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}
+            >
+              Reset Dashboard
             </button>
-          </>
-        )}
-
-        {showExport && (
-          <button onClick={onExport} style={navButtonStyle}>
-            Export Gallery
-          </button>
-        )}
-
-        {onGenerate && (
-          <button onClick={onGenerate} style={navButtonStyle}>
-            Generate Tags
-          </button>
-        )}
-
-        {onReset && (
-          <button
-            onClick={onReset}
-            style={{ ...navButtonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}
-          >
-            Reset Dashboard
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </>
   );
