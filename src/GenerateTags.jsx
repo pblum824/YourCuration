@@ -186,7 +186,7 @@ export default function GenerateTags({ setView }) {
   const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length;
 
   return (
-    <div style={{ padding: '2rem', ...getFontStyle('artist', { selectedFont }) }}>
+      <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       <ControlBar setView={setView} devMode={devMode} />
 
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
