@@ -114,7 +114,7 @@ export default function CuratedGalleryFinal({ setView, onReturn }) {
   }
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center', position: 'relative' }}>
+      <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       {!isClientView && (
         <ControlBar view="curatedFinal" setView={setView} devMode={devMode} setDevMode={setDevMode} />
       )}

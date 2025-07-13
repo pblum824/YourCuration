@@ -315,7 +315,7 @@ export default function ArtistDashboard({ setView }) {
   }));
 
   return (
-    <div style={{ padding: '2rem' }}>
+      <div style={{ padding: '1rem 1rem 2rem' }}>
       <ControlBar
         setView={setView}
         onImport={handleImportGallery}

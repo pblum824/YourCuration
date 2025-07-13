@@ -80,7 +80,7 @@ export default function CuratedGallery2({ setView, onReturn }) {
   }
 
   return (
-    <div style={{ padding: '2rem', position: 'relative' }}>
+      <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       {!isClientView && <ControlBar view="curated2" setView={setView} />}
 
       {isClientView && onReturn && (
