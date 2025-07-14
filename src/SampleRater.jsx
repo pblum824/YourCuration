@@ -163,7 +163,17 @@ export default function SampleRater({ images, setView, previewMode = false }) {
         })}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+      <div
+        style={{
+          textAlign: 'center',
+          marginTop: '1rem',
+          position: isClientView ? 'sticky' : 'static',
+          bottom: isClientView ? '0.5rem' : 'auto',
+          background: isClientView ? 'white' : 'none',
+          padding: isClientView ? '1rem' : 0,
+          zIndex: isClientView ? 10 : 'auto'
+        }}
+      >
         <button
           onClick={() => setView('curated1')}
           disabled={isDisabled}
