@@ -29,19 +29,33 @@ export default function ControlBar({
   const fileInputRef = useRef();
   if (mode !== 'artist') return null;
 
-  const navButtonStyle = {
+  const baseStyle = {
     ...getFontStyle('artist', { selectedFont }),
     padding: '0.5rem 1rem',
     fontSize: '0.9rem',
     borderRadius: '0.5rem',
     border: '1px solid #1e3a8a',
-    backgroundColor: '#f3f4f6',
-    color: '#1e3a8a',
     cursor: 'pointer',
     width: '160px',
     minHeight: '42px',
     textAlign: 'center',
     boxSizing: 'border-box',
+  };
+
+  const getButtonStyle = (label) => {
+    if (["Sample Rater", "Gallery 1", "Gallery 2", "Final Gallery"].includes(label)) {
+      return { ...baseStyle, backgroundColor: '#eff6ff', color: '#1e3a8a' };
+    }
+    if (label === "Reset Dashboard") {
+      return { ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c' };
+    }
+    if (label === "Client Mode") {
+      return { ...baseStyle, backgroundColor: '#ecfdf5', color: '#047857' };
+    }
+    if (["Artist Dashboard", "Generate Tags", "Import Gallery", "Export Gallery"].includes(label)) {
+      return { ...baseStyle, backgroundColor: '#fffee8', color: '#92400e' };
+    }
+    return baseStyle;
   };
 
   const rowStyle = {
@@ -59,7 +73,7 @@ export default function ControlBar({
             <button
               key={key}
               onClick={() => setView?.(key)}
-              style={navButtonStyle}
+              style={getButtonStyle(label)}
             >
               {label}
             </button>
@@ -75,31 +89,31 @@ export default function ControlBar({
                 onChange={onImport}
                 style={{ display: 'none' }}
               />
-              <button onClick={() => fileInputRef.current?.click()} style={navButtonStyle}>
+              <button onClick={() => fileInputRef.current?.click()} style={getButtonStyle("Import Gallery")}>
                 Import Gallery
               </button>
             </>
           )}
 
           {showExport && (
-            <button onClick={onExport} style={navButtonStyle}>
+            <button onClick={onExport} style={getButtonStyle("Export Gallery")}>
               Export Gallery
             </button>
           )}
 
           <button
             onClick={() => setView('landing')}
-            style={{ ...navButtonStyle, backgroundColor: '#fef9c3', color: '#92400e' }}
+            style={getButtonStyle("Client Mode")}
           >
             Client Mode
           </button>
 
-          {showDevToggle && <DevToggle buttonStyle={navButtonStyle} label="Dev Mode" />}
+          {showDevToggle && <DevToggle buttonStyle={baseStyle} label="Dev Mode" />}
 
           {onReset && (
             <button
               onClick={onReset}
-              style={{ ...navButtonStyle, backgroundColor: '#fee2e2', color: '#b91c1c' }}
+              style={getButtonStyle("Reset Dashboard")}
             >
               Reset Dashboard
             </button>
