@@ -46,7 +46,7 @@ export default function ControlBar({
     if (["Sample Rater", "Gallery 1", "Gallery 2", "Final Gallery"].includes(label)) {
       return { ...baseStyle, backgroundColor: '#eff6ff', color: '#1e3a8a' };
     }
-    if (label === "Reset Dashboard" || label === "Dev Mode") {
+    if (label === "Reset Dashboard") {
       return { ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c' };
     }
     if (label === "Client Mode") {
@@ -108,7 +108,12 @@ export default function ControlBar({
             Client Mode
           </button>
 
-          {showDevToggle && <DevToggle buttonStyle={getButtonStyle("Dev Mode") } label="Dev Mode" />}
+          {showDevToggle && (
+            <DevToggle
+              buttonStyle={{ ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c' }}
+              label="Dev Mode"
+            />
+          )}
 
           {onReset && (
             <button
@@ -122,4 +127,4 @@ export default function ControlBar({
       </div>
     </>
   );
-}npm
+}
