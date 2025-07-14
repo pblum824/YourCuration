@@ -9,9 +9,9 @@ export default function DevToggle({ buttonStyle }) {
     <button
       onClick={() => setDevMode(!devMode)}
       style={{
-        ...buttonStyle,
-        backgroundColor: devMode ? '#e0e7ff' : '#f3f4f6',
-        color: devMode ? '#1e3a8a' : '#4b5563',
+        backgroundColor: buttonStyle?.backgroundColor ?? (devMode ? '#e0e7ff' : '#f3f4f6'),
+        color: buttonStyle?.color ?? (devMode ? '#1e3a8a' : '#4b5563'),
+        ...buttonStyle
       }}
     >
       Dev Mode: {devMode ? 'ON' : 'OFF'}
