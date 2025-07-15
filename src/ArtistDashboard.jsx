@@ -329,7 +329,7 @@ export default function ArtistDashboard({ setView }) {
         showImport
         showExport
       />
-        {devMode && <FontSelectorDevPanel />}
+        {devMode && <FontSelectorDevPanel devMode={devMode} />}
       <HeroSection label="Hero Image" imageState={heroImage} setImageState={setHeroImage} handleSingleUpload={handleSingleUpload} />
       <HeroSection label="Border Skin" imageState={borderSkin} setImageState={setBorderSkin} handleSingleUpload={handleSingleUpload} />
       <HeroSection label="Center Background" imageState={centerBackground} setImageState={setCenterBackground} handleSingleUpload={handleSingleUpload} />
