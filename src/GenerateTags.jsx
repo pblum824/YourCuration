@@ -178,6 +178,7 @@ export default function GenerateTags({ setView }) {
     } catch (err) {
       console.error(`[GenerateTags] Batch error: ${err.message}`);
       logToScreen(`❌ Tagging failed: ${err.message}`);
+      logToScreen(`❌ Raw error: ${JSON.stringify(err)}`);
     } finally {
       setLoading(false);
     }
