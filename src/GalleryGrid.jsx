@@ -1,4 +1,3 @@
-// File: src/GalleryGrid.jsx
 import React from 'react';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { imageButton } from './utils/styles';
@@ -168,6 +167,11 @@ export default function GalleryGrid({
                   <strong>[palette]</strong> {img.metadata.paletteTags.join(', ')}
                 </div>
               )}
+              {img.metadata?.style?.length > 0 && (
+                <div>
+                  <strong>[style]</strong> {img.metadata.style.join(', ')}
+                </div>
+              )}
               {img.metadata?.customTags?.length > 0 && (
                 <div>
                   <strong>[custom]</strong> {img.metadata.customTags.join(', ')}
@@ -178,7 +182,7 @@ export default function GalleryGrid({
                   <strong>Error:</strong> {img.metadata.error}
                 </div>
               )}
-              <EditableTagSection image={img} onUpdateTag={onUpdateTag} />
+              <EditableTagSection image={img} onUpdateTag={onUpdateTag} fieldsOverride={["style"]} />
             </div>
           )}
 
