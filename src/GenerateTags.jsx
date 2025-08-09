@@ -10,6 +10,8 @@ import { useDevMode } from './context/DevModeContext';
 import { getFontStyle } from './utils/fontUtils';
 import { useFontSettings } from './FontSettingsContext';
 
+const API_BASE = 'https://api.yourcuration.app';
+
 export default function GenerateTags({ setView }) {
   const { selectedFont } = useFontSettings();
   const { artistGallery, setArtistGallery } = useCuration();
@@ -23,6 +25,16 @@ export default function GenerateTags({ setView }) {
   const [overlayKey, setOverlayKey] = useState(0);
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, msg]);
+
+  async function pingStatus(log) {
+    try {
+      const r = await fetch(`${API_BASE}/status`, { headers: { Accept: 'application/json' } });
+      const j = await r.json();
+      log(`🩺 /status ok: tagbank=${j?.caches?.tagbank?.shape} verbs=${j?.caches?.verbs?.shape}`);
+    } catch (e) {
+      log(`🩺 /status failed: ${e.message}`);
+    }
+  }
 
   useEffect(() => {
     async function hydrateImages() {
@@ -61,17 +73,13 @@ export default function GenerateTags({ setView }) {
 
   const toggleGallery = (id) => {
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img))
     );
   };
 
   const toggleScrape = (id) => {
     setArtistGallery((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
-      )
+      prev.map((img) => (img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img))
     );
   };
 
@@ -124,6 +132,8 @@ export default function GenerateTags({ setView }) {
     setLoading(true);
     setCancelRequested(false);
     try {
+      await pingStatus(logToScreen);
+
       const uploadable = localGallery.filter(
         (img) => (img.sampleEligible || img.galleryEligible) && img.file
       );
@@ -133,15 +143,20 @@ export default function GenerateTags({ setView }) {
       for (const img of uploadable) {
         if (cancelRequested) throw new Error('User cancelled');
         const compressed = await compressImage(img.file, 384, 0.7);
-        formData.append('files', compressed);
+        formData.append('files', compressed, img.name || 'image.jpg');
       }
 
-      const res = await fetch('https://api.yourcuration.app/batch-tag', {
+      logToScreen(`🚀 POST ${API_BASE}/batch-tag with ${uploadable.length} files`);
+      const res = await fetch(`${API_BASE}/batch-tag`, {
         method: 'POST',
         body: formData,
+        headers: { Accept: 'application/json' },
       });
 
-      if (!res.ok) throw new Error(`Failed (${res.status})`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status} ${res.statusText}${body ? ` | ${body}` : ''}`);
+      }
 
       const result = await res.json();
 
@@ -158,36 +173,31 @@ export default function GenerateTags({ setView }) {
       });
 
       setArtistGallery((prev) => {
-  const updated = [...prev];
-  const used = new Array(tagged.length).fill(false);
-
-  for (let i = 0; i < updated.length; i++) {
-    for (let j = 0; j < tagged.length; j++) {
-      if (!used[j] && updated[i].id === tagged[j].id) {
-        updated[i] = tagged[j];
-        used[j] = true;
-        break;
-      }
-    }
-  }
-
-  return updated;
-});
+        const updated = [...prev];
+        let k = 0;
+        for (let i = 0; i < updated.length && k < tagged.length; i++) {
+          if ((updated[i].sampleEligible || updated[i].galleryEligible) && updated[i].file) {
+            updated[i] = tagged[k++];
+          }
+        }
+        return updated;
+      });
 
       logToScreen(`✅ Tagged ${tagged.length} images.`);
     } catch (err) {
       console.error(`[GenerateTags] Batch error: ${err.message}`);
       logToScreen(`❌ Tagging failed: ${err.message}`);
-      logToScreen(`❌ Raw error: ${JSON.stringify(err)}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length;
+  const imageCount = localGallery.filter(
+    (img) => (img.sampleEligible || img.galleryEligible) && img.file
+  ).length;
 
   return (
-      <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
+    <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       <ControlBar setView={setView} devMode={devMode} />
 
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -208,19 +218,21 @@ export default function GenerateTags({ setView }) {
           {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
         </button>
       </div>
+
       <div style={{ marginTop: '2rem' }}>
-      <GalleryGrid
-        images={localGallery}
-        onToggleSample={toggleSample}
-        onToggleGallery={toggleGallery}
-        onToggleScrape={toggleScrape}
-        onRemove={removeImage}
-        onUpdateTag={updateTagField}
-        sampleWarningId={sampleWarningId}
-        showTags
-        devMode={devMode}
-      />
-        </div>
+        <GalleryGrid
+          images={localGallery}
+          onToggleSample={toggleSample}
+          onToggleGallery={toggleGallery}
+          onToggleScrape={toggleScrape}
+          onRemove={removeImage}
+          onUpdateTag={updateTagField}
+          sampleWarningId={sampleWarningId}
+          showTags
+          devMode={devMode}
+        />
+      </div>
+
       {devMode && logs.length > 0 && (
         <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
           {logs.map((log, i) => (
