@@ -35,15 +35,6 @@ export default function GalleryGrid({
     if (index >= images.length) return null;
     const img = images[index];
 
-    // Compact helper for genre display (taxonomy)
-    const getGenreTags = () => {
-      const a = img?.metadata?.genreTags;           // preferred FE alias
-      const b = img?.tags?.genre;                   // duplicate path
-      const c = img?.metadata?.taxonomyTags;        // backend fallback
-      const vals = Array.isArray(a) && a.length ? a : (Array.isArray(b) && b.length ? b : (Array.isArray(c) && c.length ? c : []));
-      return vals;
-    };
-
     return (
       <div style={{ ...style, padding: '0.5rem' }}>
         <div
@@ -153,26 +144,19 @@ export default function GalleryGrid({
             >
               {img.metadata?.imageTags?.length > 0 && (
                 <div>
-                  <strong>[image]</strong> {img.metadata.imageTags.join(', ')}
+                  <strong>[subject]</strong> {img.metadata.imageTags.join(', ')}
                 </div>
               )}
               {img.metadata?.textTags?.length > 0 && (
                 <div>
-                  <strong>[text]</strong> {img.metadata.textTags.join(', ')}
+                  <strong>[action]</strong> {img.metadata.textTags.join(', ')}
                 </div>
               )}
-              {/* NEW: compact genre row derived from taxonomy */}
-              {(() => {
-                const g = getGenreTags();
-                if (!g || g.length === 0) return null;
-                const shown = g.slice(0, 2);
-                const more = g.length - shown.length;
-                return (
-                  <div>
-                    <strong>[genre]</strong> {shown.join(', ')}{more > 0 ? `, +${more}` : ''}
-                  </div>
-                );
-              })()}
+              {img.metadata?.genreTags?.length > 0 && (
+                <div>
+                  <strong>[genre]</strong> {img.metadata.genreTags.join(', ')}
+                </div>
+              )}
               {img.metadata?.toneTags?.length > 0 && (
                 <div>
                   <strong>[tone]</strong> {img.metadata.toneTags.join(', ')}
