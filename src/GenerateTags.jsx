@@ -10,7 +10,7 @@ import { useDevMode } from './context/DevModeContext';
 import { useFontSettings } from './FontSettingsContext';
 
 export default function GenerateTags({ setView }) {
-  const { selectedFont } = useFontSettings(); // kept if something else uses it
+  const { selectedFont } = useFontSettings(); // retained for other consumers
   const { artistGallery, setArtistGallery } = useCuration();
   const { devMode } = useDevMode();
 
@@ -127,10 +127,10 @@ export default function GenerateTags({ setView }) {
         logToScreen(
           `/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(
             sj?.has_verb_vecs
-          )}`
+          )} taxonomy=${String(sj?.has_taxonomy_vecs)}`
         );
       } catch {
-        logToScreen(`/status failed (non-blocking)`);
+        logToScreen('/status failed (non-blocking)');
       }
 
       const t0 = performance.now();
@@ -139,7 +139,6 @@ export default function GenerateTags({ setView }) {
       for (const img of uploadable) {
         if (cancelRequested) throw new Error('User cancelled');
         const compressed = await compressImage(img.file, 384, 0.7);
-        // Keep order; backend returns results aligned by order
         formData.append('files', compressed, compressed.name || img.name || 'image.jpg');
       }
 
@@ -157,7 +156,6 @@ export default function GenerateTags({ setView }) {
       const result = await res.json();
       const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
 
-      // shape guard
       const rows = Array.isArray(result?.results) ? result.results : [];
       if (rows.length !== uploadable.length) {
         logToScreen(
@@ -168,23 +166,31 @@ export default function GenerateTags({ setView }) {
       const tagged = rows.map((r, i) => {
         const img = uploadable[i];
         const meta = r?.metadata || {};
+
+        // Map backend taxonomy → compact FE term: genre
+        const genreTags = Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [];
+        const imageTags = Array.isArray(meta.imageTags) ? meta.imageTags : [];
+        const textTags  = Array.isArray(meta.textTags) ? meta.textTags : [];
+
         return {
           ...img,
           metadata: {
             ...img.metadata,
-            ...meta,
+            ...meta,          // keep raw fields for completeness
+            genreTags,        // compact alias used by FE/UI
+            imageTags,
+            textTags,
             metaTagGenerated: true,
           },
-          // Write duplicate paths that the grid may read
           tags: {
             ...(img.tags || {}),
-            image: Array.isArray(meta.imageTags) ? meta.imageTags : [],
-            text: Array.isArray(meta.textTags) ? meta.textTags : [],
+            image: imageTags,
+            text: textTags,
+            genre: genreTags, // duplicate path for components that read tags.*
           },
         };
       });
 
-      // Merge back by id (preserve anything not in this batch)
       setArtistGallery((prev) => {
         const updated = [...prev];
         const used = new Array(tagged.length).fill(false);
@@ -200,15 +206,17 @@ export default function GenerateTags({ setView }) {
         return updated;
       });
 
-      // Dev logs
-      const sampleTags = tagged[0]?.metadata?.imageTags || [];
+      const sampleImageTags = tagged[0]?.metadata?.imageTags || [];
+      const sampleTextTags  = tagged[0]?.metadata?.textTags || [];
+      const sampleGenreTags = tagged[0]?.metadata?.genreTags || [];
       logToScreen(`✅ Tagged ${tagged.length} images in ${elapsed}s`);
-      logToScreen(`Example imageTags[0]: ${JSON.stringify(sampleTags)}`);
+      logToScreen(`image[0]: ${JSON.stringify(sampleImageTags)}`);
+      logToScreen(`text[0]: ${JSON.stringify(sampleTextTags)}`);
+      logToScreen(`genre[0]: ${JSON.stringify(sampleGenreTags)}`);
     } catch (err) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
       try {
-        // Peek at any error body to aid debugging
         const r = err?.response ? await err.response.text() : '';
         if (r) logToScreen(`❌ Backend said: ${r.slice(0, 500)}...`);
       } catch {}
