@@ -1,167 +1,176 @@
-// File: src/DevDialsStrip.jsx — modular dev dials with downward slider + Reset chip
-import React, { useMemo, useRef, useState, useEffect } from "react";
+// File: src/DevDialsStrip.jsx — aligned chips, vertical popover slider (downwards), Reset chip
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
- * DevDialsStrip.jsx
- * - 10 dial chips (5 left / 5 right) flanking a center control (passed via props)
- * - Clicking a chip opens a LARGE vertical slider DROPPING DOWN beneath it
- * - Only one slider open at a time
- * - Includes a small right-aligned **Reset** chip (dev-only)
+ * DevDialsStrip
+ * - Shows 10 chips (5 left / 5 right) flanking a center control (button)
+ * - Click a chip → vertical slider DROPS DOWN under that chip
+ * - Absolute left/right alignment so chips sit on the same row as center
+ * - Reset chip on the far right
  */
-export default function DevDialsStrip({ devMode, values, onChange, center, portalTarget, onReset }) {
-  const target = portalTarget || (typeof document !== "undefined" ? document.body : null);
-  const [open, setOpen] = useState(null); // { key, side, rect }
+export default function DevDialsStrip({ devMode, values, onChange, center, onReset, portalTarget }) {
+  if (!devMode) return (
+    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>{center}</div>
+  );
+
+  const target = portalTarget || (typeof document !== 'undefined' ? document.body : null);
+  const containerRef = useRef(null);
   const leftRef = useRef(null);
   const rightRef = useRef(null);
+  const [open, setOpen] = useState(null); // { key, rect }
 
-  const leftDials = [
-    { key: "NEUTRAL_COLORED_MAX", label: "Neutral colored max", min: 0, max: 10, step: 0.5, unit: "%", format: (v) => `${v}%` },
-    { key: "NEUTRAL_RATIO_MIN",   label: "Neutral ratio min",   min: 80, max: 100, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "BW_EXTREME_MIN",      label: "B&W extremes",        min: 80, max: 100, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "BW_MID_MAX",          label: "B&W mid max",         min: 0,  max: 20,  step: 0.5, unit: "%", format: (v) => `${v}%` },
-    { key: "BW_ENTROPY_MAX",      label: "B&W entropy max",     min: 2.0,max: 6.0, step: 0.1, unit: "",  format: (v) => v.toFixed(1) },
-  ];
+  // ---------- Dial model (percent-based UI) ----------
+  const leftDials = useMemo(() => ([
+    { key: 'NEUTRAL_COLORED_MAX', label: 'Neutral colored max', min: 0, max: 10, step: 0.5, fmt: (v)=>`${v}%` },
+    { key: 'NEUTRAL_RATIO_MIN',   label: 'Neutral ratio min',   min: 80, max: 100, step: 1,   fmt: (v)=>`${v}%` },
+    { key: 'BW_EXTREME_MIN',      label: 'B&W extremes',        min: 80, max: 100, step: 1,   fmt: (v)=>`${v}%` },
+    { key: 'BW_MID_MAX',          label: 'B&W mid max',         min: 0,  max: 20,  step: 0.5, fmt: (v)=>`${v}%` },
+    { key: 'BW_ENTROPY_MAX',      label: 'B&W entropy max',     min: 2,  max: 6,   step: 0.1, fmt: (v)=>v.toFixed(1) },
+  ]), []);
 
-  const rightDials = [
-    { key: "DISTINCT_DE",       label: "Distinct ΔE",      min: 8,  max: 40, step: 1, unit: "",  format: (v) => `${v}` },
-    { key: "DISTINCT_DHUE",     label: "Distinct ΔHue",    min: 5,  max: 40, step: 1, unit: "°", format: (v) => `${v}°` },
-    { key: "SELECTIVE_MAX",     label: "Selective area",    min: 10, max: 60, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "DOMINANCE_NARROW",  label: "Mono dominance",    min: 50, max: 90, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "SEPIA_CENTER",      label: "Sepia band (center)", min: 20, max: 40, step: 1, unit: "°", format: (v) => `${v}°` },
-  ];
+  const rightDials = useMemo(() => ([
+    { key: 'DISTINCT_DE',      label: 'Distinct ΔE',       min: 8,  max: 40, step: 1, fmt: (v)=>`${v}` },
+    { key: 'DISTINCT_DHUE',    label: 'Distinct ΔHue',     min: 5,  max: 40, step: 1, fmt: (v)=>`${v}°` },
+    { key: 'SELECTIVE_MAX',    label: 'Selective area',    min: 10, max: 60, step: 1, fmt: (v)=>`${v}%` },
+    { key: 'DOMINANCE_NARROW', label: 'Mono dominance',    min: 50, max: 90, step: 1, fmt: (v)=>`${v}%` },
+    { key: 'SEPIA_CENTER',     label: 'Sepia band (center)',min: 20, max: 40, step: 1, fmt: (v)=>`${v}°` },
+  ]), []);
 
-  const all = useMemo(() => ({ left: leftDials, right: rightDials }), []);
+  const allDials = useMemo(() => ({ left: leftDials, right: rightDials }), [leftDials, rightDials]);
 
-  const getValue = (key) => {
-    if (key === "SEPIA_CENTER") {
+  const getVal = (k) => {
+    if (k === 'SEPIA_CENTER') {
       const min = Number(values?.SEPIA_HUE_MIN ?? 15);
       const max = Number(values?.SEPIA_HUE_MAX ?? 50);
       return Math.round((min + max) / 2);
     }
-    return Number(values?.[key] ?? 0);
+    return Number(values?.[k] ?? 0);
   };
 
-  const setValue = (key, next) => {
-    if (typeof onChange !== "function") return;
-    if (key === "SEPIA_CENTER") {
-      const half = 17; // fixed half-width
-      const min = Math.max(0, Math.round(next - half));
-      const max = Math.min(360, Math.round(next + half));
-      onChange("SEPIA_HUE_MIN", min);
-      onChange("SEPIA_HUE_MAX", max);
-      return;
+  const setVal = (k, v) => {
+    if (!onChange) return;
+    if (k === 'SEPIA_CENTER') {
+      const half = 17; // fixed half-width (total band ~34°)
+      const min = Math.max(0, Math.round(v - half));
+      const max = Math.min(360, Math.round(v + half));
+      onChange('SEPIA_HUE_MIN', min);
+      onChange('SEPIA_HUE_MAX', max);
+    } else {
+      onChange(k, Number(v));
     }
-    onChange(key, Number(next));
   };
 
+  // Recompute anchor rect on resize/scroll
   useEffect(() => {
-    function onResize() {
+    const onWindow = () => {
       if (!open) return;
-      const colRef = open.side === "left" ? leftRef.current : rightRef.current;
-      const btn = colRef?.querySelector(`[data-dial-key="${open.key}"]`);
-      if (btn) setOpen((o) => ({ ...o, rect: btn.getBoundingClientRect() }));
-    }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+      const el = document.querySelector(`[data-dial-key="${open.key}"]`);
+      if (el) setOpen((o) => ({ ...o, rect: el.getBoundingClientRect() }));
+    };
+    window.addEventListener('resize', onWindow);
+    window.addEventListener('scroll', onWindow, true);
+    return () => {
+      window.removeEventListener('resize', onWindow);
+      window.removeEventListener('scroll', onWindow, true);
+    };
   }, [open]);
 
-  const openDial = (side, key) => {
-    const colRef = side === "left" ? leftRef.current : rightRef.current;
-    const btn = colRef?.querySelector(`[data-dial-key="${key}"]`);
-    if (!btn) return;
-    setOpen({ side, key, rect: btn.getBoundingClientRect() });
-  };
-
-  const closeDial = () => setOpen(null);
-
-  const Chip = ({ side, d }) => (
+  const Chip = ({ dial }) => (
     <button
       type="button"
-      data-dial-key={d.key}
-      onClick={() => openDial(side, d.key)}
-      className="px-3 py-1 rounded-full border shadow-sm bg-white hover:shadow transition text-xs flex items-center gap-1"
-      title={d.label}
+      data-dial-key={dial.key}
+      onClick={(e) => setOpen({ key: dial.key, rect: e.currentTarget.getBoundingClientRect() })}
+      style={{
+        padding: '6px 10px',
+        borderRadius: 9999,
+        border: '1px solid rgba(0,0,0,0.08)',
+        background: '#fff',
+        fontSize: 12,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+        whiteSpace: 'nowrap',
+      }}
+      title={dial.label}
     >
-      <span className="opacity-70 whitespace-nowrap">{d.label}</span>
-      <span className="font-mono text-[11px] bg-gray-100 px-1 py-0.5 rounded">{d.format(getValue(d.key))}</span>
+      <span style={{ opacity: 0.7 }}>{dial.label}</span>
+      <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11, background: '#f3f4f6', padding: '2px 6px', borderRadius: 6 }}>
+        {dial.fmt(getVal(dial.key))}
+      </span>
     </button>
   );
 
   const Popover = () => {
     if (!open || !target) return null;
-    const d = [...leftDials, ...rightDials].find((x) => x.key === open.key);
-    if (!d) return null;
-    const val = getValue(d.key);
+    const dial = [...leftDials, ...rightDials].find(d => d.key === open.key);
+    if (!dial) return null;
     const style = {
-      position: "fixed",
+      position: 'fixed',
       top: open.rect.bottom + 8,
-      left: Math.max(8, Math.min(window.innerWidth - 280, open.rect.left + open.rect.width / 2 - 140)),
+      left: Math.max(8, Math.min(window.innerWidth - 300, open.rect.left + (open.rect.width/2) - 140)),
       width: 280,
       zIndex: 1000,
+      background: '#fff',
+      border: '1px solid rgba(0,0,0,0.1)',
+      borderRadius: 16,
+      boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+      padding: 12,
+    };
+
+    const sliderStyle = {
+      width: 220,
+      height: 28,
+      transform: 'rotate(270deg)', // force vertical
+      transformOrigin: 'center',
+      WebkitAppearance: 'none',
+      appearance: 'none',
     };
 
     return createPortal(
-      <div style={style} className="rounded-2xl border bg-white shadow-2xl p-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-xs font-medium opacity-70">{d.label}</div>
-          <button onClick={closeDial} className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200">Close</button>
+      <div style={style}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>{dial.label}</div>
+          <button onClick={() => setOpen(null)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 8, background: '#f3f4f6', border: '1px solid rgba(0,0,0,0.08)' }}>Close</button>
         </div>
-        <div className="flex items-center justify-center py-2">
-          <div className="h-40 w-40 flex items-center justify-center relative">
-            <input
-              type="range"
-              min={d.min}
-              max={d.max}
-              step={d.step}
-              value={val}
-              onChange={(e) => setValue(d.key, Number(e.target.value))}
-              className="absolute w-40 h-6 [transform:rotate(90deg)] [transform-origin:center] accent-indigo-600"
-              aria-label={d.label}
-            />
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '18px 0' }}>
+          <input
+            type="range"
+            min={dial.min}
+            max={dial.max}
+            step={dial.step}
+            value={getVal(dial.key)}
+            onChange={(e) => setVal(dial.key, e.target.value)}
+            style={sliderStyle}
+          />
         </div>
-        <div className="text-right text-xs font-mono">{d.format(getValue(d.key))}</div>
+        <div style={{ textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }}>
+          {dial.fmt(getVal(dial.key))}
+        </div>
       </div>,
       target
     );
   };
 
-  if (!devMode) return null;
-
+  // ---------- Layout: left chips | center | right chips ----------
   return (
-    <div className="relative flex items-center justify-center gap-3 my-4">
-      {/* Left chips */}
-      <div ref={leftRef} className="hidden md:flex items-center gap-2 absolute left-0">
-        {leftDials.map((d) => (<Chip key={d.key} side="left" d={d} />))}
+    <div ref={containerRef} style={{ position: 'relative', marginBottom: 24, minHeight: 46 }}>
+      {/* center */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        {center}
       </div>
 
-      {/* Center control */}
-      <div>{center}</div>
-
-      {/* Right chips + Reset */}
-      <div ref={rightRef} className="hidden md:flex items-center gap-2 absolute right-0">
-        {rightDials.map((d) => (<Chip key={d.key} side="right" d={d} />))}
-        <button
-          type="button"
-          onClick={() => onReset && onReset()}
-          className="px-3 py-1 rounded-full border text-xs bg-white hover:shadow"
-          title="Reset to defaults"
-        >
-          Reset
-        </button>
+      {/* left chips */}
+      <div ref={leftRef} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 8, flexWrap: 'nowrap' }}>
+        {leftDials.map((d) => <Chip key={d.key} dial={d} />)}
       </div>
 
-      {/* Mobile: chips grid + Reset */}
-      <div className="md:hidden grid grid-cols-2 gap-2 w-full justify-items-stretch mt-3">
-        {[...leftDials, ...rightDials].map((d) => (<Chip key={d.key} side="mobile" d={d} />))}
-        <button
-          type="button"
-          onClick={() => onReset && onReset()}
-          className="col-span-2 px-3 py-2 rounded-lg border text-xs bg-white"
-        >
-          Reset to defaults
-        </button>
+      {/* right chips + Reset */}
+      <div ref={rightRef} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 8, flexWrap: 'nowrap', alignItems: 'center' }}>
+        {rightDials.map((d) => <Chip key={d.key} dial={d} />)}
+        <button type="button" onClick={() => onReset && onReset()}
+          style={{ padding: '6px 10px', borderRadius: 9999, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', fontSize: 12 }}>Reset</button>
       </div>
 
       <Popover />
