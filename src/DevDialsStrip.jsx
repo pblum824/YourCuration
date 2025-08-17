@@ -1,58 +1,38 @@
+// File: src/DevDialsStrip.jsx — modular dev dials with downward slider + Reset chip
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 /**
  * DevDialsStrip.jsx
- * Standalone, reusable module that renders 10 compact dev "dials" (chips)
- * flanking your central action (e.g., the Generate MetaTags button).
- *
- * • Shows 5 chips on the left and 5 on the right of the center.
- * • Clicking any chip opens a LARGE **vertical** slider that DROPS DOWN beneath
- *   the chip (overlapping content as the user adjusts).
- * • Only one slider is open at a time. Click outside or Close to dismiss.
- * • This component is UI-only; it calls onChange(key, value) for each dial.
- * • You control visibility via the `devMode` prop.
- *
- * Minimal styling uses utility classes; adapt to your design system as needed.
+ * - 10 dial chips (5 left / 5 right) flanking a center control (passed via props)
+ * - Clicking a chip opens a LARGE vertical slider DROPPING DOWN beneath it
+ * - Only one slider open at a time
+ * - Includes a small right-aligned **Reset** chip (dev-only)
  */
-
-/**
- * Props
- * - devMode: boolean — show/hide the strip entirely (no DOM when false)
- * - values: Record<string, number> — current dial values
- * - onChange: (key: string, value: number) => void
- * - center: ReactNode — your central control (e.g., Generate button)
- * - portalTarget?: HTMLElement — optional; defaults to document.body (for popovers)
- */
-export default function DevDialsStrip({ devMode, values, onChange, center, portalTarget }) {
+export default function DevDialsStrip({ devMode, values, onChange, center, portalTarget, onReset }) {
   const target = portalTarget || (typeof document !== "undefined" ? document.body : null);
   const [open, setOpen] = useState(null); // { key, side, rect }
   const leftRef = useRef(null);
   const rightRef = useRef(null);
 
-  // --- Dial definitions (10 total) ---
-  // Left (neutral/tonal focus)
   const leftDials = [
     { key: "NEUTRAL_COLORED_MAX", label: "Neutral colored max", min: 0, max: 10, step: 0.5, unit: "%", format: (v) => `${v}%` },
-    { key: "NEUTRAL_RATIO_MIN", label: "Neutral ratio min", min: 80, max: 100, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "BW_EXTREME_MIN", label: "B&W extremes", min: 80, max: 100, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "BW_MID_MAX", label: "B&W mid max", min: 0, max: 20, step: 0.5, unit: "%", format: (v) => `${v}%` },
-    { key: "BW_ENTROPY_MAX", label: "B&W entropy max", min: 2.0, max: 6.0, step: 0.1, unit: "", format: (v) => v.toFixed(1) },
+    { key: "NEUTRAL_RATIO_MIN",   label: "Neutral ratio min",   min: 80, max: 100, step: 1, unit: "%", format: (v) => `${v}%` },
+    { key: "BW_EXTREME_MIN",      label: "B&W extremes",        min: 80, max: 100, step: 1, unit: "%", format: (v) => `${v}%` },
+    { key: "BW_MID_MAX",          label: "B&W mid max",         min: 0,  max: 20,  step: 0.5, unit: "%", format: (v) => `${v}%` },
+    { key: "BW_ENTROPY_MAX",      label: "B&W entropy max",     min: 2.0,max: 6.0, step: 0.1, unit: "",  format: (v) => v.toFixed(1) },
   ];
 
-  // Right (color / distinctness focus)
   const rightDials = [
-    { key: "DISTINCT_DE", label: "Distinct ΔE", min: 8, max: 40, step: 1, unit: "", format: (v) => `${v}` },
-    { key: "DISTINCT_DHUE", label: "Distinct ΔHue", min: 5, max: 40, step: 1, unit: "°", format: (v) => `${v}°` },
-    { key: "SELECTIVE_MAX", label: "Selective area", min: 10, max: 60, step: 1, unit: "%", format: (v) => `${v}%` },
-    { key: "DOMINANCE_NARROW", label: "Mono dominance", min: 50, max: 90, step: 1, unit: "%", format: (v) => `${v}%` },
-    // Sepia band single dial → maps to MIN/MAX around a center; we still show single value
-    { key: "SEPIA_CENTER", label: "Sepia band (center)", min: 20, max: 40, step: 1, unit: "°", format: (v) => `${v}°` },
+    { key: "DISTINCT_DE",       label: "Distinct ΔE",      min: 8,  max: 40, step: 1, unit: "",  format: (v) => `${v}` },
+    { key: "DISTINCT_DHUE",     label: "Distinct ΔHue",    min: 5,  max: 40, step: 1, unit: "°", format: (v) => `${v}°` },
+    { key: "SELECTIVE_MAX",     label: "Selective area",    min: 10, max: 60, step: 1, unit: "%", format: (v) => `${v}%` },
+    { key: "DOMINANCE_NARROW",  label: "Mono dominance",    min: 50, max: 90, step: 1, unit: "%", format: (v) => `${v}%` },
+    { key: "SEPIA_CENTER",      label: "Sepia band (center)", min: 20, max: 40, step: 1, unit: "°", format: (v) => `${v}°` },
   ];
 
-  const allDials = useMemo(() => ({ left: leftDials, right: rightDials }), []);
+  const all = useMemo(() => ({ left: leftDials, right: rightDials }), []);
 
-  // --- Helpers ---
   const getValue = (key) => {
     if (key === "SEPIA_CENTER") {
       const min = Number(values?.SEPIA_HUE_MIN ?? 15);
@@ -65,8 +45,7 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
   const setValue = (key, next) => {
     if (typeof onChange !== "function") return;
     if (key === "SEPIA_CENTER") {
-      // Map single dial to min/max with a fixed half-width of 17°
-      const half = 17;
+      const half = 17; // fixed half-width
       const min = Math.max(0, Math.round(next - half));
       const max = Math.min(360, Math.round(next + half));
       onChange("SEPIA_HUE_MIN", min);
@@ -76,16 +55,12 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
     onChange(key, Number(next));
   };
 
-  // Recalculate anchor rect for popover when window resizes
   useEffect(() => {
     function onResize() {
       if (!open) return;
       const colRef = open.side === "left" ? leftRef.current : rightRef.current;
       const btn = colRef?.querySelector(`[data-dial-key="${open.key}"]`);
-      if (btn) {
-        const rect = btn.getBoundingClientRect();
-        setOpen((o) => ({ ...o, rect }));
-      }
+      if (btn) setOpen((o) => ({ ...o, rect: btn.getBoundingClientRect() }));
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -95,8 +70,7 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
     const colRef = side === "left" ? leftRef.current : rightRef.current;
     const btn = colRef?.querySelector(`[data-dial-key="${key}"]`);
     if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    setOpen({ side, key, rect });
+    setOpen({ side, key, rect: btn.getBoundingClientRect() });
   };
 
   const closeDial = () => setOpen(null);
@@ -110,9 +84,7 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
       title={d.label}
     >
       <span className="opacity-70 whitespace-nowrap">{d.label}</span>
-      <span className="font-mono text-[11px] bg-gray-100 px-1 py-0.5 rounded">
-        {d.format(getValue(d.key))}
-      </span>
+      <span className="font-mono text-[11px] bg-gray-100 px-1 py-0.5 rounded">{d.format(getValue(d.key))}</span>
     </button>
   );
 
@@ -121,8 +93,6 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
     const d = [...leftDials, ...rightDials].find((x) => x.key === open.key);
     if (!d) return null;
     const val = getValue(d.key);
-
-    // Position: just BELOW the chip, centered horizontally; drop-down panel
     const style = {
       position: "fixed",
       top: open.rect.bottom + 8,
@@ -135,15 +105,8 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
       <div style={style} className="rounded-2xl border bg-white shadow-2xl p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs font-medium opacity-70">{d.label}</div>
-          <button
-            onClick={closeDial}
-            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
-          >
-            Close
-          </button>
+          <button onClick={closeDial} className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200">Close</button>
         </div>
-
-        {/* Vertical slider: rotate a range input */}
         <div className="flex items-center justify-center py-2">
           <div className="h-40 w-40 flex items-center justify-center relative">
             <input
@@ -158,10 +121,7 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
             />
           </div>
         </div>
-
-        <div className="text-right text-xs font-mono">
-          {d.format(getValue(d.key))}
-        </div>
+        <div className="text-right text-xs font-mono">{d.format(getValue(d.key))}</div>
       </div>,
       target
     );
@@ -171,50 +131,40 @@ export default function DevDialsStrip({ devMode, values, onChange, center, porta
 
   return (
     <div className="relative flex items-center justify-center gap-3 my-4">
-      {/* Left 5 chips */}
+      {/* Left chips */}
       <div ref={leftRef} className="hidden md:flex items-center gap-2 absolute left-0">
-        {leftDials.map((d) => (
-          <Chip key={d.key} side="left" d={d} />
-        ))}
+        {leftDials.map((d) => (<Chip key={d.key} side="left" d={d} />))}
       </div>
 
-      {/* Center control passed from parent */}
+      {/* Center control */}
       <div>{center}</div>
 
-      {/* Right 5 chips */}
+      {/* Right chips + Reset */}
       <div ref={rightRef} className="hidden md:flex items-center gap-2 absolute right-0">
-        {rightDials.map((d) => (
-          <Chip key={d.key} side="right" d={d} />
-        ))}
+        {rightDials.map((d) => (<Chip key={d.key} side="right" d={d} />))}
+        <button
+          type="button"
+          onClick={() => onReset && onReset()}
+          className="px-3 py-1 rounded-full border text-xs bg-white hover:shadow"
+          title="Reset to defaults"
+        >
+          Reset
+        </button>
       </div>
 
-      {/* Mobile: all chips below in a grid */}
+      {/* Mobile: chips grid + Reset */}
       <div className="md:hidden grid grid-cols-2 gap-2 w-full justify-items-stretch mt-3">
-        {[...leftDials, ...rightDials].map((d) => (
-          <Chip key={d.key} side="mobile" d={d} />
-        ))}
+        {[...leftDials, ...rightDials].map((d) => (<Chip key={d.key} side="mobile" d={d} />))}
+        <button
+          type="button"
+          onClick={() => onReset && onReset()}
+          className="col-span-2 px-3 py-2 rounded-lg border text-xs bg-white"
+        >
+          Reset to defaults
+        </button>
       </div>
 
-      {/* Popover rendered via portal (dropdown) */}
       <Popover />
     </div>
   );
 }
-
-/**
- * Usage (inside GenerateTags.jsx):
- *
- * <DevDialsStrip
- *   devMode={devMode}
- *   values={visualConfig}
- *   onChange={(k, v) => setVisualConfig((prev) => ({ ...prev, [k]: v }))}
- *   center={(
- *     <button onClick={handleGenerate} className="px-6 py-3 rounded-xl bg-indigo-800 text-white">
- *       {loading ? "Processing Auto MetaTags…" : "Generate MetaTags"}
- *     </button>
- *   )}
- * />
- *
- * // When sending to backend, serialize only the knobs it expects.
- * // If you used the SEPIA_CENTER dial, you already get SEPIA_HUE_MIN/MAX updated via onChange.
- */

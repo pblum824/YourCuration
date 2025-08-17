@@ -1,4 +1,4 @@
-// File: src/GenerateTags.jsx — full patched
+// File: src/GenerateTags.jsx — full patched (DevDialsStrip + Reset + percent→backend)
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
@@ -50,6 +50,12 @@ export default function GenerateTags({ setView }) {
       localStorage.setItem('yourcuration.visualConfig.v1', JSON.stringify(visualConfig));
     } catch {}
   }, [visualConfig]);
+
+  const resetToDefaults = () => {
+    try { localStorage.removeItem('yourcuration.visualConfig.v1'); } catch {}
+    setVisualConfig(defaultVisualConfig);
+    setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Reset visual dials to defaults`]);
+  };
 
   const logToScreen = (msg) =>
     setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
@@ -174,9 +180,9 @@ export default function GenerateTags({ setView }) {
         const s = await fetch('https://api.yourcuration.app/status', { method: 'GET' });
         const sj = await s.json().catch(() => ({}));
         logToScreen(
-          `/status ok: tagbank=${String(s?.has_tagbank_vecs)} verbs=${String(
-            s?.has_verb_vecs
-          )} taxonomy=${String(s?.has_taxonomy_vecs)}`
+          `/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(
+            sj?.has_verb_vecs
+          )} taxonomy=${String(sj?.has_taxonomy_vecs)}`
         );
       } catch {
         logToScreen('/status failed (non-blocking)');
@@ -291,6 +297,7 @@ export default function GenerateTags({ setView }) {
         devMode={devMode}
         values={visualConfig}
         onChange={(k, v) => setVisualConfig((prev) => ({ ...prev, [k]: v }))}
+        onReset={resetToDefaults}
         center={(
           <button
             onClick={handleGenerate}
