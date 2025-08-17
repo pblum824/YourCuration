@@ -93,6 +93,66 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
     </button>
   );
 
+  // ----- Custom vertical slider: supports tap + drag on all browsers -----
+  function VerticalSlider({ min, max, step, value, onChange }) {
+    const trackRef = useRef(null);
+
+    const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+    const snap = (val) => {
+      const s = Number(step || 1);
+      const snapped = Math.round((val - min) / s) * s + min;
+      return clamp(snapped, min, max);
+    };
+
+    const percent = ((value - min) / (max - min)) || 0; // 0..1
+
+    const handleAt = (clientY) => {
+      const r = trackRef.current.getBoundingClientRect();
+      const p = clamp((clientY - r.top) / r.height, 0, 1);
+      const val = snap(min + (1 - p) * (max - min)); // top=max, bottom=min
+      onChange && onChange(val);
+    };
+
+    const onPointerDown = (e) => {
+      e.preventDefault();
+      trackRef.current.setPointerCapture?.(e.pointerId);
+      handleAt(e.clientY);
+    };
+    const onPointerMove = (e) => {
+      if (e.buttons !== 1) return;
+      handleAt(e.clientY);
+    };
+
+    const h = 140; // visual height
+
+    return (
+      <div style={{ width: 120, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div
+          ref={trackRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          style={{ position: 'relative', width: 36, height: h, borderRadius: 10, background: '#fff' }}
+        >
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 8, bottom: 8, width: 4, borderRadius: 9999, background: '#e5e7eb', border: '1px solid #e5e7eb' }} />
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translate(-50%, 50%)',
+              bottom: 8 + (1 - percent) * (h - 16 - 8),
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              background: '#1e3a8a',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.25)'
+            }}
+          />
+        </div>
+        <div style={{ marginLeft: 8, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12 }}>{value}</div>
+      </div>
+    );
+  }
+
   const Popover = () => {
     if (!open || !target) return null;
     const dial = [...leftDials, ...rightDials].find(d => d.key === open.key);
@@ -101,8 +161,8 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
     const style = {
       position: 'fixed',
       top: open.rect.bottom + 8,
-      left: Math.max(8, Math.min(window.innerWidth - 320, open.rect.left + (open.rect.width/2) - 150)),
-      width: 300,
+      left: Math.max(8, Math.min(window.innerWidth - 220, open.rect.left + (open.rect.width/2) - 110)),
+      width: 220, // narrower, cleaner
       zIndex: 1000,
       background: '#fff',
       border: '1px solid rgba(0,0,0,0.12)',
@@ -111,33 +171,19 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
       padding: 12,
     };
 
-    const sliderBox = { height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center' };
-
     return createPortal(
       <div style={style}>
-        <style>{`
-          .verticalSlider { -webkit-appearance: none; appearance: none; width: 220px; height: 28px; transform: rotate(270deg); transform-origin: center; }
-          .verticalSlider:focus { outline: none; }
-          .verticalSlider::-webkit-slider-runnable-track { height: 6px; background: #e5e7eb; border-radius: 9999px; border: 1px solid #e5e7eb; }
-          .verticalSlider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #1e3a8a; margin-top: -6px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-          .verticalSlider::-moz-range-track { height: 6px; background: #e5e7eb; border-radius: 9999px; }
-          .verticalSlider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #1e3a8a; border: none; }
-        `}</style>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <div style={{ fontSize: 12, opacity: 0.7 }}>{dial.label}</div>
           <button onClick={() => setOpen(null)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 8, background: '#f3f4f6', border: '1px solid rgba(0,0,0,0.08)' }}>Close</button>
         </div>
-        <div style={sliderBox}>
-          <input
-            className="verticalSlider"
-            type="range"
-            min={dial.min}
-            max={dial.max}
-            step={dial.step}
-            value={getVal(dial.key)}
-            onChange={(e) => setVal(dial.key, e.target.value)}
-          />
-        </div>
+        <VerticalSlider
+          min={dial.min}
+          max={dial.max}
+          step={dial.step}
+          value={getVal(dial.key)}
+          onChange={(v) => setVal(dial.key, v)}
+        />
         <div style={{ textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }}>
           {dial.fmt(getVal(dial.key))}
         </div>
