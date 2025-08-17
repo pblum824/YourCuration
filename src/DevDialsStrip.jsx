@@ -4,10 +4,8 @@ import { createPortal } from "react-dom";
 
 /**
  * DevDialsStrip
- * - Shows 10 chips (5 left / 5 right) flanking a center control (button)
- * - Click a chip → vertical slider DROPS DOWN under that chip
- * - Absolute left/right alignment so chips sit on the same row as center
- * - Reset chip on the far right
+ * - Chips flanking center
+ * - Vertical slider popover (Safari/iOS safe) using rotated range + WebKit styles
  */
 export default function DevDialsStrip({ devMode, values, onChange, center, onReset, portalTarget }) {
   if (!devMode) return (
@@ -15,12 +13,8 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
   );
 
   const target = portalTarget || (typeof document !== 'undefined' ? document.body : null);
-  const containerRef = useRef(null);
-  const leftRef = useRef(null);
-  const rightRef = useRef(null);
   const [open, setOpen] = useState(null); // { key, rect }
 
-  // ---------- Dial model (percent-based UI) ----------
   const leftDials = useMemo(() => ([
     { key: 'NEUTRAL_COLORED_MAX', label: 'Neutral colored max', min: 0, max: 10, step: 0.5, fmt: (v)=>`${v}%` },
     { key: 'NEUTRAL_RATIO_MIN',   label: 'Neutral ratio min',   min: 80, max: 100, step: 1,   fmt: (v)=>`${v}%` },
@@ -37,8 +31,6 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
     { key: 'SEPIA_CENTER',     label: 'Sepia band (center)',min: 20, max: 40, step: 1, fmt: (v)=>`${v}°` },
   ]), []);
 
-  const allDials = useMemo(() => ({ left: leftDials, right: rightDials }), [leftDials, rightDials]);
-
   const getVal = (k) => {
     if (k === 'SEPIA_CENTER') {
       const min = Number(values?.SEPIA_HUE_MIN ?? 15);
@@ -51,7 +43,7 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
   const setVal = (k, v) => {
     if (!onChange) return;
     if (k === 'SEPIA_CENTER') {
-      const half = 17; // fixed half-width (total band ~34°)
+      const half = 17;
       const min = Math.max(0, Math.round(v - half));
       const max = Math.min(360, Math.round(v + half));
       onChange('SEPIA_HUE_MIN', min);
@@ -61,7 +53,6 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
     }
   };
 
-  // Recompute anchor rect on resize/scroll
   useEffect(() => {
     const onWindow = () => {
       if (!open) return;
@@ -106,43 +97,45 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
     if (!open || !target) return null;
     const dial = [...leftDials, ...rightDials].find(d => d.key === open.key);
     if (!dial) return null;
+
     const style = {
       position: 'fixed',
       top: open.rect.bottom + 8,
-      left: Math.max(8, Math.min(window.innerWidth - 300, open.rect.left + (open.rect.width/2) - 140)),
-      width: 280,
+      left: Math.max(8, Math.min(window.innerWidth - 320, open.rect.left + (open.rect.width/2) - 150)),
+      width: 300,
       zIndex: 1000,
       background: '#fff',
-      border: '1px solid rgba(0,0,0,0.1)',
+      border: '1px solid rgba(0,0,0,0.12)',
       borderRadius: 16,
-      boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
       padding: 12,
     };
 
-    const sliderStyle = {
-      width: 220,
-      height: 28,
-      transform: 'rotate(270deg)', // force vertical
-      transformOrigin: 'center',
-      WebkitAppearance: 'none',
-      appearance: 'none',
-    };
+    const sliderBox = { height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 
     return createPortal(
       <div style={style}>
+        <style>{`
+          .verticalSlider { -webkit-appearance: none; appearance: none; width: 220px; height: 28px; transform: rotate(270deg); transform-origin: center; }
+          .verticalSlider:focus { outline: none; }
+          .verticalSlider::-webkit-slider-runnable-track { height: 6px; background: #e5e7eb; border-radius: 9999px; border: 1px solid #e5e7eb; }
+          .verticalSlider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #1e3a8a; margin-top: -6px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+          .verticalSlider::-moz-range-track { height: 6px; background: #e5e7eb; border-radius: 9999px; }
+          .verticalSlider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #1e3a8a; border: none; }
+        `}</style>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <div style={{ fontSize: 12, opacity: 0.7 }}>{dial.label}</div>
           <button onClick={() => setOpen(null)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 8, background: '#f3f4f6', border: '1px solid rgba(0,0,0,0.08)' }}>Close</button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '18px 0' }}>
+        <div style={sliderBox}>
           <input
+            className="verticalSlider"
             type="range"
             min={dial.min}
             max={dial.max}
             step={dial.step}
             value={getVal(dial.key)}
             onChange={(e) => setVal(dial.key, e.target.value)}
-            style={sliderStyle}
           />
         </div>
         <div style={{ textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }}>
@@ -153,21 +146,15 @@ export default function DevDialsStrip({ devMode, values, onChange, center, onRes
     );
   };
 
-  // ---------- Layout: left chips | center | right chips ----------
   return (
-    <div ref={containerRef} style={{ position: 'relative', marginBottom: 24, minHeight: 46 }}>
-      {/* center */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {center}
-      </div>
+    <div style={{ position: 'relative', marginBottom: 24, minHeight: 46 }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>{center}</div>
 
-      {/* left chips */}
-      <div ref={leftRef} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 8, flexWrap: 'nowrap' }}>
+      <div style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
         {leftDials.map((d) => <Chip key={d.key} dial={d} />)}
       </div>
 
-      {/* right chips + Reset */}
-      <div ref={rightRef} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 8, flexWrap: 'nowrap', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 8, alignItems: 'center' }}>
         {rightDials.map((d) => <Chip key={d.key} dial={d} />)}
         <button type="button" onClick={() => onReset && onReset()}
           style={{ padding: '6px 10px', borderRadius: 9999, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', fontSize: 12 }}>Reset</button>
