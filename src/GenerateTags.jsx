@@ -1,5 +1,5 @@
-// File: src/GenerateTags.jsx
-import React, { useEffect, useState } from 'react';
+// File: src/GenerateTags.jsx — full patched
+import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
@@ -8,6 +8,7 @@ import LoadingOverlay from './utils/LoadingOverlay';
 import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
 import { useFontSettings } from './FontSettingsContext';
+import DevDialsStrip from './DevDialsStrip';
 
 export default function GenerateTags({ setView }) {
   const { selectedFont } = useFontSettings(); // retained for other consumers
@@ -20,6 +21,35 @@ export default function GenerateTags({ setView }) {
   const [cancelRequested, setCancelRequested] = useState(false);
   const [logs, setLogs] = useState([]);
   const [overlayKey, setOverlayKey] = useState(0);
+
+  // Percent-based UI defaults; backend needs fractions for *_MAX/MIN ratios
+  const defaultVisualConfig = useMemo(() => ({
+    NEUTRAL_COLORED_MAX: 3,   // % → 0.03
+    NEUTRAL_RATIO_MIN: 95,    // % → 0.95
+    BW_EXTREME_MIN: 90,       // % → 0.90
+    BW_MID_MAX: 6,            // % → 0.06
+    BW_ENTROPY_MAX: 3.5,      // bits
+    DISTINCT_DE: 22,
+    DISTINCT_DHUE: 15,        // °
+    SELECTIVE_MAX: 40,        // % → 0.40
+    DOMINANCE_NARROW: 75,     // % → 0.75
+    SEPIA_HUE_MIN: 15,
+    SEPIA_HUE_MAX: 50,
+  }), []);
+
+  const [visualConfig, setVisualConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('yourcuration.visualConfig.v1');
+      if (saved) return { ...defaultVisualConfig, ...JSON.parse(saved) };
+    } catch {}
+    return defaultVisualConfig;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('yourcuration.visualConfig.v1', JSON.stringify(visualConfig));
+    } catch {}
+  }, [visualConfig]);
 
   const logToScreen = (msg) =>
     setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
@@ -106,6 +136,25 @@ export default function GenerateTags({ setView }) {
     });
   }
 
+  // Transform UI (%/°) → backend config (fractions where expected)
+  function buildBackendVisualConfig(ui) {
+    const toFrac = (pct) => Math.max(0, Math.min(1, Number(pct) / 100));
+    return {
+      version: 1,
+      NEUTRAL_COLORED_MAX: toFrac(ui.NEUTRAL_COLORED_MAX),
+      NEUTRAL_RATIO_MIN:   toFrac(ui.NEUTRAL_RATIO_MIN),
+      BW_EXTREME_MIN:      toFrac(ui.BW_EXTREME_MIN),
+      BW_MID_MAX:          toFrac(ui.BW_MID_MAX),
+      BW_ENTROPY_MAX:      Number(ui.BW_ENTROPY_MAX),
+      DISTINCT_DE:         Number(ui.DISTINCT_DE),
+      DISTINCT_DHUE:       Number(ui.DISTINCT_DHUE),
+      SELECTIVE_MAX:       toFrac(ui.SELECTIVE_MAX),
+      DOMINANCE_NARROW:    toFrac(ui.DOMINANCE_NARROW),
+      SEPIA_HUE_MIN:       Number(ui.SEPIA_HUE_MIN),
+      SEPIA_HUE_MAX:       Number(ui.SEPIA_HUE_MAX),
+    };
+  }
+
   const handleGenerate = async () => {
     setOverlayKey((prev) => prev + 1);
     setLoading(true);
@@ -125,9 +174,9 @@ export default function GenerateTags({ setView }) {
         const s = await fetch('https://api.yourcuration.app/status', { method: 'GET' });
         const sj = await s.json().catch(() => ({}));
         logToScreen(
-          `/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(
-            sj?.has_verb_vecs
-          )} taxonomy=${String(sj?.has_taxonomy_vecs)}`
+          `/status ok: tagbank=${String(s?.has_tagbank_vecs)} verbs=${String(
+            s?.has_verb_vecs
+          )} taxonomy=${String(s?.has_taxonomy_vecs)}`
         );
       } catch {
         logToScreen('/status failed (non-blocking)');
@@ -141,6 +190,11 @@ export default function GenerateTags({ setView }) {
         const compressed = await compressImage(img.file, 384, 0.7);
         formData.append('files', compressed, compressed.name || img.name || 'image.jpg');
       }
+
+      // Attach visual_config (JSON). If backend ignores, defaults apply.
+      const vc = buildBackendVisualConfig(visualConfig);
+      formData.append('visual_config', JSON.stringify(vc));
+      if (devMode) logToScreen(`visual_config: ${JSON.stringify(vc)}`);
 
       logToScreen(
         `POST https://api.yourcuration.app/batch-tag with ${uploadable.length} files`
@@ -167,7 +221,6 @@ export default function GenerateTags({ setView }) {
         const img = uploadable[i];
         const meta = r?.metadata || {};
 
-        // Map backend taxonomy → compact FE term: genre
         const genreTags = Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [];
         const imageTags = Array.isArray(meta.imageTags) ? meta.imageTags : [];
         const textTags  = Array.isArray(meta.textTags) ? meta.textTags : [];
@@ -176,8 +229,8 @@ export default function GenerateTags({ setView }) {
           ...img,
           metadata: {
             ...img.metadata,
-            ...meta,          // keep raw fields for completeness
-            genreTags,        // compact alias used by FE/UI
+            ...meta,
+            genreTags,
             imageTags,
             textTags,
             metaTagGenerated: true,
@@ -186,7 +239,7 @@ export default function GenerateTags({ setView }) {
             ...(img.tags || {}),
             image: imageTags,
             text: textTags,
-            genre: genreTags, // duplicate path for components that read tags.*
+            genre: genreTags,
           },
         };
       });
@@ -233,24 +286,31 @@ export default function GenerateTags({ setView }) {
     <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       <ControlBar setView={setView} devMode={devMode} />
 
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <button
-          onClick={handleGenerate}
-          disabled={loading}
-          style={{
-            padding: '1rem 2rem',
-            fontSize: '1.25rem',
-            borderRadius: '0.5rem',
-            backgroundColor: '#1e3a8a',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            opacity: loading ? 0.6 : 1,
-          }}
-        >
-          {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
-        </button>
-      </div>
+      {/* Dev dials flanking the central button */}
+      <DevDialsStrip
+        devMode={devMode}
+        values={visualConfig}
+        onChange={(k, v) => setVisualConfig((prev) => ({ ...prev, [k]: v }))}
+        center={(
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
+            style={{
+              padding: '1rem 2rem',
+              fontSize: '1.25rem',
+              borderRadius: '0.5rem',
+              backgroundColor: '#1e3a8a',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              opacity: loading ? 0.6 : 1,
+              transition: 'width 200ms ease',
+            }}
+          >
+            {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
+          </button>
+        )}
+      />
 
       <div style={{ marginTop: '2rem' }}>
         <GalleryGrid
