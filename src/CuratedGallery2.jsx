@@ -11,6 +11,7 @@ export default function CuratedGallery2({ setView, onReturn }) {
   const {
     artistGallery = [],
     ratings = {},
+    cg1Selections, // read from context
     setCG1Selections,
     devMode,
     mode
@@ -24,14 +25,35 @@ export default function CuratedGallery2({ setView, onReturn }) {
 
   useEffect(() => {
     try {
-      const samples = artistGallery.filter((img) => ratings[img.id]);
-      const tagPools = aggregateSampleTags(samples, ratings);
+      const selectedIds = Array.isArray(cg1Selections?.selected)
+        ? cg1Selections.selected
+        : Object.keys(cg1Selections || {}).filter((k) => cg1Selections[k] === 2);
+      const shownIds = Array.isArray(cg1Selections?.shown) ? cg1Selections.shown : [];
+
+      const selectedImages = artistGallery.filter((img) => selectedIds.includes(img.id));
+      const samples =
+        selectedImages.length > 0
+          ? selectedImages
+          : artistGallery.filter((img) => ratings[img.id]);
+
+      // Why: treat CG1 selections as strong positives if available
+      const effectiveRatings =
+        selectedImages.length > 0
+          ? Object.fromEntries(selectedIds.map((id) => [id, 2]))
+          : ratings;
+
+      const tagPools = aggregateSampleTags(samples, effectiveRatings);
       const tagScoreMap = {};
-      tagPools.love.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 3));
+      tagPools.love.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 4));
       tagPools.like.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) + 1));
       tagPools.less.forEach((tag) => (tagScoreMap[tag] = (tagScoreMap[tag] || 0) - 5));
 
-      const candidates = artistGallery.filter((img) => !ratings[img.id] && img.galleryEligible);
+      const exclude = new Set([...(shownIds || []), ...(selectedIds || [])]);
+
+      const candidates = artistGallery.filter(
+        (img) => !ratings[img.id] && img.galleryEligible && !exclude.has(img.id)
+      );
+
       const scored = candidates.map((img) => {
         const tags = new Set(extractAllTags(img.metadata));
         let score = 0;
@@ -60,9 +82,9 @@ export default function CuratedGallery2({ setView, onReturn }) {
 
       hydrate();
     } catch (err) {
-      setError(err.message || 'CG1 failed to process.');
+      setError(err.message || 'CG2 failed to process.');
     }
-  }, [artistGallery, ratings]);
+  }, [artistGallery, ratings, cg1Selections]);
 
   const approveImage = (id) => {
     setSelections((prev) => ({
@@ -105,7 +127,7 @@ export default function CuratedGallery2({ setView, onReturn }) {
       )}
 
       <h2 style={{ ...getFontStyle(mode, { selectedFont }), color: '#1e3a8a' }}>
-        Curated Gallery Preview
+        Curated Gallery 2 — More Like Your Picks
       </h2>
 
       <div

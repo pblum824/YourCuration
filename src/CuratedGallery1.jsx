@@ -171,7 +171,10 @@ export default function CuratedGallery1({ setView, onReturn }) {
       <div style={{ textAlign: 'center', marginTop: '2rem' }}>
         <button
           onClick={() => {
-            setCG1Selections(selections);
+            const selected = Object.keys(selections).filter((id) => selections[id] === 2);
+            const shown = hydrated.map((i) => i.id);
+            // Why: CG2 must know what the user chose and what was displayed to avoid duplicates
+            setCG1Selections({ selected, shown });
             setView('curated2');
           }}
           style={{ 
