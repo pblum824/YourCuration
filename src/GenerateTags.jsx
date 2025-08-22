@@ -1,4 +1,4 @@
-// File: src/GenerateTags.jsx — conditional DevDialsStrip (fix: show button when Dev Mode OFF)
+// file: src/GenerateTags.jsx (dual-path: files + URLs, no hydration required)
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import { loadBlob } from './utils/dbCache';
@@ -48,33 +48,15 @@ export default function GenerateTags({ setView }) {
     try { localStorage.setItem('yourcuration.visualConfig.v1', JSON.stringify(visualConfig)); } catch {}
   }, [visualConfig]);
 
-  const resetToDefaults = () => {
-    try { localStorage.removeItem('yourcuration.visualConfig.v1'); } catch {}
-    setVisualConfig(defaultVisualConfig);
-    setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Reset visual dials to defaults`]);
-  };
-
   const logToScreen = (msg) => setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
+  // NOTE: Do NOT hydrate blobs just to count. Keep memory footprint small.
   useEffect(() => {
-    async function hydrateImages() {
-      const hydrated = await Promise.all(
-        artistGallery.map(async (img) => {
-          if (!img.localRefId) return img;
-          try {
-            const blob = await loadBlob(img.localRefId);
-            if (!blob) throw new Error('No blob found');
-            const file = new File([blob], img.name || 'image.jpg', { type: blob.type || 'image/jpeg' });
-            const url = img.url || URL.createObjectURL(blob);
-            return { ...img, file, url };
-          } catch {
-            return { ...img, metadata: { ...img.metadata, error: 'Failed to hydrate image file' } };
-          }
-        })
-      );
-      setLocalGallery(hydrated);
+    async function shallowClone() {
+      const cloned = artistGallery.map((img) => ({ ...img }));
+      setLocalGallery(cloned);
     }
-    hydrateImages();
+    shallowClone();
   }, [artistGallery]);
 
   const toggleSample = (id) => toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
@@ -82,24 +64,6 @@ export default function GenerateTags({ setView }) {
   const toggleScrape = (id) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img));
   const removeImage = (id) => setArtistGallery((prev) => prev.filter((img) => img.id !== id));
   const updateTagField = (id, key, values) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, metadata: { ...img.metadata, [key]: values } } : img));
-
-  async function compressImage(file, maxDim = 384, quality = 0.7) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      const reader = new FileReader();
-      reader.onload = (e) => (img.src = e.target.result);
-      img.onload = () => {
-        const scale = maxDim / Math.max(img.width, img.height);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
 
   function buildBackendVisualConfig(ui) {
     const toFrac = (pct) => Math.max(0, Math.min(1, Number(pct) / 100));
@@ -119,46 +83,88 @@ export default function GenerateTags({ setView }) {
     };
   }
 
+  // ---- Dual-path sender: Files (FormData) + URLs (JSON) ----------------------
+  async function sendFiles(uploadableWithFiles, vc) {
+    const formData = new FormData();
+    for (const img of uploadableWithFiles) {
+      if (cancelRequested) throw new Error('User cancelled');
+      // IMPORTANT: Do not re-compress here; memory heavy. Assume file already sized from upload step.
+      const f = img.file; // must exist
+      formData.append('files', f, f.name || img.name || 'image.jpg');
+    }
+    formData.append('visual_config', JSON.stringify(vc));
+
+    logToScreen(`POST /batch-tag (files) with ${uploadableWithFiles.length} files`);
+    const res = await fetch('https://api.yourcuration.app/batch-tag', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error(`Backend(files) ${res.status}`);
+    const j = await res.json();
+    const rows = Array.isArray(j?.results) ? j.results : [];
+
+    // Attach id/name back using positional mapping
+    return rows.map((r, i) => ({ id: uploadableWithFiles[i].id, name: uploadableWithFiles[i].name, meta: r?.metadata || {} }));
+  }
+
+  async function sendUrls(uploadableWithUrls, vc) {
+    if (uploadableWithUrls.length === 0) return [];
+
+    const payload = {
+      visual_config: vc,
+      items: uploadableWithUrls.map((img) => ({ id: img.id, url: img.url }))
+    };
+
+    logToScreen(`POST /batch-tag-urls (urls) with ${uploadableWithUrls.length} urls`);
+    const res = await fetch('https://api.yourcuration.app/batch-tag-urls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`Backend(urls) ${res.status}`);
+    const j = await res.json();
+    const rows = Array.isArray(j?.results) ? j.results : [];
+
+    // Expected shape: { id, metadata }
+    return rows.map((r) => ({ id: r.id, name: r.name, meta: r?.metadata || {} }));
+  }
+
   const handleGenerate = async () => {
     setOverlayKey((prev) => prev + 1);
     setLoading(true);
     setCancelRequested(false);
 
     try {
-      const uploadable = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file);
-      if (uploadable.length === 0) { logToScreen('No eligible images to tag.'); return; }
+      const eligible = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible));
+      if (eligible.length === 0) { logToScreen('No eligible images to tag.'); return; }
+
+      const withFiles = eligible.filter((img) => img.file);
+      const withUrlsNoFile = eligible.filter((img) => !img.file && !!img.url);
+
+      // Telemetry only; keeps Safari memory low since we don't touch blobs here
+      logToScreen(`counts: total=${localGallery.length}, eligible=${eligible.length}, withFiles=${withFiles.length}, withUrlsNoFile=${withUrlsNoFile.length}`);
 
       try {
         const s = await fetch('https://api.yourcuration.app/status', { method: 'GET' });
         const sj = await s.json().catch(() => ({}));
-        logToScreen(`/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(sj?.has_verb_vecs)} taxonomy=${String(sj?.has_taxonomy_vecs)}`);
+        logToScreen(`/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(sj?.has_verb_vecs)}`);
       } catch { logToScreen('/status failed (non-blocking)'); }
 
       const t0 = performance.now();
-      const formData = new FormData();
-
-      for (const img of uploadable) {
-        if (cancelRequested) throw new Error('User cancelled');
-        const compressed = await compressImage(img.file, 384, 0.7);
-        formData.append('files', compressed, compressed.name || img.name || 'image.jpg');
-      }
-
       const vc = buildBackendVisualConfig(visualConfig);
-      formData.append('visual_config', JSON.stringify(vc));
       if (devMode) logToScreen(`visual_config: ${JSON.stringify(vc)}`);
 
-      logToScreen(`POST https://api.yourcuration.app/batch-tag with ${uploadable.length} files`);
-      const res = await fetch('https://api.yourcuration.app/batch-tag', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+      // Send in two parallel calls to minimize wall time, then merge
+      const [byFile, byUrl] = await Promise.all([
+        sendFiles(withFiles, vc),
+        sendUrls(withUrlsNoFile, vc),
+      ]);
 
-      const result = await res.json();
-      const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
-      const rows = Array.isArray(result?.results) ? result.results : [];
-      if (rows.length !== uploadable.length) logToScreen(`⚠️ result count mismatch (got ${rows.length}, expected ${uploadable.length})`);
+      const combined = [...byFile, ...byUrl];
+      const combinedById = new Map(combined.map((x) => [x.id, x]));
 
-      const tagged = rows.map((r, i) => {
-        const img = uploadable[i];
-        const meta = r?.metadata || {};
+      // Merge back into gallery
+      setArtistGallery((prev) => prev.map((img) => {
+        const found = combinedById.get(img.id);
+        if (!found) return img;
+        const meta = found.meta || {};
         return {
           ...img,
           metadata: { ...img.metadata, ...meta, metaTagGenerated: true },
@@ -169,24 +175,10 @@ export default function GenerateTags({ setView }) {
             genre: Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [],
           },
         };
-      });
+      }));
 
-      setArtistGallery((prev) => {
-        const updated = [...prev];
-        const used = new Array(tagged.length).fill(false);
-        for (let i = 0; i < updated.length; i++) {
-          for (let j = 0; j < tagged.length; j++) {
-            if (!used[j] && updated[i].id === tagged[j].id) {
-              updated[i] = tagged[j];
-              used[j] = true;
-              break;
-            }
-          }
-        }
-        return updated;
-      });
-
-      logToScreen(`✅ Tagged ${tagged.length} images in ${elapsed}s`);
+      const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+      logToScreen(`✅ Tagged ${combined.length} images in ${elapsed}s`);
     } catch (err) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
@@ -195,9 +187,9 @@ export default function GenerateTags({ setView }) {
     }
   };
 
-  const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible) && img.file).length;
+  // Count shown in overlay: all eligible (files + urls), no hydration needed
+  const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible)).length;
 
-  // The central button UI, reused whether devMode is on or off
   const generateButton = (
     <button
       onClick={handleGenerate}
@@ -222,13 +214,16 @@ export default function GenerateTags({ setView }) {
     <div style={{ padding: '1rem 1rem 2rem', position: 'relative' }}>
       <ControlBar setView={setView} devMode={devMode} />
 
-      {/* If Dev Mode ON → show dials around the button; else show the button alone */}
       {devMode ? (
         <DevDialsStrip
           devMode
           values={visualConfig}
           onChange={(k, v) => setVisualConfig((prev) => ({ ...prev, [k]: v }))}
-          onReset={resetToDefaults}
+          onReset={() => {
+            try { localStorage.removeItem('yourcuration.visualConfig.v1'); } catch {}
+            setVisualConfig(defaultVisualConfig);
+            logToScreen(`[${new Date().toLocaleTimeString()}] Reset visual dials to defaults`);
+          }}
           center={generateButton}
         />
       ) : (
