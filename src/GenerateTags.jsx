@@ -1,7 +1,6 @@
-// file: src/GenerateTags.jsx (dual-path: files + URLs, no hydration required)
+// file: src/GenerateTags.jsx — dual-path without hydration; resilient to missing /batch-tag-urls
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
-import { loadBlob } from './utils/dbCache';
 import GalleryGrid from './GalleryGrid';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
 import LoadingOverlay from './utils/LoadingOverlay';
@@ -50,13 +49,9 @@ export default function GenerateTags({ setView }) {
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
-  // NOTE: Do NOT hydrate blobs just to count. Keep memory footprint small.
+  // Keep memory low: shallow clone only; do NOT hydrate blobs
   useEffect(() => {
-    async function shallowClone() {
-      const cloned = artistGallery.map((img) => ({ ...img }));
-      setLocalGallery(cloned);
-    }
-    shallowClone();
+    setLocalGallery(artistGallery.map((img) => ({ ...img })));
   }, [artistGallery]);
 
   const toggleSample = (id) => toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
@@ -83,13 +78,12 @@ export default function GenerateTags({ setView }) {
     };
   }
 
-  // ---- Dual-path sender: Files (FormData) + URLs (JSON) ----------------------
   async function sendFiles(uploadableWithFiles, vc) {
+    if (uploadableWithFiles.length === 0) return [];
     const formData = new FormData();
     for (const img of uploadableWithFiles) {
       if (cancelRequested) throw new Error('User cancelled');
-      // IMPORTANT: Do not re-compress here; memory heavy. Assume file already sized from upload step.
-      const f = img.file; // must exist
+      const f = img.file;
       formData.append('files', f, f.name || img.name || 'image.jpg');
     }
     formData.append('visual_config', JSON.stringify(vc));
@@ -99,31 +93,25 @@ export default function GenerateTags({ setView }) {
     if (!res.ok) throw new Error(`Backend(files) ${res.status}`);
     const j = await res.json();
     const rows = Array.isArray(j?.results) ? j.results : [];
-
-    // Attach id/name back using positional mapping
     return rows.map((r, i) => ({ id: uploadableWithFiles[i].id, name: uploadableWithFiles[i].name, meta: r?.metadata || {} }));
   }
 
   async function sendUrls(uploadableWithUrls, vc) {
     if (uploadableWithUrls.length === 0) return [];
-
-    const payload = {
-      visual_config: vc,
-      items: uploadableWithUrls.map((img) => ({ id: img.id, url: img.url }))
-    };
-
+    const payload = { visual_config: vc, items: uploadableWithUrls.map((img) => ({ id: img.id, url: img.url, name: img.name })) };
     logToScreen(`POST /batch-tag-urls (urls) with ${uploadableWithUrls.length} urls`);
-    const res = await fetch('https://api.yourcuration.app/batch-tag-urls', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`Backend(urls) ${res.status}`);
-    const j = await res.json();
-    const rows = Array.isArray(j?.results) ? j.results : [];
-
-    // Expected shape: { id, metadata }
-    return rows.map((r) => ({ id: r.id, name: r.name, meta: r?.metadata || {} }));
+    try {
+      const res = await fetch('https://api.yourcuration.app/batch-tag-urls', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+      });
+      if (!res.ok) { logToScreen(`⚠️ /batch-tag-urls responded ${res.status}; skipping URL path`); return []; }
+      const j = await res.json();
+      const rows = Array.isArray(j?.results) ? j.results : [];
+      return rows.map((r) => ({ id: r.id, name: r.name, meta: r?.metadata || {} }));
+    } catch (e) {
+      logToScreen(`⚠️ /batch-tag-urls failed (${e?.message || e}); skipping URL path`);
+      return [];
+    }
   }
 
   const handleGenerate = async () => {
@@ -138,7 +126,6 @@ export default function GenerateTags({ setView }) {
       const withFiles = eligible.filter((img) => img.file);
       const withUrlsNoFile = eligible.filter((img) => !img.file && !!img.url);
 
-      // Telemetry only; keeps Safari memory low since we don't touch blobs here
       logToScreen(`counts: total=${localGallery.length}, eligible=${eligible.length}, withFiles=${withFiles.length}, withUrlsNoFile=${withUrlsNoFile.length}`);
 
       try {
@@ -151,16 +138,12 @@ export default function GenerateTags({ setView }) {
       const vc = buildBackendVisualConfig(visualConfig);
       if (devMode) logToScreen(`visual_config: ${JSON.stringify(vc)}`);
 
-      // Send in two parallel calls to minimize wall time, then merge
-      const [byFile, byUrl] = await Promise.all([
-        sendFiles(withFiles, vc),
-        sendUrls(withUrlsNoFile, vc),
-      ]);
+      const byFile = await sendFiles(withFiles, vc);
+      const byUrl = await sendUrls(withUrlsNoFile, vc); // safe if route missing
 
       const combined = [...byFile, ...byUrl];
       const combinedById = new Map(combined.map((x) => [x.id, x]));
 
-      // Merge back into gallery
       setArtistGallery((prev) => prev.map((img) => {
         const found = combinedById.get(img.id);
         if (!found) return img;
@@ -187,7 +170,6 @@ export default function GenerateTags({ setView }) {
     }
   };
 
-  // Count shown in overlay: all eligible (files + urls), no hydration needed
   const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible)).length;
 
   const generateButton = (
