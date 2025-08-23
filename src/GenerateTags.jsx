@@ -1,4 +1,4 @@
-// file: src/GenerateTags.jsx — dual-path without hydration; resilient to missing /batch-tag-urls
+// file: src/GenerateTags.jsx — dual-path without hydration; handles blob:/data: by converting to File
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import GalleryGrid from './GalleryGrid';
@@ -78,6 +78,37 @@ export default function GenerateTags({ setView }) {
     };
   }
 
+  // Partition into files and server-fetchable URLs; convert blob:/data: to File.
+  async function partitionUploadables(eligible) {
+    const withFiles = [];
+    const withUrls = [];
+    let converted = 0, skipped = 0;
+
+    for (const img of eligible) {
+      if (img.file) { withFiles.push(img); continue; }
+      const u = img.url || '';
+      if (/^https?:\/\//i.test(u)) {
+        withUrls.push({ id: img.id, url: u, name: img.name });
+      } else if (u.startsWith('blob:') || u.startsWith('data:')) {
+        try {
+          const resp = await fetch(u);
+          const blob = await resp.blob();
+          const file = new File([blob], img.name || 'image.jpg', { type: blob.type || 'image/jpeg' });
+          withFiles.push({ ...img, file });
+          converted++;
+        } catch (e) {
+          skipped++;
+          logToScreen(`blob/data convert failed for ${img.name || img.id}: ${e?.message || e}`);
+        }
+      } else {
+        skipped++;
+        logToScreen(`skip unsupported URL scheme for ${img.name || img.id}: ${u}`);
+      }
+    }
+    logToScreen(`partitioned: withFiles=${withFiles.length}, withUrls=${withUrls.length}, converted=${converted}, skipped=${skipped}`);
+    return { withFiles, withUrls };
+  }
+
   async function sendFiles(uploadableWithFiles, vc) {
     if (uploadableWithFiles.length === 0) return [];
     const formData = new FormData();
@@ -123,11 +154,6 @@ export default function GenerateTags({ setView }) {
       const eligible = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible));
       if (eligible.length === 0) { logToScreen('No eligible images to tag.'); return; }
 
-      const withFiles = eligible.filter((img) => img.file);
-      const withUrlsNoFile = eligible.filter((img) => !img.file && !!img.url);
-
-      logToScreen(`counts: total=${localGallery.length}, eligible=${eligible.length}, withFiles=${withFiles.length}, withUrlsNoFile=${withUrlsNoFile.length}`);
-
       try {
         const s = await fetch('https://api.yourcuration.app/status', { method: 'GET' });
         const sj = await s.json().catch(() => ({}));
@@ -138,8 +164,11 @@ export default function GenerateTags({ setView }) {
       const vc = buildBackendVisualConfig(visualConfig);
       if (devMode) logToScreen(`visual_config: ${JSON.stringify(vc)}`);
 
+      const { withFiles, withUrls } = await partitionUploadables(eligible);
+      logToScreen(`counts: total=${localGallery.length}, eligible=${eligible.length}, withFiles=${withFiles.length}, withUrls=${withUrls.length}`);
+
       const byFile = await sendFiles(withFiles, vc);
-      const byUrl = await sendUrls(withUrlsNoFile, vc); // safe if route missing
+      const byUrl  = await sendUrls(withUrls, vc);
 
       const combined = [...byFile, ...byUrl];
       const combinedById = new Map(combined.map((x) => [x.id, x]));
