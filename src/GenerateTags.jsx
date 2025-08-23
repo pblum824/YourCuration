@@ -155,7 +155,7 @@ export default function GenerateTags({ setView }) {
     setCancelRequested(false);
 
     try {
-      const eligible = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible));
+      const eligible = localGallery;
       if (eligible.length === 0) { logToScreen('No eligible images to tag.'); return; }
 
       const { withFiles, withUrls } = await partitionUploadables(eligible, logToScreen);
@@ -203,8 +203,7 @@ export default function GenerateTags({ setView }) {
     }
   };
 
-  const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible)).length;
-
+  const imageCount = localGallery.length;
   const generateButton = (
     <button
       onClick={handleGenerate}
