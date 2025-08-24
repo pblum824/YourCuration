@@ -1,4 +1,4 @@
-// file: src/GenerateTags.jsx — chunked processing (invisible to user), DevMode logs show chunk timings
+// file: src/GenerateTags.jsx — invisible chunking (200 default) with DevMode timing (rolled back + explicit log panel under dials)
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import GalleryGrid from './GalleryGrid';
@@ -49,6 +49,7 @@ export default function GenerateTags({ setView }) {
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
+  // Shallow clone; no hydration
   useEffect(() => {
     setLocalGallery(artistGallery.map((img) => ({ ...img })));
   }, [artistGallery]);
@@ -77,36 +78,110 @@ export default function GenerateTags({ setView }) {
     };
   }
 
-  async function sendFiles(uploadableWithFiles, vc) {
-    if (uploadableWithFiles.length === 0) return [];
+  // Convert blob:/data: → File; keep http(s) URLs for URL route
+  async function partitionUploadables(items, log) {
+    const withFiles = [];
+    const withUrls = [];
+    let converted = 0, skipped = 0;
+    for (const img of items) {
+      if (img.file) { withFiles.push(img); continue; }
+      const u = img.url || '';
+      if (u.startsWith('http://') || u.startsWith('https://')) {
+        withUrls.push({ id: img.id, url: u, name: img.name });
+      } else if (u.startsWith('blob:') || u.startsWith('data:')) {
+        try {
+          const resp = await fetch(u);
+          const blob = await resp.blob();
+          const file = new File([blob], img.name || 'image.jpg', { type: blob.type || 'image/jpeg' });
+          withFiles.push({ ...img, file });
+          converted++;
+        } catch (e) {
+          skipped++; log && log(`blob/data convert failed for ${img.name || img.id}: ${e?.message || e}`);
+        }
+      } else {
+        skipped++; log && log(`skip unsupported URL scheme for ${img.name || img.id}: ${u}`);
+      }
+    }
+    log && log(`partitioned: files=${withFiles.length}, urls=${withUrls.length}, converted=${converted}, skipped=${skipped}`);
+    return { withFiles, withUrls };
+  }
+
+  async function compressImage(file, maxDim = 384, quality = 0.7) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => (img.src = e.target.result);
+      img.onload = () => {
+        const scale = maxDim / Math.max(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function sendFiles(withFiles, vc) {
+    if (!withFiles || withFiles.length === 0) return [];
     const formData = new FormData();
-    for (const img of uploadableWithFiles) {
+    for (const img of withFiles) {
       if (cancelRequested) throw new Error('User cancelled');
-      formData.append('files', img.file, img.file.name || img.name || 'image.jpg');
+      const compressed = await compressImage(img.file, 384, 0.7);
+      formData.append('files', compressed, compressed.name || img.name || 'image.jpg');
     }
     formData.append('visual_config', JSON.stringify(vc));
 
     const res = await fetch('https://api.yourcuration.app/batch-tag', { method: 'POST', body: formData });
-    if (!res.ok) throw new Error(`Backend(files) ${res.status}`);
+    if (!res.ok) throw new Error(`/batch-tag ${res.status}`);
     const j = await res.json();
     const rows = Array.isArray(j?.results) ? j.results : [];
-    return rows.map((r, i) => ({ id: uploadableWithFiles[i].id, name: uploadableWithFiles[i].name, meta: r?.metadata || {} }));
+    return rows.map((r, i) => ({ id: withFiles[i].id, name: withFiles[i].name, meta: r?.metadata || {} }));
   }
 
-  async function sendUrls(uploadableWithUrls, vc) {
-    if (uploadableWithUrls.length === 0) return [];
-    const payload = { visual_config: vc, items: uploadableWithUrls.map((img) => ({ id: img.id, url: img.url, name: img.name })) };
-    try {
-      const res = await fetch('https://api.yourcuration.app/batch-tag-urls', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-      });
-      if (!res.ok) return [];
-      const j = await res.json();
-      const rows = Array.isArray(j?.results) ? j.results : [];
-      return rows.map((r) => ({ id: r.id, name: r.name, meta: r?.metadata || {} }));
-    } catch {
-      return [];
-    }
+  async function sendUrls(withUrls, vc) {
+    if (!withUrls || withUrls.length === 0) return [];
+    const payload = { visual_config: vc, items: withUrls };
+    const res = await fetch('https://api.yourcuration.app/batch-tag-urls', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`/batch-tag-urls ${res.status}`);
+    const j = await res.json();
+    const rows = Array.isArray(j?.results) ? j.results : [];
+    return rows.map((r) => ({ id: r.id, name: r.name, meta: r?.metadata || {} }));
+  }
+
+  async function processChunk(chunkItems, vc, idx, totalChunksPlanned) {
+    const label = `Chunk ${idx + 1}/${totalChunksPlanned}`;
+    const t0 = performance.now();
+    const { withFiles, withUrls } = await partitionUploadables(chunkItems, devMode && logToScreen);
+    const byFile = await sendFiles(withFiles, vc);
+    const byUrl  = await sendUrls(withUrls, vc);
+    const combined = [...byFile, ...byUrl];
+
+    const mapById = new Map(combined.map((x) => [x.id, x]));
+    setArtistGallery((prev) => prev.map((img) => {
+      const found = mapById.get(img.id);
+      if (!found) return img;
+      const meta = found.meta || {};
+      return {
+        ...img,
+        metadata: { ...img.metadata, ...meta, metaTagGenerated: true },
+        tags: {
+          ...(img.tags || {}),
+          image: Array.isArray(meta.imageTags) ? meta.imageTags : [],
+          text: Array.isArray(meta.textTags) ? meta.textTags : [],
+          genre: Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [],
+        },
+      };
+    }));
+
+    const dt = (performance.now() - t0) / 1000;
+    const perImg = dt / Math.max(1, chunkItems.length);
+    if (devMode) logToScreen(`${label} — sent ${chunkItems.length} in ${dt.toFixed(1)}s (${perImg.toFixed(3)} s/img)`);
+    return { dt, perImg, count: chunkItems.length };
   }
 
   const handleGenerate = async () => {
@@ -115,55 +190,44 @@ export default function GenerateTags({ setView }) {
     setCancelRequested(false);
 
     try {
-      const eligible = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible));
-      if (eligible.length === 0) { logToScreen('No eligible images to tag.'); return; }
+      const all = localGallery; // retag entire gallery
+      if (all.length === 0) { logToScreen('No images to tag.'); return; }
+
+      try {
+        const s = await fetch('https://api.yourcuration.app/status', { method: 'GET' });
+        const sj = await s.json().catch(() => ({}));
+        if (devMode) logToScreen(`/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(sj?.has_verb_vecs)} imgModel=${String(sj?.img_model_loaded)}`);
+      } catch { if (devMode) logToScreen('/status failed (non-blocking)'); }
 
       const vc = buildBackendVisualConfig(visualConfig);
-
-      let remaining = [...eligible];
+      const SAFETY_SECS = 80;
       let chunkSize = 200;
-      let chunkIndex = 0;
+      const minChunk = 100, maxChunk = 280;
 
-      while (remaining.length > 0) {
-        const batch = remaining.splice(0, chunkSize);
-        chunkIndex++;
-        const t0 = performance.now();
+      let remaining = [...all];
+      const totalImages = remaining.length;
+      let chunkIdx = 0;
+      const tStart = performance.now();
 
-        const withFiles = batch.filter((img) => img.file);
-        const withUrls  = batch.filter((img) => !img.file && !!img.url);
+      while (remaining.length && !cancelRequested) {
+        const planned = Math.ceil(remaining.length / chunkSize);
+        const batch = remaining.slice(0, chunkSize);
+        remaining = remaining.slice(chunkSize);
 
-        const byFile = await sendFiles(withFiles, vc);
-        const byUrl  = await sendUrls(withUrls, vc);
+        const { dt, perImg } = await processChunk(batch, vc, chunkIdx, planned + chunkIdx);
 
-        const combined = [...byFile, ...byUrl];
-        const combinedById = new Map(combined.map((x) => [x.id, x]));
+        // Adapt next chunk size
+        const est = SAFETY_SECS / Math.max(perImg, 0.001);
+        const nextSize = Math.max(minChunk, Math.min(maxChunk, Math.floor(est)));
+        if (dt > 75 && chunkSize > minChunk) chunkSize = Math.max(minChunk, Math.floor(chunkSize * 0.85));
+        else if (dt < 50 && chunkSize < maxChunk) chunkSize = Math.min(maxChunk, Math.floor((chunkSize + nextSize) / 2));
+        else chunkSize = nextSize;
 
-        setArtistGallery((prev) => prev.map((img) => {
-          const found = combinedById.get(img.id);
-          if (!found) return img;
-          const meta = found.meta || {};
-          return {
-            ...img,
-            metadata: { ...img.metadata, ...meta, metaTagGenerated: true },
-            tags: {
-              ...(img.tags || {}),
-              image: Array.isArray(meta.imageTags) ? meta.imageTags : [],
-              text: Array.isArray(meta.textTags) ? meta.textTags : [],
-              genre: Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [],
-            },
-          };
-        }));
-
-        const dt = (performance.now() - t0) / 1000;
-        if (devMode) logToScreen(`Chunk ${chunkIndex} — ${batch.length} images in ${dt.toFixed(1)}s (${(dt/batch.length).toFixed(3)}s/img)`);
-
-        // adjust next chunk size safely
-        const tImg = dt / batch.length;
-        const budget = 80; // s, safe under CF cap
-        chunkSize = Math.max(100, Math.min(250, Math.floor(budget / tImg)));
+        chunkIdx += 1;
       }
 
-      logToScreen(`✅ All chunks complete`);
+      const totalSec = ((performance.now() - tStart) / 1000).toFixed(1);
+      logToScreen(`✅ All chunks done — ${totalImages} images in ${totalSec}s`);
     } catch (err) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
@@ -172,7 +236,7 @@ export default function GenerateTags({ setView }) {
     }
   };
 
-  const imageCount = localGallery.filter((img) => (img.sampleEligible || img.galleryEligible)).length;
+  const imageCount = localGallery.length;
 
   const generateButton = (
     <button
@@ -211,8 +275,9 @@ export default function GenerateTags({ setView }) {
             }}
             center={generateButton}
           />
+          {/* Explicit Dev log panel directly below the dials */}
           {logs.length > 0 && (
-            <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '1rem' }}>
+            <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '1rem', maxHeight: 200, overflowY: 'auto', borderTop: '1px dashed #ddd', paddingTop: '0.5rem' }}>
               {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
             </div>
           )}
@@ -237,6 +302,7 @@ export default function GenerateTags({ setView }) {
         />
       </div>
 
+      {/* Keep the original bottom log as a fallback in case UI layout differs */}
       {devMode && logs.length > 0 && (
         <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
           {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
