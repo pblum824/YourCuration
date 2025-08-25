@@ -1,5 +1,5 @@
-// File: src/GenerateTags.jsx — invisible chunking + DevMode timing + overlay ETA
-import React, { useEffect, useMemo, useState } from 'react';
+// File: src/GenerateTags.jsx — invisible chunking + smooth in‑chunk ETA progress + DevMode timing
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import GalleryGrid from './GalleryGrid';
 import { toggleSampleWithLimit } from './utils/sampleUtils';
@@ -10,7 +10,7 @@ import { useFontSettings } from './FontSettingsContext';
 import DevDialsStrip from './DevDialsStrip';
 
 export default function GenerateTags({ setView }) {
-  const { selectedFont } = useFontSettings(); // kept for consistency with your app
+  const { selectedFont } = useFontSettings(); // kept for app consistency
   const { artistGallery, setArtistGallery } = useCuration();
   const { devMode } = useDevMode();
 
@@ -21,10 +21,15 @@ export default function GenerateTags({ setView }) {
   const [logs, setLogs] = useState([]);
   const [overlayKey, setOverlayKey] = useState(0);
 
-  // progress for overlay ETA
+  // true progress (confirmed after each chunk)
   const [processedCount, setProcessedCount] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
   const avgSecPerImage = processedCount > 0 ? elapsedSec / processedCount : 0;
+
+  // smooth in‑chunk display progress
+  const [displayProcessed, setDisplayProcessed] = useState(0);
+  const inflightRef = useRef({ startTs: 0, size: 0, baseProcessed: 0 });
+  const tickerRef = useRef(null);
 
   const defaultVisualConfig = useMemo(() => ({
     NEUTRAL_COLORED_MAX: 3,
@@ -55,7 +60,7 @@ export default function GenerateTags({ setView }) {
   const logToScreen = (msg) =>
     setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
-  // Shallow clone only; no hydration
+  // Shallow clone only; no hydration here
   useEffect(() => {
     setLocalGallery(artistGallery.map((img) => ({ ...img })));
   }, [artistGallery]);
@@ -101,7 +106,7 @@ export default function GenerateTags({ setView }) {
     };
   }
 
-  // Convert blob:/data: → File so they go to /batch-tag; http(s) → /batch-tag-urls
+  // Convert blob:/data: → File so they go via /batch-tag; http(s) → /batch-tag-urls
   async function partitionUploadables(items, log) {
     const withFiles = [];
     const withUrls = [];
@@ -176,7 +181,36 @@ export default function GenerateTags({ setView }) {
     return rows.map((r) => ({ id: r.id, name: r.name, meta: r?.metadata || {} }));
   }
 
+  // start/stop smooth in‑chunk estimator
+  function startInflightEstimator(size) {
+    const perImg = Math.max(0.2, avgSecPerImage || 0.35); // fallback if unknown
+    inflightRef.current = {
+      startTs: performance.now(),
+      size,
+      baseProcessed: processedCount,
+      perImg,
+    };
+    if (tickerRef.current) cancelAnimationFrame(tickerRef.current);
+    const tick = () => {
+      const now = performance.now();
+      const { startTs, size, baseProcessed, perImg } = inflightRef.current;
+      const estDone = Math.min(size, Math.floor((now - startTs) / 1000 / perImg));
+      setDisplayProcessed(baseProcessed + estDone);
+      tickerRef.current = requestAnimationFrame(tick);
+    };
+    tickerRef.current = requestAnimationFrame(tick);
+  }
+  function stopInflightEstimator() {
+    if (tickerRef.current) cancelAnimationFrame(tickerRef.current);
+    // lock display to confirmed processed
+    setDisplayProcessed(processedCount);
+    inflightRef.current = { startTs: 0, size: 0, baseProcessed: 0, perImg: 0 };
+  }
+
   async function processChunk(chunkItems, vc, idx, totalChunksPlanned) {
+    // begin smooth estimate
+    startInflightEstimator(chunkItems.length);
+
     const t0 = performance.now();
     const { withFiles, withUrls } = await partitionUploadables(chunkItems, devMode && logToScreen);
 
@@ -208,9 +242,10 @@ export default function GenerateTags({ setView }) {
     const perImg = dt / Math.max(1, chunkItems.length);
     if (devMode) logToScreen(`Chunk ${idx + 1}/${totalChunksPlanned} — ${chunkItems.length} in ${dt.toFixed(1)}s (${perImg.toFixed(3)} s/img)`);
 
-    // Update overlay progress
+    // update true progress, then stop estimator and sync display
     setProcessedCount((c) => c + chunkItems.length);
     setElapsedSec((t) => t + dt);
+    stopInflightEstimator();
 
     return { dt, perImg };
   }
@@ -221,6 +256,7 @@ export default function GenerateTags({ setView }) {
     setCancelRequested(false);
     setProcessedCount(0);
     setElapsedSec(0);
+    setDisplayProcessed(0);
 
     try {
       const all = localGallery;                       // retag entire gallery
@@ -237,8 +273,8 @@ export default function GenerateTags({ setView }) {
       const vc = buildBackendVisualConfig(visualConfig);
 
       // Cloudflare-safe chunking
-      const SAFETY_SECS = 80;       // keep each POST under ~100s with margin
-      let chunkSize = 200;          // reliable default
+      const SAFETY_SECS = 80;
+      let chunkSize = 200;
       const minChunk = 100, maxChunk = 280;
 
       let remaining = [...all];
@@ -266,6 +302,7 @@ export default function GenerateTags({ setView }) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
     } finally {
+      stopInflightEstimator();
       setLoading(false);
     }
   };
@@ -344,14 +381,14 @@ export default function GenerateTags({ setView }) {
         />
       </div>
 
-      {/* Modal overlay with ETA-aware bar */}
+      {/* Modal overlay with ETA-aware bar (uses displayProcessed for smooth progress) */}
       {loading && (
         <LoadingOverlay
           key={overlayKey}
           onCancel={() => setCancelRequested(true)}
           imageCount={imageCount}
-          processed={processedCount}
-          avgSecPerImage={avgSecPerImage}
+          processed={displayProcessed}
+          avgSecPerImage={avgSecPerImage || 0.35}
           mode="tag"
         />
       )}
