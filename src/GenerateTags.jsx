@@ -1,4 +1,4 @@
-// file: src/GenerateTags.jsx — invisible chunking (200 default) + accurate ETA progress bar
+// file: src/GenerateTags.jsx — invisible chunking (200 default) + accurate ETA progress bar (in-bar label)
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import GalleryGrid from './GalleryGrid';
@@ -16,26 +16,31 @@ function formatETA(sec) {
   return `${String(m)}:${String(s).padStart(2, '0')}`;
 }
 
-function ProgressBarETA({ total, processed, avgSecPerImage, chunkInfo, tight }) {
+function ProgressBarETA({ total, processed, avgSecPerImage, chunkInfo }) {
   const pct = total > 0 ? Math.min(100, Math.max(0, (processed / total) * 100)) : 0;
   const remaining = Math.max(0, total - processed);
   const eta = remaining * (avgSecPerImage || 0);
+  const label = `${processed}/${total} (${pct.toFixed(1)}%) • ETA ${formatETA(eta)}${chunkInfo ? ` • ${chunkInfo}` : ''}`;
   return (
-    <div style={{ margin: tight ? '0.5rem 0 0.75rem' : '1rem 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ margin: '0.75rem 0 1rem' }}>
       <div style={{
-        height: 14, borderRadius: 8, background: '#e5e7eb',
-        overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)'
+        position: 'relative', height: 18, borderRadius: 10,
+        background: '#e5e7eb', overflow: 'hidden',
+        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)'
       }}>
         <div style={{
-          width: `${pct.toFixed(2)}%`,
-          height: '100%',
-          transition: 'width 450ms ease',
+          width: `${pct.toFixed(2)}%`, height: '100%', transition: 'width 450ms ease',
           background: 'linear-gradient(90deg,#1e3a8a,#3b82f6)'
         }}/>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: 12, color: '#374151' }}>
-        <span>{processed}/{total} ({pct.toFixed(1)}%)</span>
-        <span>ETA {formatETA(eta)}{chunkInfo ? ` • ${chunkInfo}` : ''}</span>
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'monospace', fontSize: 12, color: '#111827'
+        }}>
+          <span style={{
+            padding: '0 6px', borderRadius: 6,
+            background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 0 1px rgba(0,0,0,0.05)'
+          }}>{label}</span>
+        </div>
       </div>
     </div>
   );
@@ -86,7 +91,6 @@ export default function GenerateTags({ setView }) {
 
   const logToScreen = (msg) => setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
-  // Shallow clone; no hydration
   useEffect(() => {
     setLocalGallery(artistGallery.map((img) => ({ ...img })));
   }, [artistGallery]);
@@ -110,15 +114,13 @@ export default function GenerateTags({ setView }) {
       DISTINCT_DHUE:       Number(ui.DISTINCT_DHUE),
       SELECTIVE_MAX:       toFrac(ui.SELECTIVE_MAX),
       DOMINANCE_NARROW:    toFrac(ui.DOMINANCE_NARROW),
-      SEPIA_HUE_MIN:       Number(ui.SEPIA_HUE_MIN),
+      SEPIA_HUE_MIN:       Number(ui.SEsPIA_HUE_MIN),
       SEPIA_HUE_MAX:       Number(ui.SEPIA_HUE_MAX),
     };
   }
 
-  // Convert blob:/data: → File; keep http(s) URLs for URL route
   async function partitionUploadables(items, log) {
-    const withFiles = [];
-    const withUrls = [];
+    const withFiles = [], withUrls = [];
     let converted = 0, skipped = 0;
     for (const img of items) {
       if (img.file) { withFiles.push(img); continue; }
@@ -132,12 +134,8 @@ export default function GenerateTags({ setView }) {
           const file = new File([blob], img.name || 'image.jpg', { type: blob.type || 'image/jpeg' });
           withFiles.push({ ...img, file });
           converted++;
-        } catch (e) {
-          skipped++; log && log(`blob/data convert failed for ${img.name || img.id}: ${e?.message || e}`);
-        }
-      } else {
-        skipped++; log && log(`skip unsupported URL scheme for ${img.name || img.id}: ${u}`);
-      }
+        } catch (e) { skipped++; log && log(`blob/data convert failed for ${img.name || img.id}: ${e?.message || e}`); }
+      } else { skipped++; log && log(`skip unsupported URL scheme for ${img.name || img.id}: ${u}`); }
     }
     log && log(`partitioned: files=${withFiles.length}, urls=${withUrls.length}, converted=${converted}, skipped=${skipped}`);
     return { withFiles, withUrls };
@@ -191,7 +189,6 @@ export default function GenerateTags({ setView }) {
   }
 
   async function processChunk(chunkItems, vc, idx, totalChunksPlanned) {
-    const label = `Chunk ${idx + 1}/${totalChunksPlanned}`;
     const t0 = performance.now();
     const { withFiles, withUrls } = await partitionUploadables(chunkItems, devMode && logToScreen);
     const byFile = await sendFiles(withFiles, vc);
@@ -217,12 +214,12 @@ export default function GenerateTags({ setView }) {
 
     const dt = (performance.now() - t0) / 1000;
     const perImg = dt / Math.max(1, chunkItems.length);
-    if (devMode) logToScreen(`${label} — sent ${chunkItems.length} in ${dt.toFixed(1)}s (${perImg.toFixed(3)} s/img)`);
-    // progress updates
+    if (devMode) logToScreen(`Chunk ${idx + 1}/${totalChunksPlanned} — ${chunkItems.length} in ${dt.toFixed(1)}s (${perImg.toFixed(3)} s/img)`);
+
     setProcessedCount((c) => c + chunkItems.length);
     setElapsedSec((t) => t + dt);
 
-    return { dt, perImg, count: chunkItems.length };
+    return { dt, perImg };
   }
 
   const handleGenerate = async () => {
@@ -249,7 +246,6 @@ export default function GenerateTags({ setView }) {
 
       let remaining = [...all];
       let chunkIdx = 0;
-      const tStart = performance.now();
 
       while (remaining.length && !cancelRequested) {
         const planned = Math.ceil(remaining.length / chunkSize);
@@ -258,7 +254,7 @@ export default function GenerateTags({ setView }) {
 
         const { dt, perImg } = await processChunk(batch, vc, chunkIdx, planned + chunkIdx);
 
-        // Adapt next chunk size with guardrails
+        // Adapt next chunk size (guardrails)
         const est = SAFETY_SECS / Math.max(perImg, 0.001);
         const nextSize = Math.max(minChunk, Math.min(maxChunk, Math.floor(est)));
         if (dt > 75 && chunkSize > minChunk) chunkSize = Math.max(minChunk, Math.floor(chunkSize * 0.85));
@@ -268,8 +264,7 @@ export default function GenerateTags({ setView }) {
         chunkIdx += 1;
       }
 
-      const totalSec = ((performance.now() - tStart) / 1000).toFixed(1);
-      logToScreen(`✅ All chunks done — ${all.length} images in ${totalSec}s`);
+      logToScreen(`✅ All chunks done — ${all.length} images in ${(elapsedSec).toFixed(1)}s`);
     } catch (err) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
@@ -285,18 +280,12 @@ export default function GenerateTags({ setView }) {
       onClick={handleGenerate}
       disabled={loading}
       style={{
-        padding: '1rem 2rem',
-        fontSize: '1.25rem',
-        borderRadius: '0.5rem',
-        backgroundColor: '#1e3a8a',
-        color: '#fff',
-        border: 'none',
-        cursor: 'pointer',
-        opacity: loading ? 0.6 : 1,
-        transition: 'width 200ms ease',
+        padding: '1rem 2rem', fontSize: '1.25rem', borderRadius: '0.5rem',
+        backgroundColor: '#1e3a8a', color: '#fff', border: 'none', cursor: 'pointer',
+        opacity: loading ? 0.6 : 1, transition: 'width 200ms ease',
       }}
     >
-      {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
+      {loading ? 'Processing Auto MetaTags…' : 'Generate MetaTags'}
     </button>
   );
 
@@ -317,17 +306,14 @@ export default function GenerateTags({ setView }) {
             }}
             center={generateButton}
           />
-          {/* Progress bar just beneath the button when loading */}
           {loading && (
             <ProgressBarETA
               total={imageCount}
               processed={processedCount}
               avgSecPerImage={avgSecPerImage}
               chunkInfo={devMode ? `avg ${avgSecPerImage.toFixed(3)} s/img` : ''}
-              tight
             />
           )}
-          {/* Dev log panel under the scales */}
           {logs.length > 0 && (
             <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '0.5rem', maxHeight: 220, overflowY: 'auto', borderTop: '1px dashed #ddd', paddingTop: '0.5rem' }}>
               {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
