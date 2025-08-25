@@ -1,4 +1,4 @@
-// file: src/GenerateTags.jsx — invisible chunking (200 default) + accurate ETA progress bar (in-bar label)
+// File: src/GenerateTags.jsx — invisible chunking + DevMode timing + overlay ETA
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import GalleryGrid from './GalleryGrid';
@@ -9,45 +9,8 @@ import { useDevMode } from './context/DevModeContext';
 import { useFontSettings } from './FontSettingsContext';
 import DevDialsStrip from './DevDialsStrip';
 
-function formatETA(sec) {
-  if (!isFinite(sec) || sec < 0) return '--:--';
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${String(m)}:${String(s).padStart(2, '0')}`;
-}
-
-function ProgressBarETA({ total, processed, avgSecPerImage, chunkInfo }) {
-  const pct = total > 0 ? Math.min(100, Math.max(0, (processed / total) * 100)) : 0;
-  const remaining = Math.max(0, total - processed);
-  const eta = remaining * (avgSecPerImage || 0);
-  const label = `${processed}/${total} (${pct.toFixed(1)}%) • ETA ${formatETA(eta)}${chunkInfo ? ` • ${chunkInfo}` : ''}`;
-  return (
-    <div style={{ margin: '0.75rem 0 1rem' }}>
-      <div style={{
-        position: 'relative', height: 18, borderRadius: 10,
-        background: '#e5e7eb', overflow: 'hidden',
-        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)'
-      }}>
-        <div style={{
-          width: `${pct.toFixed(2)}%`, height: '100%', transition: 'width 450ms ease',
-          background: 'linear-gradient(90deg,#1e3a8a,#3b82f6)'
-        }}/>
-        <div style={{
-          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'monospace', fontSize: 12, color: '#111827'
-        }}>
-          <span style={{
-            padding: '0 6px', borderRadius: 6,
-            background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 0 1px rgba(0,0,0,0.05)'
-          }}>{label}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function GenerateTags({ setView }) {
-  const { selectedFont } = useFontSettings();
+  const { selectedFont } = useFontSettings(); // kept for consistency with your app
   const { artistGallery, setArtistGallery } = useCuration();
   const { devMode } = useDevMode();
 
@@ -58,7 +21,7 @@ export default function GenerateTags({ setView }) {
   const [logs, setLogs] = useState([]);
   const [overlayKey, setOverlayKey] = useState(0);
 
-  // progress state
+  // progress for overlay ETA
   const [processedCount, setProcessedCount] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
   const avgSecPerImage = processedCount > 0 ? elapsedSec / processedCount : 0;
@@ -89,38 +52,59 @@ export default function GenerateTags({ setView }) {
     try { localStorage.setItem('yourcuration.visualConfig.v1', JSON.stringify(visualConfig)); } catch {}
   }, [visualConfig]);
 
-  const logToScreen = (msg) => setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  const logToScreen = (msg) =>
+    setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
+  // Shallow clone only; no hydration
   useEffect(() => {
     setLocalGallery(artistGallery.map((img) => ({ ...img })));
   }, [artistGallery]);
 
-  const toggleSample = (id) => toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
-  const toggleGallery = (id) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img));
-  const toggleScrape = (id) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img));
-  const removeImage = (id) => setArtistGallery((prev) => prev.filter((img) => img.id !== id));
-  const updateTagField = (id, key, values) => setArtistGallery((prev) => prev.map((img) => img.id === id ? { ...img, metadata: { ...img.metadata, [key]: values } } : img));
+  const toggleSample = (id) =>
+    toggleSampleWithLimit(id, artistGallery, setArtistGallery, setSampleWarningId);
+  const toggleGallery = (id) =>
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, galleryEligible: !img.galleryEligible } : img
+      )
+    );
+  const toggleScrape = (id) =>
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, scrapeEligible: !img.scrapeEligible } : img
+      )
+    );
+  const removeImage = (id) =>
+    setArtistGallery((prev) => prev.filter((img) => img.id !== id));
+  const updateTagField = (id, key, values) =>
+    setArtistGallery((prev) =>
+      prev.map((img) =>
+        img.id === id ? { ...img, metadata: { ...img.metadata, [key]: values } } : img
+      )
+    );
 
   function buildBackendVisualConfig(ui) {
     const toFrac = (pct) => Math.max(0, Math.min(1, Number(pct) / 100));
     return {
       version: 1,
       NEUTRAL_COLORED_MAX: toFrac(ui.NEUTRAL_COLORED_MAX),
-      NEUTRAL_RATIO_MIN:   toFrac(ui.NEUTRAL_RATIO_MIN),
-      BW_EXTREME_MIN:      toFrac(ui.BW_EXTREME_MIN),
-      BW_MID_MAX:          toFrac(ui.BW_MID_MAX),
-      BW_ENTROPY_MAX:      Number(ui.BW_ENTROPY_MAX),
-      DISTINCT_DE:         Number(ui.DISTINCT_DE),
-      DISTINCT_DHUE:       Number(ui.DISTINCT_DHUE),
-      SELECTIVE_MAX:       toFrac(ui.SELECTIVE_MAX),
-      DOMINANCE_NARROW:    toFrac(ui.DOMINANCE_NARROW),
-      SEPIA_HUE_MIN:       Number(ui.SEsPIA_HUE_MIN),
-      SEPIA_HUE_MAX:       Number(ui.SEPIA_HUE_MAX),
+      NEUTRAL_RATIO_MIN: toFrac(ui.NEUTRAL_RATIO_MIN),
+      BW_EXTREME_MIN: toFrac(ui.BW_EXTREME_MIN),
+      BW_MID_MAX: toFrac(ui.BW_MID_MAX),
+      BW_ENTROPY_MAX: Number(ui.BW_ENTROPY_MAX),
+      DISTINCT_DE: Number(ui.DISTINCT_DE),
+      DISTINCT_DHUE: Number(ui.DISTINCT_DHUE),
+      SELECTIVE_MAX: toFrac(ui.SELECTIVE_MAX),
+      DOMINANCE_NARROW: toFrac(ui.DOMINANCE_NARROW),
+      SEPIA_HUE_MIN: Number(ui.SEPIA_HUE_MIN),
+      SEPIA_HUE_MAX: Number(ui.SEPIA_HUE_MAX),
     };
   }
 
+  // Convert blob:/data: → File so they go to /batch-tag; http(s) → /batch-tag-urls
   async function partitionUploadables(items, log) {
-    const withFiles = [], withUrls = [];
+    const withFiles = [];
+    const withUrls = [];
     let converted = 0, skipped = 0;
     for (const img of items) {
       if (img.file) { withFiles.push(img); continue; }
@@ -134,8 +118,12 @@ export default function GenerateTags({ setView }) {
           const file = new File([blob], img.name || 'image.jpg', { type: blob.type || 'image/jpeg' });
           withFiles.push({ ...img, file });
           converted++;
-        } catch (e) { skipped++; log && log(`blob/data convert failed for ${img.name || img.id}: ${e?.message || e}`); }
-      } else { skipped++; log && log(`skip unsupported URL scheme for ${img.name || img.id}: ${u}`); }
+        } catch (e) {
+          skipped++; log && log(`blob/data convert failed for ${img.name || img.id}: ${e?.message || e}`);
+        }
+      } else {
+        skipped++; log && log(`skip unsupported URL scheme for ${img.name || img.id}: ${u}`);
+      }
     }
     log && log(`partitioned: files=${withFiles.length}, urls=${withUrls.length}, converted=${converted}, skipped=${skipped}`);
     return { withFiles, withUrls };
@@ -191,31 +179,36 @@ export default function GenerateTags({ setView }) {
   async function processChunk(chunkItems, vc, idx, totalChunksPlanned) {
     const t0 = performance.now();
     const { withFiles, withUrls } = await partitionUploadables(chunkItems, devMode && logToScreen);
+
     const byFile = await sendFiles(withFiles, vc);
     const byUrl  = await sendUrls(withUrls, vc);
     const combined = [...byFile, ...byUrl];
 
+    // Merge results into gallery
     const mapById = new Map(combined.map((x) => [x.id, x]));
-    setArtistGallery((prev) => prev.map((img) => {
-      const found = mapById.get(img.id);
-      if (!found) return img;
-      const meta = found.meta || {};
-      return {
-        ...img,
-        metadata: { ...img.metadata, ...meta, metaTagGenerated: true },
-        tags: {
-          ...(img.tags || {}),
-          image: Array.isArray(meta.imageTags) ? meta.imageTags : [],
-          text: Array.isArray(meta.textTags) ? meta.textTags : [],
-          genre: Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [],
-        },
-      };
-    }));
+    setArtistGallery((prev) =>
+      prev.map((img) => {
+        const found = mapById.get(img.id);
+        if (!found) return img;
+        const meta = found.meta || {};
+        return {
+          ...img,
+          metadata: { ...img.metadata, ...meta, metaTagGenerated: true },
+          tags: {
+            ...(img.tags || {}),
+            image: Array.isArray(meta.imageTags) ? meta.imageTags : [],
+            text: Array.isArray(meta.textTags) ? meta.textTags : [],
+            genre: Array.isArray(meta.taxonomyTags) ? meta.taxonomyTags : [],
+          },
+        };
+      })
+    );
 
     const dt = (performance.now() - t0) / 1000;
     const perImg = dt / Math.max(1, chunkItems.length);
     if (devMode) logToScreen(`Chunk ${idx + 1}/${totalChunksPlanned} — ${chunkItems.length} in ${dt.toFixed(1)}s (${perImg.toFixed(3)} s/img)`);
 
+    // Update overlay progress
     setProcessedCount((c) => c + chunkItems.length);
     setElapsedSec((t) => t + dt);
 
@@ -230,18 +223,22 @@ export default function GenerateTags({ setView }) {
     setElapsedSec(0);
 
     try {
-      const all = localGallery; // retag entire gallery
+      const all = localGallery;                       // retag entire gallery
       if (all.length === 0) { logToScreen('No images to tag.'); return; }
 
       try {
         const s = await fetch('https://api.yourcuration.app/status', { method: 'GET' });
         const sj = await s.json().catch(() => ({}));
         if (devMode) logToScreen(`/status ok: tagbank=${String(sj?.has_tagbank_vecs)} verbs=${String(sj?.has_verb_vecs)} imgModel=${String(sj?.img_model_loaded)}`);
-      } catch { if (devMode) logToScreen('/status failed (non-blocking)'); }
+      } catch {
+        if (devMode) logToScreen('/status failed (non-blocking)');
+      }
 
       const vc = buildBackendVisualConfig(visualConfig);
-      const SAFETY_SECS = 80;
-      let chunkSize = 200;
+
+      // Cloudflare-safe chunking
+      const SAFETY_SECS = 80;       // keep each POST under ~100s with margin
+      let chunkSize = 200;          // reliable default
       const minChunk = 100, maxChunk = 280;
 
       let remaining = [...all];
@@ -254,7 +251,7 @@ export default function GenerateTags({ setView }) {
 
         const { dt, perImg } = await processChunk(batch, vc, chunkIdx, planned + chunkIdx);
 
-        // Adapt next chunk size (guardrails)
+        // Adapt next chunk size with guardrails
         const est = SAFETY_SECS / Math.max(perImg, 0.001);
         const nextSize = Math.max(minChunk, Math.min(maxChunk, Math.floor(est)));
         if (dt > 75 && chunkSize > minChunk) chunkSize = Math.max(minChunk, Math.floor(chunkSize * 0.85));
@@ -264,7 +261,7 @@ export default function GenerateTags({ setView }) {
         chunkIdx += 1;
       }
 
-      logToScreen(`✅ All chunks done — ${all.length} images in ${(elapsedSec).toFixed(1)}s`);
+      logToScreen(`✅ All chunks done — ${all.length} images in ${elapsedSec.toFixed(1)}s`);
     } catch (err) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
@@ -280,12 +277,18 @@ export default function GenerateTags({ setView }) {
       onClick={handleGenerate}
       disabled={loading}
       style={{
-        padding: '1rem 2rem', fontSize: '1.25rem', borderRadius: '0.5rem',
-        backgroundColor: '#1e3a8a', color: '#fff', border: 'none', cursor: 'pointer',
-        opacity: loading ? 0.6 : 1, transition: 'width 200ms ease',
+        padding: '1rem 2rem',
+        fontSize: '1.25rem',
+        borderRadius: '0.5rem',
+        backgroundColor: '#1e3a8a',
+        color: '#fff',
+        border: 'none',
+        cursor: 'pointer',
+        opacity: loading ? 0.6 : 1,
+        transition: 'width 200ms ease',
       }}
     >
-      {loading ? 'Processing Auto MetaTags…' : 'Generate MetaTags'}
+      {loading ? 'Processing Auto MetaTags...' : 'Generate MetaTags'}
     </button>
   );
 
@@ -306,16 +309,17 @@ export default function GenerateTags({ setView }) {
             }}
             center={generateButton}
           />
-          {loading && (
-            <ProgressBarETA
-              total={imageCount}
-              processed={processedCount}
-              avgSecPerImage={avgSecPerImage}
-              chunkInfo={devMode ? `avg ${avgSecPerImage.toFixed(3)} s/img` : ''}
-            />
-          )}
+          {/* DevMode timing panel directly under dials */}
           {logs.length > 0 && (
-            <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '0.5rem', maxHeight: 220, overflowY: 'auto', borderTop: '1px dashed #ddd', paddingTop: '0.5rem' }}>
+            <div style={{
+              fontFamily: 'monospace',
+              color: '#555',
+              marginTop: '0.5rem',
+              maxHeight: 220,
+              overflowY: 'auto',
+              borderTop: '1px dashed #ddd',
+              paddingTop: '0.5rem'
+            }}>
               {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
             </div>
           )}
@@ -323,15 +327,6 @@ export default function GenerateTags({ setView }) {
       ) : (
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           {generateButton}
-          {loading && (
-            <div style={{ maxWidth: 720, margin: '0.75rem auto' }}>
-              <ProgressBarETA
-                total={imageCount}
-                processed={processedCount}
-                avgSecPerImage={avgSecPerImage}
-              />
-            </div>
-          )}
         </div>
       )}
 
@@ -349,17 +344,14 @@ export default function GenerateTags({ setView }) {
         />
       </div>
 
-      {devMode && logs.length > 0 && (
-        <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
-          {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
-        </div>
-      )}
-
+      {/* Modal overlay with ETA-aware bar */}
       {loading && (
         <LoadingOverlay
           key={overlayKey}
           onCancel={() => setCancelRequested(true)}
           imageCount={imageCount}
+          processed={processedCount}
+          avgSecPerImage={avgSecPerImage}
           mode="tag"
         />
       )}
