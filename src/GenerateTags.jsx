@@ -1,4 +1,4 @@
-// file: src/GenerateTags.jsx — invisible chunking (200 default) with DevMode timing (rolled back + explicit log panel under dials)
+// file: src/GenerateTags.jsx — invisible chunking (200 default) + accurate ETA progress bar
 import React, { useEffect, useMemo, useState } from 'react';
 import { useCuration } from './YourCurationContext';
 import GalleryGrid from './GalleryGrid';
@@ -8,6 +8,38 @@ import ControlBar from './utils/ControlBar';
 import { useDevMode } from './context/DevModeContext';
 import { useFontSettings } from './FontSettingsContext';
 import DevDialsStrip from './DevDialsStrip';
+
+function formatETA(sec) {
+  if (!isFinite(sec) || sec < 0) return '--:--';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m)}:${String(s).padStart(2, '0')}`;
+}
+
+function ProgressBarETA({ total, processed, avgSecPerImage, chunkInfo, tight }) {
+  const pct = total > 0 ? Math.min(100, Math.max(0, (processed / total) * 100)) : 0;
+  const remaining = Math.max(0, total - processed);
+  const eta = remaining * (avgSecPerImage || 0);
+  return (
+    <div style={{ margin: tight ? '0.5rem 0 0.75rem' : '1rem 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{
+        height: 14, borderRadius: 8, background: '#e5e7eb',
+        overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)'
+      }}>
+        <div style={{
+          width: `${pct.toFixed(2)}%`,
+          height: '100%',
+          transition: 'width 450ms ease',
+          background: 'linear-gradient(90deg,#1e3a8a,#3b82f6)'
+        }}/>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: 12, color: '#374151' }}>
+        <span>{processed}/{total} ({pct.toFixed(1)}%)</span>
+        <span>ETA {formatETA(eta)}{chunkInfo ? ` • ${chunkInfo}` : ''}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function GenerateTags({ setView }) {
   const { selectedFont } = useFontSettings();
@@ -20,6 +52,11 @@ export default function GenerateTags({ setView }) {
   const [cancelRequested, setCancelRequested] = useState(false);
   const [logs, setLogs] = useState([]);
   const [overlayKey, setOverlayKey] = useState(0);
+
+  // progress state
+  const [processedCount, setProcessedCount] = useState(0);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const avgSecPerImage = processedCount > 0 ? elapsedSec / processedCount : 0;
 
   const defaultVisualConfig = useMemo(() => ({
     NEUTRAL_COLORED_MAX: 3,
@@ -181,6 +218,10 @@ export default function GenerateTags({ setView }) {
     const dt = (performance.now() - t0) / 1000;
     const perImg = dt / Math.max(1, chunkItems.length);
     if (devMode) logToScreen(`${label} — sent ${chunkItems.length} in ${dt.toFixed(1)}s (${perImg.toFixed(3)} s/img)`);
+    // progress updates
+    setProcessedCount((c) => c + chunkItems.length);
+    setElapsedSec((t) => t + dt);
+
     return { dt, perImg, count: chunkItems.length };
   }
 
@@ -188,6 +229,8 @@ export default function GenerateTags({ setView }) {
     setOverlayKey((prev) => prev + 1);
     setLoading(true);
     setCancelRequested(false);
+    setProcessedCount(0);
+    setElapsedSec(0);
 
     try {
       const all = localGallery; // retag entire gallery
@@ -205,7 +248,6 @@ export default function GenerateTags({ setView }) {
       const minChunk = 100, maxChunk = 280;
 
       let remaining = [...all];
-      const totalImages = remaining.length;
       let chunkIdx = 0;
       const tStart = performance.now();
 
@@ -216,7 +258,7 @@ export default function GenerateTags({ setView }) {
 
         const { dt, perImg } = await processChunk(batch, vc, chunkIdx, planned + chunkIdx);
 
-        // Adapt next chunk size
+        // Adapt next chunk size with guardrails
         const est = SAFETY_SECS / Math.max(perImg, 0.001);
         const nextSize = Math.max(minChunk, Math.min(maxChunk, Math.floor(est)));
         if (dt > 75 && chunkSize > minChunk) chunkSize = Math.max(minChunk, Math.floor(chunkSize * 0.85));
@@ -227,7 +269,7 @@ export default function GenerateTags({ setView }) {
       }
 
       const totalSec = ((performance.now() - tStart) / 1000).toFixed(1);
-      logToScreen(`✅ All chunks done — ${totalImages} images in ${totalSec}s`);
+      logToScreen(`✅ All chunks done — ${all.length} images in ${totalSec}s`);
     } catch (err) {
       console.error('[GenerateTags] error:', err);
       logToScreen(`❌ Tagging failed: ${err?.message || err}`);
@@ -275,9 +317,19 @@ export default function GenerateTags({ setView }) {
             }}
             center={generateButton}
           />
-          {/* Explicit Dev log panel directly below the dials */}
+          {/* Progress bar just beneath the button when loading */}
+          {loading && (
+            <ProgressBarETA
+              total={imageCount}
+              processed={processedCount}
+              avgSecPerImage={avgSecPerImage}
+              chunkInfo={devMode ? `avg ${avgSecPerImage.toFixed(3)} s/img` : ''}
+              tight
+            />
+          )}
+          {/* Dev log panel under the scales */}
           {logs.length > 0 && (
-            <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '1rem', maxHeight: 200, overflowY: 'auto', borderTop: '1px dashed #ddd', paddingTop: '0.5rem' }}>
+            <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '0.5rem', maxHeight: 220, overflowY: 'auto', borderTop: '1px dashed #ddd', paddingTop: '0.5rem' }}>
               {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
             </div>
           )}
@@ -285,6 +337,15 @@ export default function GenerateTags({ setView }) {
       ) : (
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           {generateButton}
+          {loading && (
+            <div style={{ maxWidth: 720, margin: '0.75rem auto' }}>
+              <ProgressBarETA
+                total={imageCount}
+                processed={processedCount}
+                avgSecPerImage={avgSecPerImage}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -302,7 +363,6 @@ export default function GenerateTags({ setView }) {
         />
       </div>
 
-      {/* Keep the original bottom log as a fallback in case UI layout differs */}
       {devMode && logs.length > 0 && (
         <div style={{ fontFamily: 'monospace', color: '#555', marginTop: '2rem' }}>
           {logs.map((log, i) => (<div key={i}>📦 {log}</div>))}
